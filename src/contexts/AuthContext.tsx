@@ -12,6 +12,7 @@ type AuthContextType = {
   loading: boolean;
   userRole: UserRole;
   setUserRole: (role: UserRole) => void;
+  redirectToDashboard: () => string;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,13 +63,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserRole(null);
   };
 
+  // Function to determine which dashboard to redirect to based on user role
+  const redirectToDashboard = () => {
+    if (userRole === 'supplier') {
+      return '/supplier-dashboard';
+    } else if (userRole === 'admin') {
+      return '/admin-dashboard';
+    }
+    return '/auth'; // Fallback to auth page if no role or unknown role
+  };
+
   const value = {
     session,
     user,
     signOut,
     loading,
     userRole,
-    setUserRole
+    setUserRole,
+    redirectToDashboard
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,20 +17,13 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { setUserRole } = useAuth();
+  const { user, userRole, setUserRole, redirectToDashboard } = useAuth();
 
-  // Check if user is already logged in
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
-        navigate('/');
-      }
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [navigate]);
+    if (user) {
+      navigate(redirectToDashboard());
+    }
+  }, [user, userRole, navigate, redirectToDashboard]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,7 +88,7 @@ const Auth = () => {
           title: "Welcome back!",
           description: `You've been successfully signed in as a ${userRole || 'user'}.`,
         });
-        navigate('/');
+        navigate(redirectToDashboard());
       }
     } catch (error: any) {
       toast({
