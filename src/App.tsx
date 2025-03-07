@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import SupplierDashboard from "./pages/SupplierDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import NewSubmission from "./pages/NewSubmission";
+import SubmissionResults from "./pages/SubmissionResults";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/supplier-dashboard" element={<SupplierDashboard />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/new-submission" element={<NewSubmission />} />
+            <Route path="/submission-results/:submissionId" element={<SubmissionResults />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

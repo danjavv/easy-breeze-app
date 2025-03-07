@@ -1,4 +1,5 @@
 
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -8,8 +9,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Eye } from 'lucide-react';
 
 type Submission = {
+  id?: string;
   date: string;
   label: string;
   batches: number;
@@ -22,6 +25,12 @@ type SubmissionsTableProps = {
 };
 
 const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
+  const navigate = useNavigate();
+
+  const viewSubmission = (submissionId: string) => {
+    navigate(`/submission-results/${submissionId}`);
+  };
+
   return (
     <div className="bg-card rounded-md border shadow-sm">
       <div className="p-4 border-b">
@@ -47,7 +56,13 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
                 <TableCell>{submission.batches}</TableCell>
                 <TableCell className={submission.statusColor}>{submission.status}</TableCell>
                 <TableCell>
-                  <Button variant="ghost" size="sm">View</Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => viewSubmission(submission.id || `submission-${index}`)}
+                  >
+                    <Eye className="h-4 w-4 mr-1" /> View
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}

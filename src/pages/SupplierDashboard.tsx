@@ -19,6 +19,7 @@ const SupplierDashboard = () => {
   
   const sampleSubmissions = [
     { 
+      id: 'acme-q2-1',
       date: '05/12', 
       label: 'ACME_Q2_1', 
       batches: 5, 
@@ -26,6 +27,7 @@ const SupplierDashboard = () => {
       statusColor: 'text-amber-500'
     },
     { 
+      id: 'acme-q2-0',
       date: '05/01', 
       label: 'ACME_Q2_0', 
       batches: 3, 
