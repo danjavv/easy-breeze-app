@@ -7,6 +7,7 @@ type AuthContextType = {
   userRole: UserRole;
   setUserRole: (role: UserRole) => void;
   redirectToDashboard: () => string;
+  signOut: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,10 +25,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return '/auth'; // Fallback to auth page if no role or unknown role
   };
 
+  // Function to sign out the user
+  const signOut = () => {
+    setUserRole(null);
+  };
+
   const value = {
     userRole,
     setUserRole,
-    redirectToDashboard
+    redirectToDashboard,
+    signOut
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

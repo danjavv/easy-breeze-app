@@ -9,7 +9,7 @@ import { LogOut, Menu, X } from 'lucide-react';
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { userRole, signOut } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -29,26 +29,21 @@ const Navbar = () => {
   }, []);
 
   const handleAuthAction = () => {
-    if (user) {
+    if (userRole) {
       signOut();
+      navigate('/auth');
     } else {
       navigate('/auth');
     }
   };
 
   const handleGetStarted = () => {
-    if (user) {
-      // Navigate to dashboard or app main page for logged in users
-      // For now, just scroll to features
-      const element = document.getElementById('features');
-      if (element) {
-        window.scrollTo({
-          behavior: 'smooth',
-          top: element.offsetTop - 100
-        });
-      }
+    if (userRole) {
+      // Navigate to dashboard 
+      const dashboardRoute = userRole === 'admin' ? '/admin-dashboard' : '/supplier-dashboard';
+      navigate(dashboardRoute);
     } else {
-      navigate('/auth?tab=register');
+      navigate('/auth');
     }
   };
 
@@ -95,11 +90,11 @@ const Navbar = () => {
             className="hidden sm:inline-flex"
             onClick={handleAuthAction}
           >
-            {user ? 'Log out' : 'Log in'}
-            {user && <LogOut className="ml-2 h-4 w-4" />}
+            {userRole ? 'Log out' : 'Log in'}
+            {userRole && <LogOut className="ml-2 h-4 w-4" />}
           </Button>
           <Button size="sm" onClick={handleGetStarted}>
-            {user ? 'Dashboard' : 'Get Started'}
+            {userRole ? 'Dashboard' : 'Get Started'}
           </Button>
         </div>
       </div>
@@ -128,8 +123,8 @@ const Navbar = () => {
                 setMobileMenuOpen(false);
               }}
             >
-              {user ? 'Log out' : 'Log in'}
-              {user && <LogOut className="ml-2 h-4 w-4" />}
+              {userRole ? 'Log out' : 'Log in'}
+              {userRole && <LogOut className="ml-2 h-4 w-4" />}
             </Button>
             <Button 
               size="sm" 
@@ -139,7 +134,7 @@ const Navbar = () => {
                 setMobileMenuOpen(false);
               }}
             >
-              {user ? 'Dashboard' : 'Get Started'}
+              {userRole ? 'Dashboard' : 'Get Started'}
             </Button>
           </nav>
         </div>
