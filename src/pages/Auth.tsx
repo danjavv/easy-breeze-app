@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -92,6 +93,26 @@ const Auth = () => {
         });
         setLoading(false);
         return;
+      }
+      
+      // Send data to webhook
+      const webhookUrl = 'https://danjavv.app.n8n.cloud/webhook-test/59f900d2-b5fe-4c3f-bde6-6e1d2bb061d5';
+      
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          company_name: companyName,
+          email: email,
+          notification_email: notificationEmail,
+          password: password
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to submit registration');
       }
       
       setUserRole('supplier');
