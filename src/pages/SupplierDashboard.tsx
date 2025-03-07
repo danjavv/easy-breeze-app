@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -22,20 +21,14 @@ import {
 } from "@/components/ui/table";
 
 const SupplierDashboard = () => {
-  const { user, userRole, signOut, loading } = useAuth();
+  const { userRole, setUserRole } = useAuth();
   const navigate = useNavigate();
   const [activeItem, setActiveItem] = useState('submissions');
 
-  useEffect(() => {
-    // Redirect if not logged in or not a supplier
-    if (!loading && (!user || userRole !== 'supplier')) {
-      navigate('/auth');
-    }
-  }, [user, userRole, loading, navigate]);
-
-  if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
-  }
+  const handleSignOut = () => {
+    setUserRole(null);
+    navigate('/auth');
+  };
 
   const sampleSubmissions = [
     { 
@@ -138,7 +131,7 @@ const SupplierDashboard = () => {
           </div>
           
           <div className="hidden md:flex items-center">
-            <Button size="sm" variant="outline" onClick={signOut} className="ml-2">
+            <Button size="sm" variant="outline" onClick={handleSignOut} className="ml-2">
               <LogOut className="mr-2 h-4 w-4" />
               Sign out
             </Button>

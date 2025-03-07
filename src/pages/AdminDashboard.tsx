@@ -1,5 +1,3 @@
-
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -8,19 +6,13 @@ import { LogOut, Users, ShoppingBag, BarChart2, Settings, Search } from 'lucide-
 import { Input } from '@/components/ui/input';
 
 const AdminDashboard = () => {
-  const { user, userRole, signOut, loading } = useAuth();
+  const { setUserRole } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Redirect if not logged in or not an admin
-    if (!loading && (!user || userRole !== 'admin')) {
-      navigate('/auth');
-    }
-  }, [user, userRole, loading, navigate]);
-
-  if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
-  }
+  const handleSignOut = () => {
+    setUserRole(null);
+    navigate('/auth');
+  };
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -35,7 +27,7 @@ const AdminDashboard = () => {
               Admin Dashboard
             </span>
           </div>
-          <Button variant="outline" size="sm" onClick={signOut}>
+          <Button variant="outline" size="sm" onClick={handleSignOut}>
             Log out
             <LogOut className="ml-2 h-4 w-4" />
           </Button>
