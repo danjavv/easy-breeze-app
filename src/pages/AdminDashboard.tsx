@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -45,8 +46,9 @@ const AdminDashboard = () => {
       const data = await response.json();
       console.log('Fetched data:', data); // Debug log
       
-      // Handle different response formats
+      // Properly handle different response formats
       if (Array.isArray(data)) {
+        // If response is already an array, use it directly
         console.log('Setting array data:', data); // Debug log
         setSuppliers(data);
       } else if (data && typeof data === 'object') {
@@ -384,4 +386,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-
