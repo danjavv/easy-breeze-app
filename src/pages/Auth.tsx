@@ -6,15 +6,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { LogIn, UserPlus } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<'supplier' | 'admin'>('supplier');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setUserRole } = useAuth();
 
   // Check if user is already logged in
   useEffect(() => {
@@ -37,6 +41,11 @@ const Auth = () => {
       const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            role: role
+          }
+        }
       });
       
       if (error) {
@@ -46,9 +55,10 @@ const Auth = () => {
           variant: "destructive"
         });
       } else {
+        setUserRole(role);
         toast({
           title: "Sign up successful",
-          description: "Please check your email for confirmation.",
+          description: `You have signed up as a ${role}. Please check your email for confirmation.`,
         });
       }
     } catch (error: any) {
@@ -67,7 +77,7 @@ const Auth = () => {
     setLoading(true);
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -79,9 +89,12 @@ const Auth = () => {
           variant: "destructive"
         });
       } else {
+        const userRole = data.user?.user_metadata?.role || null;
+        setUserRole(userRole);
+        
         toast({
           title: "Welcome back!",
-          description: "You've been successfully signed in.",
+          description: `You've been successfully signed in as a ${userRole || 'user'}.`,
         });
         navigate('/');
       }
@@ -181,12 +194,26 @@ const Auth = () => {
                 />
               </div>
               
+              <div className="space-y-3">
+                <Label>Account Type</Label>
+                <RadioGroup defaultValue="supplier" value={role} onValueChange={(value) => setRole(value as 'supplier' | 'admin')} className="flex gap-4">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="supplier" id="supplier" />
+                    <Label htmlFor="supplier" className="cursor-pointer">Supplier</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="admin" id="admin" />
+                    <Label htmlFor="admin" className="cursor-pointer">Admin</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              
               <Button 
                 type="submit" 
                 className="w-full" 
                 disabled={loading}
               >
-                {loading ? 'Creating account...' : 'Create account'}
+                {loading ? 'Creating account...' : `Sign up as ${role}`}
                 <UserPlus className="ml-2 h-4 w-4" />
               </Button>
             </form>
