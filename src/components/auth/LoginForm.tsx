@@ -38,22 +38,38 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
         return;
       }
       
-      // Simulating login to match the registration flow
-      // In a real application, this would verify credentials with your backend
-      const webhookUrl = 'https://danjavv.app.n8n.cloud/webhook-test/59f900d2-b5fe-4c3f-bde6-6e1d2bb061d5';
+      // Send login request to the webhook
+      const webhookUrl = 'https://danjavv.app.n8n.cloud/webhook-test/3f878768-29d0-43f6-a567-c5f127ff8855';
       
       const response = await fetch(webhookUrl, {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        }
+        },
+        body: JSON.stringify({
+          email,
+          password
+        })
       });
       
       if (!response.ok) {
-        throw new Error('Failed to authenticate');
+        throw new Error('Network response was not ok');
       }
       
-      // Simulate successful login - for a real app you would check credentials
+      const data = await response.json();
+      
+      // Check login status from response
+      if (data.status1 === 'error') {
+        toast({
+          title: "Login failed",
+          description: data.message || "Invalid email or password",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+      
+      // Success - set user role and redirect
       setUserRole('supplier');
       
       toast({
