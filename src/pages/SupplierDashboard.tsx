@@ -7,7 +7,7 @@ import {
   ChevronDown, 
   FileText, 
   FilePlus, 
-  FileTemplate, 
+  FileCode, 
   User, 
   LogOut, 
   Settings
@@ -85,7 +85,7 @@ const SupplierDashboard = () => {
               className={`w-full flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeItem === 'templates' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-secondary'}`}
               onClick={() => setActiveItem('templates')}
             >
-              <FileTemplate className="h-5 w-5" />
+              <FileCode className="h-5 w-5" />
               <span>Templates</span>
             </button>
             
