@@ -1,6 +1,7 @@
 
 import { Button } from '@/components/ui/button';
 import { FilePlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 type DashboardHeaderProps = {
   activePeriod: string;
@@ -8,6 +9,8 @@ type DashboardHeaderProps = {
 };
 
 const DashboardHeader = ({ activePeriod, deadline }: DashboardHeaderProps) => {
+  const navigate = useNavigate();
+
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
       <div>
@@ -22,7 +25,11 @@ const DashboardHeader = ({ activePeriod, deadline }: DashboardHeaderProps) => {
         </div>
       </div>
       
-      <Button size="default" className="mt-4 md:mt-0">
+      <Button 
+        size="default" 
+        className="mt-4 md:mt-0"
+        onClick={() => navigate('/new-submission')}
+      >
         <FilePlus className="mr-2 h-4 w-4" />
         New Submission
       </Button>
