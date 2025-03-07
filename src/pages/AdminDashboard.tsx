@@ -43,12 +43,24 @@ const AdminDashboard = () => {
       }
       
       const data = await response.json();
+      console.log('Fetched data:', data); // Debug log
       
+      // Handle different response formats
       if (Array.isArray(data)) {
+        console.log('Setting array data:', data); // Debug log
         setSuppliers(data);
       } else if (data && typeof data === 'object') {
-        setSuppliers([data]);
+        if (Array.isArray(data.suppliers)) {
+          // If data has a suppliers array property
+          console.log('Setting data.suppliers:', data.suppliers); // Debug log
+          setSuppliers(data.suppliers);
+        } else {
+          // If it's just a single object, wrap it in an array
+          console.log('Setting single object in array:', [data]); // Debug log
+          setSuppliers([data]);
+        }
       } else {
+        console.log('No valid data found, setting empty array'); // Debug log
         setSuppliers([]);
       }
     } catch (err) {
@@ -265,7 +277,7 @@ const AdminDashboard = () => {
                     <TableBody>
                       {suppliers.map((supplier) => (
                         <TableRow 
-                          key={supplier.id}
+                          key={supplier.id || Math.random().toString()}
                           className="cursor-pointer hover:bg-muted"
                           onClick={() => openSupplierDetails(supplier)}
                         >
@@ -372,3 +384,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+
