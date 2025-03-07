@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,14 +11,14 @@ import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 
-// Type definition for the supplier data
 interface Supplier {
-  id: number;
+  id: string;
   company_name: string;
   email: string;
   status: 'Pending' | 'Approved' | 'Rejected';
   created_at: string;
   notification_email?: string;
+  password_hash?: string;
 }
 
 const AdminDashboard = () => {
@@ -45,20 +44,11 @@ const AdminDashboard = () => {
       
       const data = await response.json();
       
-      // Check if data is an object (single supplier) and convert it to an array
-      // Also ensure the id field is properly set
-      if (data && typeof data === 'object' && !Array.isArray(data)) {
-        // If a single object is returned, convert it to an array with one element
-        const supplier = {
-          ...data,
-          id: data.id || Math.floor(Math.random() * 1000) // Ensure we have an id
-        };
-        setSuppliers([supplier]);
-      } else if (Array.isArray(data)) {
-        // If it's already an array, use it directly
+      if (Array.isArray(data)) {
         setSuppliers(data);
+      } else if (data && typeof data === 'object') {
+        setSuppliers([data]);
       } else {
-        // If data is null or undefined, set empty array
         setSuppliers([]);
       }
     } catch (err) {
@@ -83,7 +73,7 @@ const AdminDashboard = () => {
     navigate('/auth');
   };
 
-  const handleApproveSupplier = (supplierId: number) => {
+  const handleApproveSupplier = (supplierId: string) => {
     toast({
       title: "Supplier approved",
       description: `Supplier ${suppliers.find(s => s.id === supplierId)?.company_name} has been approved successfully.`,
@@ -91,7 +81,7 @@ const AdminDashboard = () => {
     setIsReviewDialogOpen(false);
   };
 
-  const handleRejectSupplier = (supplierId: number) => {
+  const handleRejectSupplier = (supplierId: string) => {
     toast({
       title: "Supplier rejected",
       description: `Supplier ${suppliers.find(s => s.id === supplierId)?.company_name} has been rejected.`,
@@ -116,15 +106,15 @@ const AdminDashboard = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Pending':
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+        return <Badge variant="warning" className="flex items-center">
           <AlertTriangle className="mr-1 h-3 w-3" /> {status}
         </Badge>;
       case 'Approved':
-        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
+        return <Badge variant="success" className="flex items-center">
           <CheckCircle className="mr-1 h-3 w-3" /> {status}
         </Badge>;
       case 'Rejected':
-        return <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">
+        return <Badge variant="danger" className="flex items-center">
           <XCircle className="mr-1 h-3 w-3" /> {status}
         </Badge>;
       default:
@@ -307,7 +297,6 @@ const AdminDashboard = () => {
         </div>
       </main>
 
-      {/* Supplier Details Dialog */}
       <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
         <DialogContent>
           <DialogHeader>
