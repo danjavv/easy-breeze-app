@@ -1,8 +1,9 @@
+
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, Users, ShoppingBag, BarChart2, Settings, Search } from 'lucide-react';
+import { LogOut, Users, ShoppingBag, BarChart2, Settings, Search, Sliders } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 const AdminDashboard = () => {
@@ -137,7 +138,20 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {['Platform Configuration', 'User Permissions', 'Notification Settings', 'Security Controls'].map((setting) => (
+                <div className="flex items-center justify-between py-2 border-b">
+                  <span className="flex items-center">
+                    <Sliders className="mr-2 h-4 w-4 text-primary" />
+                    Baseline Config
+                  </span>
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    onClick={() => navigate('/admin-baseline-config')}
+                  >
+                    Edit
+                  </Button>
+                </div>
+                {['Platform Configuration', 'User Permissions', 'Notification Settings', 'Security Controls'].map((setting, index) => (
                   <div key={setting} className="flex items-center justify-between py-2 border-b last:border-none">
                     <span>{setting}</span>
                     <Button size="sm" variant="ghost">Edit</Button>

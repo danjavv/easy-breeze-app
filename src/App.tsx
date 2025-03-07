@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import SupplierDashboard from "./pages/SupplierDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminBaselineConfig from "./pages/AdminBaselineConfig";
 import NewSubmission from "./pages/NewSubmission";
 import SubmissionResults from "./pages/SubmissionResults";
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/supplier-dashboard" element={<SupplierDashboard />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/admin-baseline-config" element={<AdminBaselineConfig />} />
             <Route path="/new-submission" element={<NewSubmission />} />
             <Route path="/submission-results/:submissionId" element={<SubmissionResults />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
