@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { UserPlus, LogIn } from 'lucide-react';
@@ -11,7 +11,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from '@/components/ui/card';
 
 const Auth = () => {
-  const [name, setName] = useState('');
   const [role, setRole] = useState<'supplier' | 'admin'>('supplier');
   const [isRegistering, setIsRegistering] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -47,16 +46,6 @@ const Auth = () => {
     setLoading(true);
     
     try {
-      if (!name.trim()) {
-        toast({
-          title: "Name required",
-          description: "Please enter your name to continue",
-          variant: "destructive"
-        });
-        setLoading(false);
-        return;
-      }
-      
       if (role === 'supplier') {
         setIsRegistering(true);
       } else {
@@ -64,7 +53,7 @@ const Auth = () => {
         
         toast({
           title: "Welcome!",
-          description: `Hello ${name}, you're continuing as an admin.`,
+          description: `You're continuing as an admin.`,
         });
         
         navigate('/admin-dashboard');
@@ -273,23 +262,11 @@ const Auth = () => {
             Welcome to SilentSource
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Enter your name and select a dashboard to continue
+            Select a dashboard to continue
           </p>
         </div>
 
         <form onSubmit={handleContinue} className="space-y-6 mt-8">
-          <div className="space-y-2">
-            <Label htmlFor="name">Your Name</Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="Enter your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-          
           <div className="space-y-3">
             <Label>Dashboard Type</Label>
             <RadioGroup 
