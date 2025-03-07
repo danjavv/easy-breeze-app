@@ -44,7 +44,23 @@ const AdminDashboard = () => {
       }
       
       const data = await response.json();
-      setSuppliers(Array.isArray(data) ? data : []);
+      
+      // Check if data is an object (single supplier) and convert it to an array
+      // Also ensure the id field is properly set
+      if (data && typeof data === 'object' && !Array.isArray(data)) {
+        // If a single object is returned, convert it to an array with one element
+        const supplier = {
+          ...data,
+          id: data.id || Math.floor(Math.random() * 1000) // Ensure we have an id
+        };
+        setSuppliers([supplier]);
+      } else if (Array.isArray(data)) {
+        // If it's already an array, use it directly
+        setSuppliers(data);
+      } else {
+        // If data is null or undefined, set empty array
+        setSuppliers([]);
+      }
     } catch (err) {
       console.error('Error fetching suppliers:', err);
       setError('Failed to load supplier data. Please try again.');
