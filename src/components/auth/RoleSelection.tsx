@@ -5,16 +5,17 @@ import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, LogIn } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 type RoleType = 'supplier' | 'admin';
 
 interface RoleSelectionProps {
   onRegisterClick: () => void;
+  onLoginClick: () => void;
 }
 
-const RoleSelection = ({ onRegisterClick }: RoleSelectionProps) => {
+const RoleSelection = ({ onRegisterClick, onLoginClick }: RoleSelectionProps) => {
   const [role, setRole] = useState<RoleType>('supplier');
   const [loading, setLoading] = useState(false);
   
@@ -86,14 +87,28 @@ const RoleSelection = ({ onRegisterClick }: RoleSelectionProps) => {
             </RadioGroup>
           </div>
           
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={loading}
-          >
-            {loading ? 'Processing...' : `Continue to ${role} dashboard`}
-            <UserPlus className="ml-2 h-4 w-4" />
-          </Button>
+          <div className="space-y-4">
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading}
+            >
+              {loading ? 'Processing...' : `Register as ${role}`}
+              <UserPlus className="ml-2 h-4 w-4" />
+            </Button>
+            
+            {role === 'supplier' && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full" 
+                onClick={onLoginClick}
+              >
+                Sign in to existing account
+                <LogIn className="ml-2 h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </form>
       </div>
     </div>

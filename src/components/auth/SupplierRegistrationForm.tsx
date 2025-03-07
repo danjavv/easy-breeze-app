@@ -12,9 +12,10 @@ import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription }
 
 interface SupplierRegistrationFormProps {
   onBack: () => void;
+  onLoginClick: () => void;
 }
 
-const SupplierRegistrationForm = ({ onBack }: SupplierRegistrationFormProps) => {
+const SupplierRegistrationForm = ({ onBack, onLoginClick }: SupplierRegistrationFormProps) => {
   const [loading, setLoading] = useState(false);
   const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
@@ -221,12 +222,7 @@ const SupplierRegistrationForm = ({ onBack }: SupplierRegistrationFormProps) => 
             <Button 
               variant="link" 
               className="text-sm font-medium"
-              onClick={() => {
-                toast({
-                  title: "Login",
-                  description: "Login functionality would be implemented here",
-                });
-              }}
+              onClick={onLoginClick}
             >
               Already have an account? Log in
               <LogIn className="ml-2 h-3 w-3" />
