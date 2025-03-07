@@ -1,18 +1,48 @@
 
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, Users, ShoppingBag, BarChart2, Settings, Search, Sliders } from 'lucide-react';
+import { LogOut, Users, ShoppingBag, BarChart2, Settings, Search, Sliders, CheckCircle, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+
+// Sample pending suppliers data
+const pendingSuppliers = [
+  { id: 1, name: 'Acme Cleaning Products', status: 'Pending review', date: '2023-05-10' },
+  { id: 2, name: 'CleanTech Solutions', status: 'Documents received', date: '2023-05-09' },
+  { id: 3, name: 'EcoClean Industries', status: 'Awaiting final approval', date: '2023-05-08' },
+];
 
 const AdminDashboard = () => {
   const { setUserRole } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
+  const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
 
   const handleSignOut = () => {
     setUserRole(null);
     navigate('/auth');
+  };
+
+  const handleApproveSupplier = (supplierId: number) => {
+    toast({
+      title: "Supplier approved",
+      description: `Supplier ${pendingSuppliers.find(s => s.id === supplierId)?.name} has been approved successfully.`,
+    });
+    setIsReviewDialogOpen(false);
+  };
+
+  const handleRejectSupplier = (supplierId: number) => {
+    toast({
+      title: "Supplier rejected",
+      description: `Supplier ${pendingSuppliers.find(s => s.id === supplierId)?.name} has been rejected.`,
+      variant: "destructive"
+    });
+    setIsReviewDialogOpen(false);
   };
 
   return (
@@ -60,6 +90,7 @@ const AdminDashboard = () => {
             <CardContent>
               <p className="text-3xl font-semibold">24</p>
               <p className="text-sm text-muted-foreground">Active suppliers</p>
+              <p className="text-sm font-medium text-amber-500 mt-1">3 Pending approval</p>
             </CardContent>
             <CardFooter>
               <Button size="sm" variant="outline" className="w-full">Manage Suppliers</Button>
@@ -109,20 +140,29 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {[1, 2, 3].map((item) => (
-                  <div key={item} className="flex items-start justify-between gap-4 border-b pb-4 last:border-none">
+                {pendingSuppliers.map((supplier) => (
+                  <div key={supplier.id} className="flex items-start justify-between gap-4 border-b pb-4 last:border-none">
                     <div className="flex items-start gap-4">
                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                        {String.fromCharCode(64 + item)}
+                        {supplier.name.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-medium">Supplier #{item}</p>
+                        <p className="font-medium">{supplier.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {['Pending review', 'Documents received', 'Awaiting final approval'][item - 1]}
+                          {supplier.status} • Applied on {supplier.date}
                         </p>
                       </div>
                     </div>
-                    <Button size="sm" variant="outline">Review</Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedSupplier(supplier);
+                        setIsReviewDialogOpen(true);
+                      }}
+                    >
+                      Review
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -162,6 +202,67 @@ const AdminDashboard = () => {
           </Card>
         </div>
       </main>
+
+      {/* Supplier Review Dialog */}
+      <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Review Supplier Application</DialogTitle>
+            <DialogDescription>
+              {selectedSupplier ? `Review application for ${selectedSupplier.name}` : 'Supplier details'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedSupplier && (
+            <>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Supplier Information</h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <span className="text-muted-foreground">Company Name:</span>
+                    <span>{selectedSupplier.name}</span>
+                    
+                    <span className="text-muted-foreground">Application Date:</span>
+                    <span>{selectedSupplier.date}</span>
+                    
+                    <span className="text-muted-foreground">Current Status:</span>
+                    <span>{selectedSupplier.status}</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Contact Information</h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <span className="text-muted-foreground">Email:</span>
+                    <span>{selectedSupplier.name.toLowerCase().replace(/\s+/g, '')}@example.com</span>
+                    
+                    <span className="text-muted-foreground">Phone:</span>
+                    <span>+1 (555) 123-4567</span>
+                  </div>
+                </div>
+              </div>
+              
+              <DialogFooter className="flex flex-col sm:flex-row gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => handleRejectSupplier(selectedSupplier.id)}
+                  className="w-full sm:w-auto flex items-center"
+                >
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Reject
+                </Button>
+                <Button
+                  onClick={() => handleApproveSupplier(selectedSupplier.id)}
+                  className="w-full sm:w-auto flex items-center"
+                >
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Approve
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

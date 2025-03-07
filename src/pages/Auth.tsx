@@ -108,8 +108,8 @@ const Auth = () => {
       setUserRole('supplier');
       
       toast({
-        title: "Registration successful!",
-        description: `Welcome ${companyName}, your supplier account has been created.`,
+        title: "Registration submitted",
+        description: "Your registration has been submitted for approval. You'll be notified once it's reviewed.",
       });
       
       navigate('/supplier-dashboard');

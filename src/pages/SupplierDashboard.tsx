@@ -6,9 +6,12 @@ import SupplierSidebar from '@/components/dashboard/SupplierSidebar';
 import SupplierHeader from '@/components/dashboard/SupplierHeader';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import SubmissionsTable from '@/components/dashboard/SubmissionsTable';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, Clock } from 'lucide-react';
 
 const SupplierDashboard = () => {
-  const { userRole } = useAuth();
+  const { userRole, supplierStatus } = useAuth();
   const navigate = useNavigate();
   const [activeItem, setActiveItem] = useState('submissions');
 
@@ -35,6 +38,50 @@ const SupplierDashboard = () => {
       statusColor: 'text-red-500'
     },
   ];
+
+  // If supplier account is pending approval or rejected
+  if (supplierStatus !== 'approved') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {supplierStatus === 'pending' ? (
+                <>
+                  <Clock className="h-5 w-5 text-amber-500" />
+                  Account Pending Approval
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="h-5 w-5 text-red-500" />
+                  Account Registration Rejected
+                </>
+              )}
+            </CardTitle>
+            <CardDescription>
+              {supplierStatus === 'pending' 
+                ? 'Your supplier account is currently under review by our admin team.'
+                : 'Unfortunately, your supplier account registration was not approved.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm">
+              {supplierStatus === 'pending' 
+                ? 'Please check back later or contact support if you have any questions about your application status.'
+                : 'If you believe this is an error, please contact our support team for assistance.'}
+            </p>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => navigate('/auth')}
+            >
+              Back to Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex bg-background">
