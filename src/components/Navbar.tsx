@@ -1,10 +1,16 @@
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from "@/lib/utils";
 import Button from './Button';
+import { useAuth } from '@/contexts/AuthContext';
+import { LogOut, Menu, X } from 'lucide-react';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -22,6 +28,30 @@ const Navbar = () => {
     };
   }, []);
 
+  const handleAuthAction = () => {
+    if (user) {
+      signOut();
+    } else {
+      navigate('/auth');
+    }
+  };
+
+  const handleGetStarted = () => {
+    if (user) {
+      // Navigate to dashboard or app main page for logged in users
+      // For now, just scroll to features
+      const element = document.getElementById('features');
+      if (element) {
+        window.scrollTo({
+          behavior: 'smooth',
+          top: element.offsetTop - 100
+        });
+      }
+    } else {
+      navigate('/auth?tab=register');
+    }
+  };
+
   return (
     <header 
       className={cn(
@@ -35,6 +65,7 @@ const Navbar = () => {
           <span className="font-semibold">Essence</span>
         </a>
         
+        {/* Desktop Navigation */}
         <nav className="hidden md:flex space-x-8 items-center">
           {['Products', 'Features', 'About', 'Contact'].map((item) => (
             <a 
@@ -47,15 +78,72 @@ const Navbar = () => {
           ))}
         </nav>
         
-        <div className="flex items-center space-x-4">
-          <Button variant="outline" size="sm" className="hidden sm:inline-flex">
-            Log in
+        {/* Mobile Menu Button */}
+        <button 
+          className="md:hidden text-foreground p-2"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? <X /> : <Menu />}
+        </button>
+        
+        {/* Auth Buttons */}
+        <div className="hidden md:flex items-center space-x-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="hidden sm:inline-flex"
+            onClick={handleAuthAction}
+          >
+            {user ? 'Log out' : 'Log in'}
+            {user && <LogOut className="ml-2 h-4 w-4" />}
           </Button>
-          <Button size="sm">
-            Get Started
+          <Button size="sm" onClick={handleGetStarted}>
+            {user ? 'Dashboard' : 'Get Started'}
           </Button>
         </div>
       </div>
+      
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden absolute top-full left-0 right-0 glass shadow-md py-4 px-6">
+          <nav className="flex flex-col space-y-4">
+            {['Products', 'Features', 'About', 'Contact'].map((item) => (
+              <a 
+                key={item} 
+                href={`#${item.toLowerCase()}`}
+                className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item}
+              </a>
+            ))}
+            <hr className="border-foreground/10" />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full justify-center"
+              onClick={() => {
+                handleAuthAction();
+                setMobileMenuOpen(false);
+              }}
+            >
+              {user ? 'Log out' : 'Log in'}
+              {user && <LogOut className="ml-2 h-4 w-4" />}
+            </Button>
+            <Button 
+              size="sm" 
+              className="w-full justify-center"
+              onClick={() => {
+                handleGetStarted();
+                setMobileMenuOpen(false);
+              }}
+            >
+              {user ? 'Dashboard' : 'Get Started'}
+            </Button>
+          </nav>
+        </div>
+      )}
     </header>
   );
 };
