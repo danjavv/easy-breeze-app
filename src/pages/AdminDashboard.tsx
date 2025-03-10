@@ -37,7 +37,7 @@ const AdminDashboard = () => {
     setError(null);
     
     try {
-      const response = await fetch('https://danjavv.app.n8n.cloud/webhook-test/37825e51-69ed-4104-9def-af272b819973');
+      const response = await fetch('https://danjavv.app.n8n.cloud/webhook/37825e51-69ed-4104-9def-af272b819973');
       
       if (!response.ok) {
         throw new Error('Failed to fetch suppliers');
