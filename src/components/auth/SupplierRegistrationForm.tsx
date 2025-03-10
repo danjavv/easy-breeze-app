@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -68,8 +67,7 @@ const SupplierRegistrationForm = ({ onBack, onLoginClick }: SupplierRegistration
         return;
       }
       
-      // Send data to webhook
-      const webhookUrl = 'https://danjavv.app.n8n.cloud/webhook-test/59f900d2-b5fe-4c3f-bde6-6e1d2bb061d5';
+      const webhookUrl = 'https://danjavv.app.n8n.cloud/webhook/59f900d2-b5fe-4c3f-bde6-6e1d2bb061d5';
       
       const response = await fetch(webhookUrl, {
         method: 'POST',
