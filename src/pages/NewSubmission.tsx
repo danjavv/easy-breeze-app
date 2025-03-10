@@ -19,7 +19,7 @@ const NewSubmission = () => {
     
     try {
       // Send GET request to the webhook to fetch the CSV template
-      const response = await fetch('https://danjavv.app.n8n.cloud/webhook/b743582d-b89f-4840-92e0-29a75a349878');
+      const response = await fetch('https://danjavv.app.n8n.cloud/webhook/e6369e97-7e71-4787-b1ef-54d8d456874f');
       
       if (!response.ok) {
         throw new Error('Failed to download template');
