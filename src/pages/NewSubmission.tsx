@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Upload, FileCode, Check } from 'lucide-react';
@@ -42,16 +41,13 @@ const NewSubmission = () => {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       
-      toast({
-        title: "Template Downloaded",
-        description: "CSV template has been downloaded successfully.",
+      toast.success("Template Downloaded", {
+        description: "CSV template has been downloaded successfully."
       });
     } catch (error) {
       console.error('Download error:', error);
-      toast({
-        title: "Download Failed",
-        description: "Could not download the CSV template. Please try again.",
-        variant: "destructive",
+      toast.error("Download Failed", {
+        description: "Could not download the CSV template. Please try again."
       });
     } finally {
       setIsDownloading(false);
@@ -68,10 +64,8 @@ const NewSubmission = () => {
     e.preventDefault();
     
     if (!file) {
-      toast({
-        title: "Missing File",
-        description: "Please upload a completed CSV file before submitting.",
-        variant: "destructive",
+      toast.error("Missing File", {
+        description: "Please upload a completed CSV file before submitting."
       });
       return;
     }
@@ -80,9 +74,8 @@ const NewSubmission = () => {
     
     // Simulate submission process
     setTimeout(() => {
-      toast({
-        title: "Submission Successful",
-        description: "Your LAS submission has been received.",
+      toast.success("Submission Successful", {
+        description: "Your LAS submission has been received."
       });
       setIsSubmitting(false);
       navigate('/supplier-dashboard');
