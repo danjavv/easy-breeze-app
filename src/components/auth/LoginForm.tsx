@@ -38,8 +38,8 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
         return;
       }
       
-      // Send login request to the webhook
-      const webhookUrl = 'https://danjavv.app.n8n.cloud/webhook-test/3f878768-29d0-43f6-a567-c5f127ff8855';
+      // Updated webhook URL for login
+      const webhookUrl = 'https://danjavv.app.n8n.cloud/webhook/3f878768-29d0-43f6-a567-c5f127ff8855';
       
       const response = await fetch(webhookUrl, {
         method: 'POST',
