@@ -46,13 +46,42 @@ const AdminBaselineConfig = () => {
     }));
   };
 
-  const handleSave = () => {
-    // Here you would save the configuration to the backend
-    toast.success('Baseline configuration saved successfully');
-    if (isActive) {
-      toast.info('Configuration set as active');
+  const handleSave = async () => {
+    try {
+      // Prepare data for the webhook
+      const webhookData = {
+        name: configName,
+        thresholds: {
+          detergency: thresholdValues.detergency,
+          foaming: thresholdValues.foaming,
+          biodegradability: thresholdValues.biodegradability,
+          purity: thresholdValues.purity
+        }
+      };
+
+      // Send POST request to the webhook
+      const response = await fetch('https://danjavv.app.n8n.cloud/webhook/b912a264-8bca-4bba-8d47-535eae93b7eb', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData),
+      });
+
+      if (response.ok) {
+        toast.success('Baseline configuration saved successfully');
+        if (isActive) {
+          toast.info('Configuration set as active');
+        }
+        navigate('/admin-dashboard');
+      } else {
+        toast.error('Failed to save configuration');
+        console.error('Failed to save configuration:', await response.text());
+      }
+    } catch (error) {
+      toast.error('Error saving configuration');
+      console.error('Error saving configuration:', error);
     }
-    navigate('/admin-dashboard');
   };
 
   const handleCancel = () => {
