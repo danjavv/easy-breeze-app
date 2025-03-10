@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ingredients: {
+        Row: {
+          biodegrability: number | null
+          created_at: string
+          detergency: number | null
+          foaming: number | null
+          id: string
+          name: string | null
+          purity: number | null
+        }
+        Insert: {
+          biodegrability?: number | null
+          created_at?: string
+          detergency?: number | null
+          foaming?: number | null
+          id?: string
+          name?: string | null
+          purity?: number | null
+        }
+        Update: {
+          biodegrability?: number | null
+          created_at?: string
+          detergency?: number | null
+          foaming?: number | null
+          id?: string
+          name?: string | null
+          purity?: number | null
+        }
+        Relationships: []
+      }
       suppliers: {
         Row: {
           company_name: string

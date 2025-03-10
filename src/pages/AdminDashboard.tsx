@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -46,18 +45,14 @@ const AdminDashboard = () => {
       const data = await response.json();
       console.log('Fetched data:', data); // Debug log
       
-      // Properly handle different response formats
       if (Array.isArray(data)) {
-        // If response is already an array, use it directly
         console.log('Setting array data:', data); // Debug log
         setSuppliers(data);
       } else if (data && typeof data === 'object') {
         if (Array.isArray(data.suppliers)) {
-          // If data has a suppliers array property
           console.log('Setting data.suppliers:', data.suppliers); // Debug log
           setSuppliers(data.suppliers);
         } else {
-          // If it's just a single object, wrap it in an array
           console.log('Setting single object in array:', [data]); // Debug log
           setSuppliers([data]);
         }
@@ -136,6 +131,10 @@ const AdminDashboard = () => {
     }
   };
 
+  const goToBaselineConfig = () => {
+    navigate('/admin-baseline-config');
+  };
+
   return (
     <div className="min-h-screen bg-muted/40">
       <header className="bg-background shadow-sm">
@@ -169,7 +168,7 @@ const AdminDashboard = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center">
@@ -221,6 +220,30 @@ const AdminDashboard = () => {
             </CardContent>
             <CardFooter>
               <Button size="sm" variant="outline" className="w-full">View Analytics</Button>
+            </CardFooter>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center">
+                <Sliders className="mr-2 h-5 w-5 text-primary" />
+                Baseline Config
+              </CardTitle>
+              <CardDescription>Set ingredient standards</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-semibold">4</p>
+              <p className="text-sm text-muted-foreground">Ingredient parameters</p>
+            </CardContent>
+            <CardFooter>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full"
+                onClick={goToBaselineConfig}
+              >
+                Configure Baseline
+              </Button>
             </CardFooter>
           </Card>
         </div>
