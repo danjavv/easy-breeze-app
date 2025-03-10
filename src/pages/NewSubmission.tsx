@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Upload, FileCode, Check } from 'lucide-react';
@@ -20,7 +19,6 @@ const NewSubmission = () => {
     
     try {
       // Send GET request to the webhook to fetch the CSV template
-      // Fixed URL to use the correct webhook endpoint
       const response = await fetch('https://danjavv.app.n8n.cloud/webhook/e6369e97-7e71-4787-b1ef-54d8d456874f');
       
       if (!response.ok) {
@@ -73,6 +71,9 @@ const NewSubmission = () => {
     }
 
     setIsSubmitting(true);
+    toast.info("Processing Submission", {
+      description: "Uploading and analyzing your data. Please wait..."
+    });
     
     try {
       // Create a FormData object to send the file
@@ -80,7 +81,7 @@ const NewSubmission = () => {
       formData.append('file', file);
       formData.append('submissionLabel', submissionLabel);
       
-      // Send POST request to the webhook with the CSV file
+      // Send POST request to the webhook with the CSV file and wait for results
       const response = await fetch('https://danjavv.app.n8n.cloud/webhook/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
         method: 'POST',
         body: formData,
@@ -90,10 +91,23 @@ const NewSubmission = () => {
         throw new Error('Failed to upload CSV file');
       }
       
+      // Parse the results from the response
+      const results = await response.json();
+      
+      console.log('Submission results:', results);
+      
       toast.success("Submission Successful", {
-        description: "Your LAS submission has been received."
+        description: "Your LAS submission has been processed."
       });
-      navigate('/supplier-dashboard');
+      
+      // Navigate to the results page with the submission ID
+      // Assuming the API returns a submissionId in the results
+      if (results && results.submissionId) {
+        navigate(`/submission-results/${results.submissionId}`);
+      } else {
+        // If no specific ID is returned, just navigate to the dashboard
+        navigate('/supplier-dashboard');
+      }
     } catch (error) {
       console.error('Upload error:', error);
       toast.error("Submission Failed", {
@@ -208,7 +222,7 @@ const NewSubmission = () => {
                   className="w-full py-6 text-lg"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Submitting...' : 'Submit LAS Data'}
+                  {isSubmitting ? 'Processing...' : 'Submit LAS Data'}
                 </Button>
               </div>
             </form>
