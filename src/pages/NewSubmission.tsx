@@ -6,21 +6,56 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const NewSubmission = () => {
   const [submissionLabel, setSubmissionLabel] = useState('ACME_Q2_Batch_2');
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
-  const handleDownloadTemplate = () => {
-    // In a real application, this would trigger a file download
-    toast({
-      title: "Template Downloaded",
-      description: "CSV template has been downloaded successfully.",
-    });
+  const handleDownloadTemplate = async () => {
+    setIsDownloading(true);
+    
+    try {
+      // Send GET request to the webhook to fetch the CSV template
+      const response = await fetch('https://danjavv.app.n8n.cloud/webhook/b743582d-b89f-4840-92e0-29a75a349878');
+      
+      if (!response.ok) {
+        throw new Error('Failed to download template');
+      }
+      
+      // Get the blob from the response
+      const blob = await response.blob();
+      
+      // Create a download link and trigger download
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = 'las_submission_template.csv';
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Template Downloaded",
+        description: "CSV template has been downloaded successfully.",
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download Failed",
+        description: "Could not download the CSV template. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,9 +135,10 @@ const NewSubmission = () => {
                       type="button"
                       onClick={handleDownloadTemplate}
                       className="flex items-center gap-2"
+                      disabled={isDownloading}
                     >
                       <Download size={18} />
-                      Download CSV Template
+                      {isDownloading ? 'Downloading...' : 'Download CSV Template'}
                     </Button>
                   </div>
                   
