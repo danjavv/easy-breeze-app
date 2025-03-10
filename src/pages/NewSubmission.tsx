@@ -62,7 +62,7 @@ const NewSubmission = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!file) {
@@ -74,14 +74,34 @@ const NewSubmission = () => {
 
     setIsSubmitting(true);
     
-    // Simulate submission process
-    setTimeout(() => {
+    try {
+      // Create a FormData object to send the file
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('submissionLabel', submissionLabel);
+      
+      // Send POST request to the webhook with the CSV file
+      const response = await fetch('https://danjavv.app.n8n.cloud/webhook/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload CSV file');
+      }
+      
       toast.success("Submission Successful", {
         description: "Your LAS submission has been received."
       });
-      setIsSubmitting(false);
       navigate('/supplier-dashboard');
-    }, 1500);
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error("Submission Failed", {
+        description: "Could not submit your CSV file. Please try again."
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
