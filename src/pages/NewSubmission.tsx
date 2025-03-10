@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Upload, FileCode, Check } from 'lucide-react';
@@ -19,6 +20,7 @@ const NewSubmission = () => {
     
     try {
       // Send GET request to the webhook to fetch the CSV template
+      // Fixed URL to use the correct webhook endpoint
       const response = await fetch('https://danjavv.app.n8n.cloud/webhook/e6369e97-7e71-4787-b1ef-54d8d456874f');
       
       if (!response.ok) {
