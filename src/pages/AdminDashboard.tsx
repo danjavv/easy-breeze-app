@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -22,6 +21,37 @@ interface Supplier {
   password_hash?: string;
 }
 
+const mockSuppliers: Supplier[] = [
+  {
+    id: "1",
+    company_name: "Eco Ingredients Co.",
+    email: "contact@ecoingredients.com",
+    status: "Pending",
+    created_at: "2025-03-01T10:30:00Z"
+  },
+  {
+    id: "2",
+    company_name: "Natural Extracts Ltd.",
+    email: "info@naturalextracts.com",
+    status: "Approved",
+    created_at: "2025-02-15T09:15:00Z"
+  },
+  {
+    id: "3",
+    company_name: "Pure Botanicals Inc.",
+    email: "sales@purebotanicals.com",
+    status: "Rejected",
+    created_at: "2025-02-28T14:45:00Z"
+  },
+  {
+    id: "4",
+    company_name: "Organic Essentials",
+    email: "support@organicessen.com",
+    status: "Pending",
+    created_at: "2025-03-05T11:20:00Z"
+  }
+];
+
 const AdminDashboard = () => {
   const { setUserRole } = useAuth();
   const navigate = useNavigate();
@@ -32,46 +62,74 @@ const AdminDashboard = () => {
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
   const [isSupplierListOpen, setIsSupplierListOpen] = useState(false);
+  const [isMockData, setIsMockData] = useState(false);
+  const [loadAttempts, setLoadAttempts] = useState(0);
 
   const fetchSuppliers = async () => {
     setIsLoading(true);
     setError(null);
+    setIsMockData(false);
     
     try {
-      const response = await fetch('https://danjavv.app.n8n.cloud/webhook-test/37825e51-69ed-4104-9def-af272b819973');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
+      const response = await fetch(
+        'https://danjavv.app.n8n.cloud/webhook-test/37825e51-69ed-4104-9def-af272b819973',
+        { signal: controller.signal }
+      );
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch suppliers');
+        throw new Error(`Server responded with status: ${response.status}`);
       }
       
       const data = await response.json();
-      console.log('Fetched data:', data); // Debug log
+      console.log('Fetched data:', data);
       
       if (Array.isArray(data)) {
-        console.log('Setting array data:', data); // Debug log
         setSuppliers(data);
       } else if (data && typeof data === 'object') {
         if (Array.isArray(data.suppliers)) {
-          console.log('Setting data.suppliers:', data.suppliers); // Debug log
           setSuppliers(data.suppliers);
         } else {
-          console.log('Setting single object in array:', [data]); // Debug log
           setSuppliers([data]);
         }
       } else {
-        console.log('No valid data found, setting empty array'); // Debug log
         setSuppliers([]);
       }
       
       setIsSupplierListOpen(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching suppliers:', err);
-      setError('Failed to load supplier data. Please try again.');
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load supplier data. Please try again.",
-      });
+      
+      const newAttempts = loadAttempts + 1;
+      setLoadAttempts(newAttempts);
+      
+      if (newAttempts >= 3) {
+        console.log('Falling back to mock data after failed attempts');
+        setSuppliers(mockSuppliers);
+        setIsMockData(true);
+        setIsSupplierListOpen(true);
+        setError('Could not connect to the supplier service. Showing sample data instead.');
+        toast({
+          title: "Using sample data",
+          description: "Could not connect to the supplier service. Showing sample data instead.",
+          variant: "default"
+        });
+      } else {
+        setError(`Failed to load supplier data: ${err.message || 'Unknown error'}. Attempt ${newAttempts}/3`);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: `Failed to load supplier data. Attempt ${newAttempts}/3. Retrying...`,
+        });
+        
+        setTimeout(() => {
+          fetchSuppliers();
+        }, 2000);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -83,6 +141,14 @@ const AdminDashboard = () => {
   };
 
   const handleApproveSupplier = (supplierId: string) => {
+    setSuppliers(prev => 
+      prev.map(supplier => 
+        supplier.id === supplierId 
+          ? { ...supplier, status: 'Approved' as const } 
+          : supplier
+      )
+    );
+    
     toast({
       title: "Supplier approved",
       description: `Supplier ${suppliers.find(s => s.id === supplierId)?.company_name} has been approved successfully.`,
@@ -91,6 +157,14 @@ const AdminDashboard = () => {
   };
 
   const handleRejectSupplier = (supplierId: string) => {
+    setSuppliers(prev => 
+      prev.map(supplier => 
+        supplier.id === supplierId 
+          ? { ...supplier, status: 'Rejected' as const } 
+          : supplier
+      )
+    );
+    
     toast({
       title: "Supplier rejected",
       description: `Supplier ${suppliers.find(s => s.id === supplierId)?.company_name} has been rejected.`,
@@ -134,6 +208,8 @@ const AdminDashboard = () => {
   const goToBaselineConfig = () => {
     navigate('/admin-baseline-config');
   };
+
+  const pendingSupplierCount = suppliers.filter(s => s.status === 'Pending').length;
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -181,7 +257,7 @@ const AdminDashboard = () => {
               <p className="text-3xl font-semibold">{suppliers.length || 0}</p>
               <p className="text-sm text-muted-foreground">Active suppliers</p>
               <p className="text-sm font-medium text-amber-500 mt-1">
-                {suppliers.filter(s => s.status === 'Pending').length || 0} Pending approval
+                {pendingSupplierCount || 0} Pending approval
               </p>
             </CardContent>
             <CardFooter>
@@ -267,19 +343,25 @@ const AdminDashboard = () => {
         </div>
       </main>
 
-      {/* Supplier List Dialog */}
       <Dialog open={isSupplierListOpen} onOpenChange={setIsSupplierListOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>Supplier Management</DialogTitle>
+            <DialogTitle>
+              Supplier Management
+              {isMockData && <span className="ml-2 text-xs text-amber-500">(Sample Data)</span>}
+            </DialogTitle>
             <DialogDescription>
-              View and manage all registered suppliers
+              {isMockData 
+                ? "Displaying sample data as the supplier service is currently unavailable"
+                : "View and manage all registered suppliers"}
             </DialogDescription>
           </DialogHeader>
           
           {isLoading ? (
-            <div className="flex justify-center items-center py-8">
+            <div className="flex flex-col justify-center items-center py-8 space-y-4">
               <RefreshCw className="animate-spin h-8 w-8 text-primary" />
+              <p className="text-muted-foreground">Fetching supplier data...</p>
+              <p className="text-xs text-muted-foreground">Attempt {loadAttempts + 1}/3</p>
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -289,7 +371,10 @@ const AdminDashboard = () => {
                 variant="outline" 
                 size="sm" 
                 className="mt-4"
-                onClick={fetchSuppliers}
+                onClick={() => {
+                  setLoadAttempts(0);
+                  fetchSuppliers();
+                }}
               >
                 Try Again
               </Button>
@@ -336,13 +421,17 @@ const AdminDashboard = () => {
             </div>
           )}
           
-          <DialogFooter>
+          <DialogFooter className="flex items-center justify-between">
+            {isMockData && (
+              <p className="text-xs text-muted-foreground">
+                Note: Actions on sample data will only be persisted for this session
+              </p>
+            )}
             <Button onClick={() => setIsSupplierListOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Supplier Details Dialog */}
       <Dialog open={isSupplierDialogOpen} onOpenChange={setIsSupplierDialogOpen}>
         <DialogContent>
           <DialogHeader>
