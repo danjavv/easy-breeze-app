@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, Users, ShoppingBag, BarChart2, Settings, Search, Sliders, CheckCircle, XCircle, RefreshCw, AlertTriangle, Info } from 'lucide-react';
+import { LogOut, Users, ShoppingBag, BarChart2, Settings, Search, Sliders, CheckCircle, XCircle, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -26,17 +27,18 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
-  const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+  const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
+  const [isSupplierListOpen, setIsSupplierListOpen] = useState(false);
 
   const fetchSuppliers = async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      const response = await fetch('https://danjavv.app.n8n.cloud/webhook/37825e51-69ed-4104-9def-af272b819973');
+      const response = await fetch('https://danjavv.app.n8n.cloud/webhook-test/37825e51-69ed-4104-9def-af272b819973');
       
       if (!response.ok) {
         throw new Error('Failed to fetch suppliers');
@@ -60,6 +62,8 @@ const AdminDashboard = () => {
         console.log('No valid data found, setting empty array'); // Debug log
         setSuppliers([]);
       }
+      
+      setIsSupplierListOpen(true);
     } catch (err) {
       console.error('Error fetching suppliers:', err);
       setError('Failed to load supplier data. Please try again.');
@@ -73,10 +77,6 @@ const AdminDashboard = () => {
     }
   };
 
-  useEffect(() => {
-    fetchSuppliers();
-  }, []);
-
   const handleSignOut = () => {
     setUserRole(null);
     navigate('/auth');
@@ -87,7 +87,7 @@ const AdminDashboard = () => {
       title: "Supplier approved",
       description: `Supplier ${suppliers.find(s => s.id === supplierId)?.company_name} has been approved successfully.`,
     });
-    setIsReviewDialogOpen(false);
+    setIsSupplierDialogOpen(false);
   };
 
   const handleRejectSupplier = (supplierId: string) => {
@@ -96,12 +96,12 @@ const AdminDashboard = () => {
       description: `Supplier ${suppliers.find(s => s.id === supplierId)?.company_name} has been rejected.`,
       variant: "destructive"
     });
-    setIsReviewDialogOpen(false);
+    setIsSupplierDialogOpen(false);
   };
 
   const openSupplierDetails = (supplier: Supplier) => {
     setSelectedSupplier(supplier);
-    setIsReviewDialogOpen(true);
+    setIsSupplierDialogOpen(true);
   };
 
   const formatDate = (dateString: string) => {
@@ -178,14 +178,32 @@ const AdminDashboard = () => {
               <CardDescription>Manage supplier accounts</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-semibold">{suppliers.length}</p>
+              <p className="text-3xl font-semibold">{suppliers.length || 0}</p>
               <p className="text-sm text-muted-foreground">Active suppliers</p>
               <p className="text-sm font-medium text-amber-500 mt-1">
-                {suppliers.filter(s => s.status === 'Pending').length} Pending approval
+                {suppliers.filter(s => s.status === 'Pending').length || 0} Pending approval
               </p>
             </CardContent>
             <CardFooter>
-              <Button size="sm" variant="outline" className="w-full">Manage Suppliers</Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full"
+                onClick={fetchSuppliers}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <Users className="mr-2 h-4 w-4" />
+                    Manage Suppliers
+                  </>
+                )}
+              </Button>
             </CardFooter>
           </Card>
 
@@ -247,99 +265,90 @@ const AdminDashboard = () => {
             </CardFooter>
           </Card>
         </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <Card className="lg:col-span-3">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <div>
-                <CardTitle>Supplier Onboarding Status</CardTitle>
-                <CardDescription>New supplier account approvals pending</CardDescription>
-              </div>
+      </main>
+
+      {/* Supplier List Dialog */}
+      <Dialog open={isSupplierListOpen} onOpenChange={setIsSupplierListOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Supplier Management</DialogTitle>
+            <DialogDescription>
+              View and manage all registered suppliers
+            </DialogDescription>
+          </DialogHeader>
+          
+          {isLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <RefreshCw className="animate-spin h-8 w-8 text-primary" />
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
+              <p className="text-destructive">{error}</p>
               <Button 
                 variant="outline" 
                 size="sm" 
+                className="mt-4"
                 onClick={fetchSuppliers}
-                disabled={isLoading}
               >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                Refresh
+                Try Again
               </Button>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex justify-center items-center py-8">
-                  <RefreshCw className="animate-spin h-8 w-8 text-primary" />
-                </div>
-              ) : error ? (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
-                  <p className="text-destructive">{error}</p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="mt-4"
-                    onClick={fetchSuppliers}
-                  >
-                    Try Again
-                  </Button>
-                </div>
-              ) : suppliers.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No suppliers found
-                </div>
-              ) : (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Company Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Created At</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {suppliers.map((supplier) => (
-                        <TableRow 
-                          key={supplier.id || Math.random().toString()}
-                          className="cursor-pointer hover:bg-muted"
+            </div>
+          ) : suppliers.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No suppliers found
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Company Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Created At</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {suppliers.map((supplier) => (
+                    <TableRow 
+                      key={supplier.id || Math.random().toString()}
+                      className="cursor-pointer hover:bg-muted"
+                    >
+                      <TableCell className="font-medium">{supplier.company_name}</TableCell>
+                      <TableCell>{supplier.email}</TableCell>
+                      <TableCell>{getStatusBadge(supplier.status)}</TableCell>
+                      <TableCell>{formatDate(supplier.created_at)}</TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
                           onClick={() => openSupplierDetails(supplier)}
                         >
-                          <TableCell className="font-medium">{supplier.company_name}</TableCell>
-                          <TableCell>{supplier.email}</TableCell>
-                          <TableCell>{getStatusBadge(supplier.status)}</TableCell>
-                          <TableCell>{formatDate(supplier.created_at)}</TableCell>
-                          <TableCell className="text-right">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openSupplierDetails(supplier);
-                              }}
-                            >
-                              <Info className="h-4 w-4" />
-                              <span className="sr-only">Details</span>
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+                          View Details
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button onClick={() => setIsSupplierListOpen(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
+      {/* Supplier Details Dialog */}
+      <Dialog open={isSupplierDialogOpen} onOpenChange={setIsSupplierDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Supplier Details</DialogTitle>
             <DialogDescription>
-              {selectedSupplier ? `Review application for ${selectedSupplier.company_name}` : 'Supplier details'}
+              {selectedSupplier ? `Review information for ${selectedSupplier.company_name}` : 'Supplier details'}
             </DialogDescription>
           </DialogHeader>
           
@@ -393,7 +402,7 @@ const AdminDashboard = () => {
                 )}
                 {selectedSupplier.status !== 'Pending' && (
                   <Button
-                    onClick={() => setIsReviewDialogOpen(false)}
+                    onClick={() => setIsSupplierDialogOpen(false)}
                     className="w-full sm:w-auto"
                   >
                     Close
