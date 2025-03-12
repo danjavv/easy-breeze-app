@@ -1,3 +1,4 @@
+
 import { Supplier } from '@/components/admin/SupplierList';
 import { toast } from '@/hooks/use-toast';
 
@@ -91,55 +92,16 @@ export const fetchSupplierData = async (): Promise<{
   isMockData: boolean, 
   error: string | null 
 }> => {
-  try {
-    const webhookUrl = "https://danjavv.app.n8n.cloud/webhook/37825e51-69ed-4104-9def-af272b819973";
-    
-    const response = await fetch(webhookUrl, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    // The response is expected to be a direct array of suppliers
-    const suppliersArray = Array.isArray(data) ? data : [data];
-    
-    const formattedData = suppliersArray.map((supplier: any) => ({
-      ...supplier,
-      status: supplier.status as 'Pending' | 'Approved' | 'Rejected'
-    }));
-    
-    toast({
-      title: "Suppliers loaded",
-      description: `Successfully loaded ${formattedData.length} suppliers.`,
-      variant: "default"
-    });
-    
-    return {
-      suppliers: formattedData,
-      isMockData: false,
-      error: null
-    };
-    
-  } catch (err: any) {
-    console.error('Error fetching suppliers:', err);
-    
-    toast({
-      title: "Using default data",
-      description: "Could not connect to the supplier service. Showing default data instead.",
-      variant: "default"
-    });
-    
-    return {
-      suppliers: defaultSuppliers,
-      isMockData: true,
-      error: 'Could not connect to the supplier service. Showing default data instead.'
-    };
-  }
+  // Return default suppliers directly without making an API call
+  toast({
+    title: "Suppliers loaded",
+    description: `Successfully loaded ${defaultSuppliers.length} suppliers.`,
+    variant: "default"
+  });
+  
+  return {
+    suppliers: defaultSuppliers,
+    isMockData: true,
+    error: null
+  };
 };
