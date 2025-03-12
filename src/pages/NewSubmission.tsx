@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Upload, FileCode, Check } from 'lucide-react';
+import { Download, Upload, FileCode, Check, Loader } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,6 @@ const NewSubmission = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [submissionResult, setSubmissionResult] = useState<any>(null);
   const navigate = useNavigate();
 
   const handleDownloadTemplate = async () => {
@@ -73,7 +72,6 @@ const NewSubmission = () => {
     }
 
     setIsSubmitting(true);
-    setSubmissionResult(null);
     
     toast.info("Processing Submission", {
       description: "Uploading and analyzing your data. Please wait..."
@@ -84,7 +82,7 @@ const NewSubmission = () => {
       formData.append('file', file);
       formData.append('submissionLabel', submissionLabel);
       
-      const response = await fetch('https://danjavv.app.n8n.cloud/webhook-test/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
+      const response = await fetch('https://danjavv.app.n8n.cloud/webhook/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
         method: 'POST',
         body: formData,
       });
@@ -94,11 +92,16 @@ const NewSubmission = () => {
       }
       
       const results = await response.json();
-      setSubmissionResult(results);
+      
+      // Store the results in sessionStorage to pass to the results page
+      sessionStorage.setItem('submissionResults', JSON.stringify(results));
       
       toast.success("Submission Successful", {
         description: "Your LAS submission has been processed successfully."
       });
+      
+      // Navigate to results page with submission ID
+      navigate(`/submission-results/${results[0]?.submission_id || 'latest'}`);
       
     } catch (error) {
       console.error('Upload error:', error);
@@ -158,7 +161,7 @@ const NewSubmission = () => {
                       className="flex items-center gap-2"
                       disabled={isDownloading}
                     >
-                      <Download size={18} />
+                      {isDownloading ? <Loader className="animate-spin" size={18} /> : <Download size={18} />}
                       {isDownloading ? 'Downloading...' : 'Download CSV Template'}
                     </Button>
                   </div>
@@ -214,19 +217,15 @@ const NewSubmission = () => {
                   className="w-full py-6 text-lg"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Processing...' : 'Submit LAS Data'}
+                  {isSubmitting ? (
+                    <>
+                      <Loader className="animate-spin mr-2" />
+                      Processing...
+                    </>
+                  ) : 'Submit LAS Data'}
                 </Button>
               </div>
             </form>
-
-            {submissionResult && (
-              <div className="mt-6 p-4 bg-muted rounded-lg">
-                <h3 className="font-medium mb-2">Submission Results:</h3>
-                <pre className="whitespace-pre-wrap text-sm">
-                  {JSON.stringify(submissionResult, null, 2)}
-                </pre>
-              </div>
-            )}
           </CardContent>
           
           <CardFooter className="flex flex-col items-start text-sm text-muted-foreground">

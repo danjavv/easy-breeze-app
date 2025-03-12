@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -21,6 +22,7 @@ function App() {
           <Route path="/supplier-dashboard" element={<SupplierDashboard />} />
           <Route path="/new-submission" element={<NewSubmission />} />
           <Route path="/submission-results" element={<SubmissionResults />} />
+          <Route path="/submission-results/:submissionId" element={<SubmissionResults />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/admin-baseline-config" element={<AdminBaselineConfig />} />
           <Route path="*" element={<NotFound />} />
