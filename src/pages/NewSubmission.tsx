@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useAuth } from '@/contexts/AuthContext';
 
 const NewSubmission = () => {
   const [submissionLabel, setSubmissionLabel] = useState('ACME_Q2_Batch_2');
@@ -14,6 +15,9 @@ const NewSubmission = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const navigate = useNavigate();
+  
+  // Get current supplier information from context
+  const { supplierID } = useAuth();
 
   const handleDownloadTemplate = async () => {
     setIsDownloading(true);
@@ -81,6 +85,11 @@ const NewSubmission = () => {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('submissionLabel', submissionLabel);
+      
+      // Add supplier ID to the form data
+      if (supplierID) {
+        formData.append('supplierID', supplierID);
+      }
       
       const response = await fetch('https://danjavv.app.n8n.cloud/webhook/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
         method: 'POST',

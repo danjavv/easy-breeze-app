@@ -48,6 +48,7 @@ export type Database = {
           notification_email: string | null
           password_hash: string | null
           status: string | null
+          submissions: Json[] | null
         }
         Insert: {
           company_name: string
@@ -57,6 +58,7 @@ export type Database = {
           notification_email?: string | null
           password_hash?: string | null
           status?: string | null
+          submissions?: Json[] | null
         }
         Update: {
           company_name?: string
@@ -66,6 +68,7 @@ export type Database = {
           notification_email?: string | null
           password_hash?: string | null
           status?: string | null
+          submissions?: Json[] | null
         }
         Relationships: []
       }

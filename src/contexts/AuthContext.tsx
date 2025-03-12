@@ -8,8 +8,10 @@ type SupplierStatus = 'pending' | 'approved' | 'rejected';
 type AuthContextType = {
   userRole: UserRole;
   supplierStatus: SupplierStatus;
+  supplierID: string | null;
   setUserRole: (role: UserRole) => void;
   setSupplierStatus: (status: SupplierStatus) => void;
+  setSupplierID: (id: string | null) => void;
   redirectToDashboard: () => string;
   signOut: () => void;
 };
@@ -19,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [supplierStatus, setSupplierStatus] = useState<SupplierStatus>('pending');
+  const [supplierID, setSupplierID] = useState<string | null>(null);
 
   // Function to determine which dashboard to redirect to based on user role
   const redirectToDashboard = () => {
@@ -33,13 +36,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Function to sign out the user
   const signOut = () => {
     setUserRole(null);
+    setSupplierID(null);
   };
 
   const value = {
     userRole,
     supplierStatus,
+    supplierID,
     setUserRole,
     setSupplierStatus,
+    setSupplierID,
     redirectToDashboard,
     signOut
   };
