@@ -1,15 +1,18 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, Users, ShoppingBag, BarChart2, Settings, Search, Sliders, CheckCircle, XCircle, RefreshCw, AlertTriangle } from 'lucide-react';
+import { LogOut, Users, ShoppingBag, BarChart2, Settings, Search, Sliders, CheckCircle, XCircle, RefreshCw, AlertTriangle, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface Supplier {
   id: string;
@@ -64,6 +67,8 @@ const AdminDashboard = () => {
   const [isSupplierListOpen, setIsSupplierListOpen] = useState(false);
   const [isMockData, setIsMockData] = useState(false);
   const [loadAttempts, setLoadAttempts] = useState(0);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
 
   const fetchSuppliers = async () => {
     setIsLoading(true);
@@ -71,6 +76,7 @@ const AdminDashboard = () => {
     setIsMockData(false);
     
     try {
+      // Convert the status string to the correct enum value for type safety
       const mockResponse = [
         {
           "id": "2ba035af-e4ad-4a7b-aaca-cd318b7c8647",
@@ -78,7 +84,7 @@ const AdminDashboard = () => {
           "email": "lol@gmail.com",
           "notification_email": "lol@gmail.com",
           "password_hash": "LOL",
-          "status": "Approved",
+          "status": "Approved" as const,
           "created_at": "2025-03-07T15:25:50.84047"
         },
         {
@@ -87,7 +93,7 @@ const AdminDashboard = () => {
           "email": "abc@gmail.com",
           "notification_email": "abc@gmail.com",
           "password_hash": "ABCDE",
-          "status": "Approved",
+          "status": "Approved" as const,
           "created_at": "2025-03-07T15:18:47.899904"
         },
         {
@@ -96,7 +102,7 @@ const AdminDashboard = () => {
           "email": "reliance@gmail.com",
           "notification_email": "reliance@gmail.com",
           "password_hash": "ABCDE",
-          "status": "Approved",
+          "status": "Approved" as const,
           "created_at": "2025-03-07T16:54:27.934076"
         },
         {
@@ -105,7 +111,7 @@ const AdminDashboard = () => {
           "email": "amc@gmail.com",
           "notification_email": "amc@gmail.com",
           "password_hash": "AMCDE",
-          "status": "Approved",
+          "status": "Approved" as const,
           "created_at": "2025-03-07T16:47:29.680506"
         },
         {
@@ -114,7 +120,7 @@ const AdminDashboard = () => {
           "email": "company@company.com",
           "notification_email": "company@company.com",
           "password_hash": "COMPANY",
-          "status": "Approved",
+          "status": "Approved" as const,
           "created_at": "2025-03-07T20:02:03.891065"
         },
         {
@@ -123,7 +129,7 @@ const AdminDashboard = () => {
           "email": "reliance@outlook.com",
           "notification_email": "reliance@outlook.com",
           "password_hash": "ABCXX",
-          "status": "Approved",
+          "status": "Approved" as const,
           "created_at": "2025-03-10T08:40:36.54133"
         },
         {
@@ -132,7 +138,7 @@ const AdminDashboard = () => {
           "email": "random@gmail.com",
           "notification_email": "random@gmail.com",
           "password_hash": "RANDOM",
-          "status": "Approved",
+          "status": "Approved" as const,
           "created_at": "2025-03-10T09:23:43.308399"
         },
         {
@@ -141,7 +147,7 @@ const AdminDashboard = () => {
           "email": "danjaved007@gmail.com",
           "notification_email": "danjaved007@gmail.com",
           "password_hash": "DANISH",
-          "status": "Approved",
+          "status": "Approved" as const,
           "created_at": "2025-03-10T09:51:09.384387"
         },
         {
@@ -150,7 +156,7 @@ const AdminDashboard = () => {
           "email": "abcde@gmail.com",
           "notification_email": "abcde@gmail.com",
           "password_hash": "ABCDE",
-          "status": "Approved",
+          "status": "Approved" as const,
           "created_at": "2025-03-10T12:49:11.829208"
         }
       ];
@@ -241,6 +247,27 @@ const AdminDashboard = () => {
   const openSupplierDetails = (supplier: Supplier) => {
     setSelectedSupplier(supplier);
     setIsSupplierDialogOpen(true);
+  };
+
+  const openDeleteConfirmation = (supplier: Supplier, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the row click
+    setSupplierToDelete(supplier);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteSupplier = () => {
+    if (!supplierToDelete) return;
+    
+    setSuppliers(prev => prev.filter(supplier => supplier.id !== supplierToDelete.id));
+    
+    toast({
+      title: "Supplier deleted",
+      description: `Supplier ${supplierToDelete.company_name} has been deleted successfully.`,
+      variant: "destructive"
+    });
+    
+    setIsDeleteDialogOpen(false);
+    setSupplierToDelete(null);
   };
 
   const formatDate = (dateString: string) => {
@@ -408,8 +435,9 @@ const AdminDashboard = () => {
         </div>
       </main>
 
+      {/* Supplier List Dialog */}
       <Dialog open={isSupplierListOpen} onOpenChange={setIsSupplierListOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>
               Supplier Management
@@ -449,44 +477,60 @@ const AdminDashboard = () => {
               No suppliers found
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Company Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created At</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {suppliers.map((supplier) => (
-                    <TableRow 
-                      key={supplier.id || Math.random().toString()}
-                      className="cursor-pointer hover:bg-muted"
-                    >
-                      <TableCell className="font-medium">{supplier.company_name}</TableCell>
-                      <TableCell>{supplier.email}</TableCell>
-                      <TableCell>{getStatusBadge(supplier.status)}</TableCell>
-                      <TableCell>{formatDate(supplier.created_at)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => openSupplierDetails(supplier)}
-                        >
-                          View Details
-                        </Button>
-                      </TableCell>
+            <div className="rounded-md border flex-1 overflow-hidden">
+              <ScrollArea className="h-[500px]">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-background shadow-sm z-10">
+                    <TableRow>
+                      <TableHead>Company Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created At</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {suppliers.map((supplier) => (
+                      <TableRow 
+                        key={supplier.id || Math.random().toString()}
+                        className="cursor-pointer hover:bg-muted"
+                        onClick={() => openSupplierDetails(supplier)}
+                      >
+                        <TableCell className="font-medium">{supplier.company_name}</TableCell>
+                        <TableCell>{supplier.email}</TableCell>
+                        <TableCell>{getStatusBadge(supplier.status)}</TableCell>
+                        <TableCell>{formatDate(supplier.created_at)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openSupplierDetails(supplier);
+                              }}
+                            >
+                              View
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={(e) => openDeleteConfirmation(supplier, e)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
             </div>
           )}
           
-          <DialogFooter className="flex items-center justify-between">
+          <DialogFooter className="flex items-center justify-between mt-4">
             {isMockData && (
               <p className="text-xs text-muted-foreground">
                 Note: Actions on sample data will only be persisted for this session
@@ -497,6 +541,7 @@ const AdminDashboard = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Supplier Details Dialog */}
       <Dialog open={isSupplierDialogOpen} onOpenChange={setIsSupplierDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -554,6 +599,18 @@ const AdminDashboard = () => {
                     </Button>
                   </>
                 )}
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    setIsSupplierDialogOpen(false);
+                    setSupplierToDelete(selectedSupplier);
+                    setIsDeleteDialogOpen(true);
+                  }}
+                  className="w-full sm:w-auto flex items-center"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
                 {selectedSupplier.status !== 'Pending' && (
                   <Button
                     onClick={() => setIsSupplierDialogOpen(false)}
@@ -567,6 +624,30 @@ const AdminDashboard = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the supplier account for{" "}
+              <span className="font-semibold">{supplierToDelete?.company_name}</span>.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSupplierToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteSupplier}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
