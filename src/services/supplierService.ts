@@ -109,7 +109,7 @@ export const fetchSupplierData = async (): Promise<{
     
     const data = await response.json();
     
-    const suppliersArray = Array.isArray(data) ? data : [data];
+    const suppliersArray = Array.isArray(data) ? data : (Array.isArray(data.suppliers) ? data.suppliers : []);
     
     const formattedData = suppliersArray.map((supplier: any) => ({
       ...supplier,
