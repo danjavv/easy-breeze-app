@@ -89,6 +89,9 @@ const NewSubmission = () => {
       // Add supplier ID to the form data
       if (supplierID) {
         formData.append('supplierID', supplierID);
+        console.log("Including supplier ID in submission:", supplierID);
+      } else {
+        console.warn("No supplier ID available for submission");
       }
       
       const response = await fetch('https://danjavv.app.n8n.cloud/webhook/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
