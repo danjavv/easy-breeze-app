@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -70,6 +71,9 @@ const AdminDashboard = () => {
   const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
 
   const fetchSuppliers = async () => {
+    // Don't fetch if already loading
+    if (isLoading) return;
+    
     setIsLoading(true);
     setError(null);
     setIsMockData(false);
