@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -112,7 +111,6 @@ const AdminDashboard = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const fetchSuppliers = async () => {
-    // Don't fetch if already loading
     if (isLoading) return;
     
     setIsLoading(true);
@@ -135,11 +133,9 @@ const AdminDashboard = () => {
       
       const data = await response.json();
       
-      if (!Array.isArray(data)) {
-        throw new Error('Invalid data format received');
-      }
+      const suppliersArray = Array.isArray(data) ? data : [data];
       
-      const formattedData = data.map((supplier: any) => ({
+      const formattedData = suppliersArray.map((supplier: any) => ({
         ...supplier,
         status: supplier.status as 'Pending' | 'Approved' | 'Rejected'
       }));
@@ -213,7 +209,7 @@ const AdminDashboard = () => {
   };
 
   const openDeleteConfirmation = (supplier: Supplier, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering the row click
+    e.stopPropagation();
     setSupplierToDelete(supplier);
     setIsDeleteDialogOpen(true);
   };
