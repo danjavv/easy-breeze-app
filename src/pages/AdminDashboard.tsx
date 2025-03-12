@@ -1,27 +1,17 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, Users, ShoppingBag, BarChart2, Settings, Search, Sliders, CheckCircle, XCircle, RefreshCw, AlertTriangle, Trash2 } from 'lucide-react';
+import { LogOut, Users, ShoppingBag, BarChart2, Settings, Search, Sliders, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { format } from 'date-fns';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-
-interface Supplier {
-  id: string;
-  company_name: string;
-  email: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
-  created_at: string;
-  notification_email?: string;
-  password_hash?: string;
-}
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import DashboardCard from '@/components/admin/DashboardCard';
+import SupplierList, { Supplier } from '@/components/admin/SupplierList';
+import SupplierDetails from '@/components/admin/SupplierDetails';
+import DeleteConfirmation from '@/components/admin/DeleteConfirmation';
 
 const defaultSuppliers: Supplier[] = [
   {
@@ -120,7 +110,6 @@ const AdminDashboard = () => {
   const [isMockData, setIsMockData] = useState(false);
   const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [loadAttempts, setLoadAttempts] = useState(0);
 
   const fetchSuppliers = async () => {
     // Don't fetch if already loading
@@ -244,33 +233,6 @@ const AdminDashboard = () => {
     setSupplierToDelete(null);
   };
 
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'MMM dd, yyyy HH:mm') + ' UTC';
-    } catch (error) {
-      return 'Invalid date';
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'Pending':
-        return <Badge variant="warning" className="flex items-center">
-          <AlertTriangle className="mr-1 h-3 w-3" /> {status}
-        </Badge>;
-      case 'Approved':
-        return <Badge variant="success" className="flex items-center">
-          <CheckCircle className="mr-1 h-3 w-3" /> {status}
-        </Badge>;
-      case 'Rejected':
-        return <Badge variant="danger" className="flex items-center">
-          <XCircle className="mr-1 h-3 w-3" /> {status}
-        </Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
   const goToBaselineConfig = () => {
     navigate('/admin-baseline-config');
   };
@@ -311,101 +273,50 @@ const AdminDashboard = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <Users className="mr-2 h-5 w-5 text-primary" />
-                Suppliers
-              </CardTitle>
-              <CardDescription>Manage supplier accounts</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-semibold">{suppliers.length || 0}</p>
-              <p className="text-sm text-muted-foreground">Active suppliers</p>
-              <p className="text-sm font-medium text-amber-500 mt-1">
-                {pendingSupplierCount || 0} Pending approval
-              </p>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="w-full"
-                onClick={fetchSuppliers}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  <>
-                    <Users className="mr-2 h-4 w-4" />
-                    Manage Suppliers
-                  </>
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
+          <DashboardCard
+            title="Suppliers"
+            description="Manage supplier accounts"
+            icon={Users}
+            value={suppliers.length || 0}
+            subtitle="Active suppliers"
+            extraInfo={`${pendingSupplierCount || 0} Pending approval`}
+            extraInfoColor="text-amber-500"
+            buttonText="Manage Suppliers"
+            buttonIcon={isLoading ? RefreshCw : Users}
+            loading={isLoading}
+            loadingText="Loading..."
+            onClick={fetchSuppliers}
+          />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <ShoppingBag className="mr-2 h-5 w-5 text-primary" />
-                Product Catalog
-              </CardTitle>
-              <CardDescription>Oversee all products</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-semibold">128</p>
-              <p className="text-sm text-muted-foreground">Total products</p>
-            </CardContent>
-            <CardFooter>
-              <Button size="sm" variant="outline" className="w-full">View Catalog</Button>
-            </CardFooter>
-          </Card>
+          <DashboardCard
+            title="Product Catalog"
+            description="Oversee all products"
+            icon={ShoppingBag}
+            value={128}
+            subtitle="Total products"
+            buttonText="View Catalog"
+            onClick={() => {}}
+          />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <BarChart2 className="mr-2 h-5 w-5 text-primary" />
-                Platform Analytics
-              </CardTitle>
-              <CardDescription>System performance metrics</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-semibold">$12,450</p>
-              <p className="text-sm text-muted-foreground">Monthly revenue</p>
-            </CardContent>
-            <CardFooter>
-              <Button size="sm" variant="outline" className="w-full">View Analytics</Button>
-            </CardFooter>
-          </Card>
+          <DashboardCard
+            title="Platform Analytics"
+            description="System performance metrics"
+            icon={BarChart2}
+            value="$12,450"
+            subtitle="Monthly revenue"
+            buttonText="View Analytics"
+            onClick={() => {}}
+          />
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center">
-                <Sliders className="mr-2 h-5 w-5 text-primary" />
-                Baseline Config
-              </CardTitle>
-              <CardDescription>Set ingredient standards</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-semibold">4</p>
-              <p className="text-sm text-muted-foreground">Ingredient parameters</p>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="w-full"
-                onClick={goToBaselineConfig}
-              >
-                Configure Baseline
-              </Button>
-            </CardFooter>
-          </Card>
+          <DashboardCard
+            title="Baseline Config"
+            description="Set ingredient standards"
+            icon={Sliders}
+            value={4}
+            subtitle="Ingredient parameters"
+            buttonText="Configure Baseline"
+            onClick={goToBaselineConfig}
+          />
         </div>
       </main>
 
@@ -424,85 +335,15 @@ const AdminDashboard = () => {
             </DialogDescription>
           </DialogHeader>
           
-          {isLoading ? (
-            <div className="flex flex-col justify-center items-center py-8 space-y-4">
-              <RefreshCw className="animate-spin h-8 w-8 text-primary" />
-              <p className="text-muted-foreground">Fetching supplier data...</p>
-              <p className="text-xs text-muted-foreground">Attempt {loadAttempts + 1}/3</p>
-            </div>
-          ) : error ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
-              <p className="text-destructive">{error}</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="mt-4"
-                onClick={() => {
-                  setLoadAttempts(0);
-                  fetchSuppliers();
-                }}
-              >
-                Try Again
-              </Button>
-            </div>
-          ) : suppliers.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No suppliers found
-            </div>
-          ) : (
-            <div className="rounded-md border flex-1 overflow-hidden">
-              <ScrollArea className="h-[500px]">
-                <Table>
-                  <TableHeader className="sticky top-0 bg-background shadow-sm z-10">
-                    <TableRow>
-                      <TableHead>Company Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created At</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {suppliers.map((supplier) => (
-                      <TableRow 
-                        key={supplier.id || Math.random().toString()}
-                        className="cursor-pointer hover:bg-muted"
-                        onClick={() => openSupplierDetails(supplier)}
-                      >
-                        <TableCell className="font-medium">{supplier.company_name}</TableCell>
-                        <TableCell>{supplier.email}</TableCell>
-                        <TableCell>{getStatusBadge(supplier.status)}</TableCell>
-                        <TableCell>{formatDate(supplier.created_at)}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end space-x-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openSupplierDetails(supplier);
-                              }}
-                            >
-                              View
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={(e) => openDeleteConfirmation(supplier, e)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </div>
-          )}
+          <SupplierList
+            suppliers={suppliers}
+            isLoading={isLoading}
+            error={error}
+            isMockData={isMockData}
+            onViewSupplier={openSupplierDetails}
+            onDeleteSupplier={openDeleteConfirmation}
+            onRetry={fetchSuppliers}
+          />
           
           <DialogFooter className="flex items-center justify-between mt-4">
             {isMockData && (
@@ -526,75 +367,17 @@ const AdminDashboard = () => {
           </DialogHeader>
           
           {selectedSupplier && (
-            <>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Supplier Information</h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <span className="text-muted-foreground">Company Name:</span>
-                    <span>{selectedSupplier.company_name}</span>
-                    
-                    <span className="text-muted-foreground">Email:</span>
-                    <span>{selectedSupplier.email}</span>
-                    
-                    {selectedSupplier.notification_email && (
-                      <>
-                        <span className="text-muted-foreground">Notification Email:</span>
-                        <span>{selectedSupplier.notification_email}</span>
-                      </>
-                    )}
-                    
-                    <span className="text-muted-foreground">Current Status:</span>
-                    <span>{getStatusBadge(selectedSupplier.status)}</span>
-
-                    <span className="text-muted-foreground">Created At:</span>
-                    <span>{formatDate(selectedSupplier.created_at)}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <DialogFooter className="flex flex-col sm:flex-row gap-2">
-                {selectedSupplier.status === 'Pending' && (
-                  <>
-                    <Button
-                      variant="outline"
-                      onClick={() => handleRejectSupplier(selectedSupplier.id)}
-                      className="w-full sm:w-auto flex items-center"
-                    >
-                      <XCircle className="mr-2 h-4 w-4" />
-                      Reject
-                    </Button>
-                    <Button
-                      onClick={() => handleApproveSupplier(selectedSupplier.id)}
-                      className="w-full sm:w-auto flex items-center"
-                    >
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Approve
-                    </Button>
-                  </>
-                )}
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    setIsSupplierDialogOpen(false);
-                    setSupplierToDelete(selectedSupplier);
-                    setIsDeleteDialogOpen(true);
-                  }}
-                  className="w-full sm:w-auto flex items-center"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </Button>
-                {selectedSupplier.status !== 'Pending' && (
-                  <Button
-                    onClick={() => setIsSupplierDialogOpen(false)}
-                    className="w-full sm:w-auto"
-                  >
-                    Close
-                  </Button>
-                )}
-              </DialogFooter>
-            </>
+            <SupplierDetails
+              supplier={selectedSupplier}
+              onApprove={handleApproveSupplier}
+              onReject={handleRejectSupplier}
+              onDelete={() => {
+                setIsSupplierDialogOpen(false);
+                setSupplierToDelete(selectedSupplier);
+                setIsDeleteDialogOpen(true);
+              }}
+              onClose={() => setIsSupplierDialogOpen(false)}
+            />
           )}
         </DialogContent>
       </Dialog>
@@ -604,22 +387,16 @@ const AdminDashboard = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the supplier account for{" "}
-              <span className="font-semibold">{supplierToDelete?.company_name}</span>.
-              This action cannot be undone.
-            </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setSupplierToDelete(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteSupplier}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
+          
+          <DeleteConfirmation
+            supplier={supplierToDelete}
+            onConfirm={handleDeleteSupplier}
+            onCancel={() => {
+              setIsDeleteDialogOpen(false);
+              setSupplierToDelete(null);
+            }}
+          />
         </AlertDialogContent>
       </AlertDialog>
     </div>
