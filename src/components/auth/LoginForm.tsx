@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -38,7 +37,6 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
         return;
       }
       
-      // Updated webhook URL for login
       const webhookUrl = 'https://danjavv.app.n8n.cloud/webhook/3f878768-29d0-43f6-a567-c5f127ff8855';
       
       const response = await fetch(webhookUrl, {
@@ -58,7 +56,6 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
       
       const data = await response.json();
       
-      // Check login status from response
       if (data.status === 'error') {
         toast({
           title: "Login failed",
@@ -69,13 +66,11 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
         return;
       }
       
-      // Success - set user role and supplier ID (if available)
       setUserRole('supplier');
       
-      // Store supplier ID if it's provided in the response
-      if (data.supplier_id) {
-        setSupplierID(data.supplier_id);
-        console.log("Stored supplier ID:", data.supplier_id);
+      if (data.supplierid) {
+        setSupplierID(data.supplierid);
+        console.log("Stored supplierid:", data.supplierid);
       }
       
       toast({

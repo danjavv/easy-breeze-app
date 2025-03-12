@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Upload, FileCode, Check, Loader } from 'lucide-react';
@@ -16,24 +15,20 @@ const NewSubmission = () => {
   const [isDownloading, setIsDownloading] = useState(false);
   const navigate = useNavigate();
   
-  // Get current supplier information from context
   const { supplierID } = useAuth();
 
   const handleDownloadTemplate = async () => {
     setIsDownloading(true);
     
     try {
-      // Send GET request to the webhook to fetch the CSV template
       const response = await fetch('https://danjavv.app.n8n.cloud/webhook/e6369e97-7e71-4787-b1ef-54d8d456874f');
       
       if (!response.ok) {
         throw new Error('Failed to download template');
       }
       
-      // Get the blob from the response
       const blob = await response.blob();
       
-      // Create a download link and trigger download
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.style.display = 'none';
@@ -42,7 +37,6 @@ const NewSubmission = () => {
       document.body.appendChild(a);
       a.click();
       
-      // Clean up
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       
@@ -86,12 +80,11 @@ const NewSubmission = () => {
       formData.append('file', file);
       formData.append('submissionLabel', submissionLabel);
       
-      // Add supplier ID to the form data
       if (supplierID) {
-        formData.append('supplierID', supplierID);
-        console.log("Including supplier ID in submission:", supplierID);
+        formData.append('supplierid', supplierID);
+        console.log("Including supplierid in submission:", supplierID);
       } else {
-        console.warn("No supplier ID available for submission");
+        console.warn("No supplierid available for submission");
       }
       
       const response = await fetch('https://danjavv.app.n8n.cloud/webhook/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
@@ -105,14 +98,12 @@ const NewSubmission = () => {
       
       const results = await response.json();
       
-      // Store the results in sessionStorage to pass to the results page
       sessionStorage.setItem('submissionResults', JSON.stringify(results));
       
       toast.success("Submission Successful", {
         description: "Your LAS submission has been processed successfully."
       });
       
-      // Navigate to results page with submission ID
       navigate(`/submission-results/${results[0]?.submission_id || 'latest'}`);
       
     } catch (error) {
