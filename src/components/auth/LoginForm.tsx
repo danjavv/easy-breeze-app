@@ -21,7 +21,7 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
   
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { setUserRole } = useAuth();
+  const { setUserRole, setSupplierID } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +59,7 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
       const data = await response.json();
       
       // Check login status from response
-      if (data.status1 === 'error') {
+      if (data.status === 'error') {
         toast({
           title: "Login failed",
           description: data.message || "Invalid email or password",
@@ -69,8 +69,14 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
         return;
       }
       
-      // Success - set user role and redirect
+      // Success - set user role and supplier ID (if available)
       setUserRole('supplier');
+      
+      // Store supplier ID if it's provided in the response
+      if (data.supplier_id) {
+        setSupplierID(data.supplier_id);
+        console.log("Stored supplier ID:", data.supplier_id);
+      }
       
       toast({
         title: "Login successful",
