@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -55,11 +56,24 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
       }
       
       const data = await response.json();
+      console.log("Login response:", data);
       
+      // Check if the response has status property
       if (data.status === 'error') {
         toast({
           title: "Login failed",
           description: data.message || "Invalid email or password",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+      
+      // Check if we have the status1 property instead (as seen in network logs)
+      if (data.status1 === 'error') {
+        toast({
+          title: "Login failed",
+          description: "Invalid email or password",
           variant: "destructive"
         });
         setLoading(false);
