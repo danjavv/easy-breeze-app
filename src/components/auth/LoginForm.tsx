@@ -55,11 +55,14 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
         throw new Error('Network response was not ok');
       }
       
-      const data = await response.json();
-      console.log("Login response:", data);
+      const responseData = await response.json();
+      console.log("Login response:", responseData);
+      
+      // Handle array response format
+      const data = Array.isArray(responseData) ? responseData[0] : responseData;
       
       // Check if login was successful by checking if we received a supplierID
-      if (data.supplierid) {
+      if (data && data.supplierid) {
         // Store the supplier ID
         setSupplierID(data.supplierid);
         console.log("Stored supplierid:", data.supplierid);
@@ -74,7 +77,7 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
         
         navigate('/supplier-dashboard');
       } else {
-        // If no supplierID, or status is error, login has failed
+        // If no supplierID, login has failed
         toast({
           title: "Login failed",
           description: "Invalid email or password",
