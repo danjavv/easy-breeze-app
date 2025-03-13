@@ -87,7 +87,7 @@ const NewSubmission = () => {
         console.warn("No supplierid available for submission");
       }
       
-      const response = await fetch('https://danjavv.app.n8n.cloud/webhook/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
+      const response = await fetch('https://danjavv.app.n8n.cloud/webhook-test/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
         method: 'POST',
         body: formData,
       });
