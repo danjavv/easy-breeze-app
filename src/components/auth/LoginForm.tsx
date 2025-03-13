@@ -58,23 +58,14 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
       const data = await response.json();
       console.log("Login response:", data);
       
-      if (data.status === 'error') {
-        toast({
-          title: "Login failed",
-          description: "Invalid email or password",
-          variant: "destructive"
-        });
-        setLoading(false);
-        return;
-      }
-      
-      if (data.status === 'success') {
-        setUserRole('supplier');
+      // Check if login was successful by checking if we received a supplierID
+      if (data.supplierid) {
+        // Store the supplier ID
+        setSupplierID(data.supplierid);
+        console.log("Stored supplierid:", data.supplierid);
         
-        if (data.supplierid) {
-          setSupplierID(data.supplierid);
-          console.log("Stored supplierid:", data.supplierid);
-        }
+        // Set user role
+        setUserRole('supplier');
         
         toast({
           title: "Login successful",
@@ -82,6 +73,13 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
         });
         
         navigate('/supplier-dashboard');
+      } else {
+        // If no supplierID, or status is error, login has failed
+        toast({
+          title: "Login failed",
+          description: "Invalid email or password",
+          variant: "destructive"
+        });
       }
     } catch (error: any) {
       toast({
