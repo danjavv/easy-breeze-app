@@ -58,19 +58,7 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
       const data = await response.json();
       console.log("Login response:", data);
       
-      // Check if the response has status property
       if (data.status === 'error') {
-        toast({
-          title: "Login failed",
-          description: data.message || "Invalid email or password",
-          variant: "destructive"
-        });
-        setLoading(false);
-        return;
-      }
-      
-      // Check if we have the status1 property instead (as seen in network logs)
-      if (data.status1 === 'error') {
         toast({
           title: "Login failed",
           description: "Invalid email or password",
@@ -80,19 +68,21 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
         return;
       }
       
-      setUserRole('supplier');
-      
-      if (data.supplierid) {
-        setSupplierID(data.supplierid);
-        console.log("Stored supplierid:", data.supplierid);
+      if (data.status === 'success') {
+        setUserRole('supplier');
+        
+        if (data.supplierid) {
+          setSupplierID(data.supplierid);
+          console.log("Stored supplierid:", data.supplierid);
+        }
+        
+        toast({
+          title: "Login successful",
+          description: "Welcome back to SilentSource!",
+        });
+        
+        navigate('/supplier-dashboard');
       }
-      
-      toast({
-        title: "Login successful",
-        description: "Welcome back to SilentSource!",
-      });
-      
-      navigate('/supplier-dashboard');
     } catch (error: any) {
       toast({
         title: "Login error",
