@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, ShoppingBag, BarChart2, Sliders, RefreshCw } from 'lucide-react';
+import { Users, BarChart2, RefreshCw } from 'lucide-react';
 import DashboardCard from '@/components/admin/DashboardCard';
 import { Supplier } from '@/components/admin/SupplierList';
 
@@ -8,19 +8,17 @@ interface DashboardCardsGridProps {
   suppliers: Supplier[];
   isLoading: boolean;
   onFetchSuppliers: () => void;
-  onNavigateToBaselineConfig: () => void;
 }
 
 const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
   suppliers,
   isLoading,
   onFetchSuppliers,
-  onNavigateToBaselineConfig
 }) => {
   const pendingSupplierCount = suppliers.filter(s => s.status === 'Pending').length;
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
       <DashboardCard
         title="Suppliers"
         description="Manage supplier accounts"
@@ -37,16 +35,6 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
       />
 
       <DashboardCard
-        title="Product Catalog"
-        description="Oversee all products"
-        icon={ShoppingBag}
-        value={128}
-        subtitle="Total products"
-        buttonText="View Catalog"
-        onClick={() => {}}
-      />
-
-      <DashboardCard
         title="Platform Analytics"
         description="System performance metrics"
         icon={BarChart2}
@@ -54,16 +42,6 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
         subtitle="Monthly revenue"
         buttonText="View Analytics"
         onClick={() => {}}
-      />
-
-      <DashboardCard
-        title="Baseline Config"
-        description="Set ingredient standards"
-        icon={Sliders}
-        value={4}
-        subtitle="Ingredient parameters"
-        buttonText="Configure Baseline"
-        onClick={onNavigateToBaselineConfig}
       />
     </div>
   );

@@ -36,10 +36,21 @@ const AdminDashboard = () => {
     try {
       const result = await fetchSupplierData();
       
-      setSuppliers(result.suppliers);
+      // Set all suppliers to Pending status
+      const pendingSuppliers = result.suppliers.map(supplier => ({
+        ...supplier,
+        status: 'Pending' as const
+      }));
+      
+      setSuppliers(pendingSuppliers);
       setIsMockData(result.isMockData);
       setError(result.error);
       setIsSupplierListOpen(true);
+      
+      toast({
+        title: "Suppliers loaded",
+        description: `All suppliers set to Pending status.`,
+      });
       
     } catch (err: any) {
       console.error('Unexpected error:', err);
@@ -123,7 +134,6 @@ const AdminDashboard = () => {
           suppliers={suppliers}
           isLoading={isLoading}
           onFetchSuppliers={fetchSuppliers}
-          onNavigateToBaselineConfig={goToBaselineConfig}
         />
       </main>
 
