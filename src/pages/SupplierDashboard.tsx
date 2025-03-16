@@ -8,9 +8,31 @@ import SubmissionsTable from '@/components/dashboard/SubmissionsTable';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Clock, History, ArrowUpRight } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
+
+type SubmissionResult = {
+  results: {
+    status: string;
+    metrics: {
+      purity: number;
+      foaming: number;
+      detergency: number;
+      biodegradability?: number;
+    };
+    batch_label: string;
+    failure_reasons?: string[];
+  }[];
+  summary: {
+    total_batches: number;
+    failed_batches: number;
+    passed_batches: number;
+  };
+  processed_at: string;
+  submission_id: string;
+  submission_label: string;
+};
 
 const SupplierDashboard = () => {
   const { userRole, supplierID } = useAuth();
@@ -22,16 +44,7 @@ const SupplierDashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [showSubmissions, setShowSubmissions] = useState(false);
   
-  // Sample data
-  const supplierName = 'ACME Corporation';
-  const activePeriod = 'Q2 2023';
-  const deadline = 'June 30, 2023 - 23:59 UTC';
-  
-  // Log the supplier ID when the component mounts
-  useEffect(() => {
-    console.log("Supplier Dashboard - supplierID from context:", supplierID);
-  }, [supplierID]);
-  
+  // Sample data for fallback
   const sampleSubmissions = [
     { 
       id: 'acme-q2-1',
@@ -50,6 +63,11 @@ const SupplierDashboard = () => {
       statusColor: 'text-red-500'
     },
   ];
+
+  // Log the supplier ID when the component mounts
+  useEffect(() => {
+    console.log("Supplier Dashboard - supplierID from context:", supplierID);
+  }, [supplierID]);
 
   const fetchPastSubmissions = async () => {
     setLoading(true);
@@ -144,6 +162,11 @@ const SupplierDashboard = () => {
     </div>
   );
 
+  // Sample data
+  const supplierName = 'ACME Corporation';
+  const activePeriod = 'Q2 2023';
+  const deadline = 'June 30, 2023 - 23:59 UTC';
+
   return (
     <div className="min-h-screen flex bg-background">
       {/* Sidebar Component */}
@@ -200,12 +223,13 @@ const SupplierDashboard = () => {
             {/* Show loading state when loading */}
             {loading && showSubmissions && renderLoadingState()}
             
-            {/* Only show submissions content when showSubmissions is true and not loading */}
-            {showSubmissions && !loading && (
-              <>
-                {/* Submissions Table Component */}
-                <SubmissionsTable submissions={pastSubmissions} />
-              </>
+            {/* Only show submissions content when showSubmissions is true */}
+            {showSubmissions && (
+              <SubmissionsTable 
+                submissions={pastSubmissions} 
+                isLoading={loading} 
+                onRefresh={fetchPastSubmissions}
+              />
             )}
           </div>
         </main>

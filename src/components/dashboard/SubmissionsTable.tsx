@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,10 +8,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Eye, ArrowUp, CheckCircle, XCircle } from 'lucide-react';
+import { Eye, ArrowUp, CheckCircle, XCircle, Loader } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Metrics = {
   purity: number;
@@ -53,9 +53,11 @@ type Submission = SubmissionResult | {
 
 type SubmissionsTableProps = {
   submissions: Submission[];
+  isLoading?: boolean;
+  onRefresh?: () => void;
 };
 
-const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
+const SubmissionsTable = ({ submissions, isLoading = false, onRefresh }: SubmissionsTableProps) => {
   const navigate = useNavigate();
   const { supplierID } = useAuth();
 
@@ -84,6 +86,9 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
         
         if (data) {
           console.log('Response data:', data);
+          if (onRefresh) {
+            onRefresh(); // Notify parent to refresh data
+          }
         }
       } catch (error) {
         console.error('Error sending POST request:', error);
@@ -91,7 +96,7 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
     };
 
     fetchSubmissions();
-  }, [supplierID]);
+  }, [supplierID, onRefresh]);
 
   const viewSubmission = (submissionId: string) => {
     navigate(`/submission-results/${submissionId}`);
@@ -101,7 +106,6 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
     navigate('/new-submission');
   };
 
-  // Function to determine status color based on status text
   const getStatusColor = (status: string) => {
     if (status.toLowerCase().includes('pass')) {
       return status.toLowerCase().includes('0 pass') ? 'text-red-500' : 'text-amber-500';
@@ -111,7 +115,6 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
     return 'text-muted-foreground';
   };
 
-  // Format date from ISO string
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
@@ -125,19 +128,38 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
     }
   };
 
-  // Function to determine if the submission is the new format
   const isNewFormatSubmission = (submission: any): submission is SubmissionResult => {
     return submission.results && Array.isArray(submission.results) && submission.summary;
+  };
+
+  const renderSkeletonRows = () => {
+    return Array(3).fill(0).map((_, index) => (
+      <TableRow key={`skeleton-${index}`}>
+        <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+        <TableCell><Skeleton className="h-5 w-12" /></TableCell>
+        <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+        <TableCell><Skeleton className="h-8 w-16" /></TableCell>
+      </TableRow>
+    ));
   };
 
   return (
     <div className="bg-card rounded-md border shadow-sm">
       <div className="p-4 border-b flex justify-between items-center">
         <h2 className="text-lg font-semibold">Your Submissions</h2>
-        <Button onClick={newSubmission} className="flex items-center gap-2">
-          <ArrowUp size={16} />
-          New Submission
-        </Button>
+        <div className="flex gap-2">
+          {onRefresh && (
+            <Button onClick={onRefresh} variant="outline" className="flex items-center gap-2" disabled={isLoading}>
+              {isLoading ? <Loader size={16} className="animate-spin" /> : null}
+              Refresh
+            </Button>
+          )}
+          <Button onClick={newSubmission} className="flex items-center gap-2">
+            <ArrowUp size={16} />
+            New Submission
+          </Button>
+        </div>
       </div>
       
       <div className="overflow-x-auto">
@@ -152,9 +174,10 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {submissions.length > 0 ? (
+            {isLoading ? (
+              renderSkeletonRows()
+            ) : submissions.length > 0 ? (
               submissions.map((submission, index) => {
-                // Handle the new format submissions
                 if (isNewFormatSubmission(submission)) {
                   const { summary, processed_at, submission_id, submission_label } = submission;
                   const statusText = `${summary.passed_batches} Pass / ${summary.failed_batches} Fail`;
@@ -187,7 +210,6 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
                     </TableRow>
                   );
                 } else {
-                  // Handle the old format submissions
                   return (
                     <TableRow key={index}>
                       <TableCell>{submission.date}</TableCell>
