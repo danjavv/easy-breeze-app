@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Upload, FileCode, Check, Loader } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +17,11 @@ const NewSubmission = () => {
   const navigate = useNavigate();
   
   const { supplierID } = useAuth();
+
+  // Log the supplier ID when the component mounts
+  useEffect(() => {
+    console.log("New Submission page - supplierID from context:", supplierID);
+  }, [supplierID]);
 
   const handleDownloadTemplate = async () => {
     setIsDownloading(true);
@@ -81,11 +86,13 @@ const NewSubmission = () => {
       formData.append('file', file);
       formData.append('submissionLabel', submissionLabel);
       
+      // Check for supplierID and add it to the formData
       if (supplierID) {
         formData.append('supplierid', supplierID);
         console.log("Including supplierid in submission:", supplierID);
       } else {
-        console.warn("No supplierid available for submission");
+        console.warn("No supplierid available for submission - using placeholder");
+        formData.append('supplierid', 'placeholder-id');
       }
       
       const response = await fetch('https://danjavv.app.n8n.cloud/webhook/ec92ebad-901c-43d5-bc72-7063593ddc2c', {

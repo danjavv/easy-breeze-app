@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,6 +24,11 @@ const SupplierDashboard = () => {
   const supplierName = 'ACME Corporation';
   const activePeriod = 'Q2 2023';
   const deadline = 'June 30, 2023 - 23:59 UTC';
+  
+  // Log the supplier ID when the component mounts
+  useEffect(() => {
+    console.log("Supplier Dashboard - supplierID from context:", supplierID);
+  }, [supplierID]);
   
   const sampleSubmissions = [
     { 

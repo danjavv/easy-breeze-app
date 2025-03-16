@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 type UserRole = 'admin' | 'supplier' | null;
 
@@ -19,9 +19,45 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [userRole, setUserRole] = useState<UserRole>(null);
-  const [supplierStatus, setSupplierStatus] = useState<SupplierStatus>('pending');
-  const [supplierID, setSupplierID] = useState<string | null>(null);
+  // Initialize state from localStorage if available
+  const [userRole, setUserRoleState] = useState<UserRole>(() => {
+    const savedRole = localStorage.getItem('userRole');
+    return (savedRole as UserRole) || null;
+  });
+  
+  const [supplierStatus, setSupplierStatusState] = useState<SupplierStatus>(() => {
+    const savedStatus = localStorage.getItem('supplierStatus');
+    return (savedStatus as SupplierStatus) || 'pending';
+  });
+  
+  const [supplierID, setSupplierIDState] = useState<string | null>(() => {
+    return localStorage.getItem('supplierID');
+  });
+
+  // Persist state changes to localStorage
+  const setUserRole = (role: UserRole) => {
+    setUserRoleState(role);
+    if (role) {
+      localStorage.setItem('userRole', role);
+    } else {
+      localStorage.removeItem('userRole');
+    }
+  };
+
+  const setSupplierStatus = (status: SupplierStatus) => {
+    setSupplierStatusState(status);
+    localStorage.setItem('supplierStatus', status);
+  };
+
+  const setSupplierID = (id: string | null) => {
+    setSupplierIDState(id);
+    if (id) {
+      localStorage.setItem('supplierID', id);
+      console.log("Stored supplierID in localStorage:", id);
+    } else {
+      localStorage.removeItem('supplierID');
+    }
+  };
 
   // Function to determine which dashboard to redirect to based on user role
   const redirectToDashboard = () => {
@@ -37,7 +73,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = () => {
     setUserRole(null);
     setSupplierID(null);
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('supplierID');
+    localStorage.removeItem('supplierStatus');
   };
+
+  // Log the current supplierID on component mount for debugging
+  useEffect(() => {
+    console.log("Current supplierID in context:", supplierID);
+  }, [supplierID]);
 
   const value = {
     userRole,
