@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import SupplierList, { Supplier } from '@/components/admin/SupplierList';
 import SupplierDetails from '@/components/admin/SupplierDetails';
@@ -125,11 +125,17 @@ const SupplierDialogs: React.FC<SupplierDialogsProps> = ({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the supplier account.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           
           <DeleteConfirmation
             supplier={supplierToDelete}
-            onConfirm={onDeleteConfirm}
+            onConfirm={() => {
+              onDeleteConfirm();
+              setIsDeleteDialogOpen(false);
+            }}
             onCancel={() => {
               setIsDeleteDialogOpen(false);
               setSupplierToDelete(null);

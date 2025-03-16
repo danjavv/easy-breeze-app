@@ -21,10 +21,9 @@ const DeleteConfirmation: React.FC<DeleteConfirmationProps> = ({
     <>
       <div className="py-4">
         <p className="mb-2">
-          This will permanently delete the supplier account for{" "}
+          You are about to delete the supplier account for{" "}
           <span className="font-semibold">{supplier.company_name}</span>.
         </p>
-        <p>This action cannot be undone.</p>
       </div>
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onCancel}>
