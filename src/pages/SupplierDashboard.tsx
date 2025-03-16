@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import SupplierSidebar from '@/components/dashboard/SupplierSidebar';
@@ -9,13 +9,17 @@ import SubmissionsTable from '@/components/dashboard/SubmissionsTable';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Clock, History } from 'lucide-react';
+import { useToast } from "@/components/ui/use-toast";
 
 const SupplierDashboard = () => {
   const { userRole, supplierID } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [activeItem, setActiveItem] = useState('submissions');
   const [loading, setLoading] = useState(false);
   const [pastSubmissions, setPastSubmissions] = useState<any[]>([]);
+  const [apiResponse, setApiResponse] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
   
   // Sample data
   const supplierName = 'ACME Corporation';
@@ -43,6 +47,7 @@ const SupplierDashboard = () => {
 
   const fetchPastSubmissions = async () => {
     setLoading(true);
+    setError(null);
     
     // Log the supplier ID being sent
     console.log('Sending request with supplierID:', supplierID);
@@ -65,15 +70,28 @@ const SupplierDashboard = () => {
       const data = await response.json();
       console.log('Past submissions:', data);
       
+      // Store the full API response
+      setApiResponse(data);
+      
       // Update submissions with fetched data or use default if no data
       if (Array.isArray(data) && data.length > 0) {
         setPastSubmissions(data);
+      } else if (data.submissions && Array.isArray(data.submissions) && data.submissions.length > 0) {
+        // Check if data has a submissions property that is an array
+        setPastSubmissions(data.submissions);
       } else {
         // Keep sample data if the API returns no data
         setPastSubmissions(sampleSubmissions);
+        
+        // Show a toast notification about the response
+        toast({
+          title: "API Response Received",
+          description: "No submissions data found in the response. Showing sample data instead.",
+        });
       }
     } catch (error) {
       console.error('Error fetching past submissions:', error);
+      setError('Failed to fetch submissions. Please try again later.');
       // Fallback to sample data on error
       setPastSubmissions(sampleSubmissions);
     } finally {
@@ -113,6 +131,33 @@ const SupplierDashboard = () => {
                 {loading ? 'Loading Submissions...' : 'View Past Submissions'}
               </Button>
             </div>
+            
+            {/* Error message if any */}
+            {error && (
+              <Card className="mb-6 border-red-200 bg-red-50">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-2 text-red-600">
+                    <AlertCircle className="h-5 w-5" />
+                    <p>{error}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* API Response Display */}
+            {apiResponse && !Array.isArray(apiResponse) && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="text-lg">API Response</CardTitle>
+                  <CardDescription>Raw data received from the server</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <pre className="bg-slate-100 p-4 rounded-md overflow-auto max-h-40 text-xs">
+                    {JSON.stringify(apiResponse, null, 2)}
+                  </pre>
+                </CardContent>
+              </Card>
+            )}
             
             {/* Submissions Table Component */}
             <SubmissionsTable submissions={pastSubmissions.length > 0 ? pastSubmissions : sampleSubmissions} />
