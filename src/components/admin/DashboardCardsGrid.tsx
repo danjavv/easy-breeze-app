@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { Users, BarChart2, RefreshCw } from 'lucide-react';
+import { Users, Settings, RefreshCw } from 'lucide-react';
 import DashboardCard from '@/components/admin/DashboardCard';
 import { Supplier } from '@/components/admin/SupplierList';
+import { useNavigate } from 'react-router-dom';
 
 interface DashboardCardsGridProps {
   suppliers: Supplier[];
@@ -15,6 +16,7 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
   isLoading,
   onFetchSuppliers,
 }) => {
+  const navigate = useNavigate();
   const pendingSupplierCount = suppliers.filter(s => s.status === 'Pending').length;
   
   return (
@@ -35,13 +37,13 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
       />
 
       <DashboardCard
-        title="Platform Analytics"
-        description="System performance metrics"
-        icon={BarChart2}
-        value="$12,450"
-        subtitle="Monthly revenue"
-        buttonText="View Analytics"
-        onClick={() => {}}
+        title="Baseline Configuration"
+        description="Set quality standards"
+        icon={Settings}
+        value="Quality Standards"
+        subtitle="Define passing thresholds"
+        buttonText="Configure Standards"
+        onClick={() => navigate('/admin-baseline-config')}
       />
     </div>
   );
