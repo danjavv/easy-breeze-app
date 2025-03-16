@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,7 +19,6 @@ const SupplierDashboard = () => {
   const [activeItem, setActiveItem] = useState('submissions');
   const [loading, setLoading] = useState(false);
   const [pastSubmissions, setPastSubmissions] = useState<any[]>([]);
-  const [apiResponse, setApiResponse] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [showSubmissions, setShowSubmissions] = useState(false);
   
@@ -79,28 +77,32 @@ const SupplierDashboard = () => {
       const data = await response.json();
       console.log('Past submissions:', data);
       
-      // Store the full API response
-      setApiResponse(data);
-      
-      // Update submissions with fetched data or use default if no data
+      // If data is an array with valid submission data
       if (Array.isArray(data) && data.length > 0) {
         setPastSubmissions(data);
+        
+        // Count total submissions
+        const submissionCount = data.length;
+        
         toast({
           title: "Submissions Loaded",
-          description: `Found ${data.length} submission(s) for your account.`,
+          description: `Found ${submissionCount} submission(s) for your account.`,
         });
-      } else if (data.submissions && Array.isArray(data.submissions) && data.submissions.length > 0) {
-        // Check if data has a submissions property that is an array
-        setPastSubmissions(data.submissions);
-        toast({
-          title: "Submissions Loaded",
-          description: `Found ${data.submissions.length} submission(s) for your account.`,
-        });
-      } else {
-        // Keep sample data if the API returns no data
+      } 
+      // If data has a message property (like workflow started)
+      else if (data.message) {
+        // Keep sample data for display but show toast
         setPastSubmissions(sampleSubmissions);
         
-        // Show a toast notification about the response
+        toast({
+          title: "Processing Submissions",
+          description: data.message,
+        });
+      } 
+      // Fallback
+      else {
+        setPastSubmissions(sampleSubmissions);
+        
         toast({
           title: "No Submissions Found",
           description: "No previous submissions were found for your account.",
@@ -201,23 +203,8 @@ const SupplierDashboard = () => {
             {/* Only show submissions content when showSubmissions is true and not loading */}
             {showSubmissions && !loading && (
               <>
-                {/* API Response Display (if exists and not an array) */}
-                {apiResponse && !Array.isArray(apiResponse) && (
-                  <Card className="mb-6">
-                    <CardHeader>
-                      <CardTitle className="text-lg">API Response</CardTitle>
-                      <CardDescription>Raw data received from the server</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <pre className="bg-slate-100 p-4 rounded-md overflow-auto max-h-40 text-xs">
-                        {JSON.stringify(apiResponse, null, 2)}
-                      </pre>
-                    </CardContent>
-                  </Card>
-                )}
-                
                 {/* Submissions Table Component */}
-                <SubmissionsTable submissions={pastSubmissions.length > 0 ? pastSubmissions : sampleSubmissions} />
+                <SubmissionsTable submissions={pastSubmissions} />
               </>
             )}
           </div>

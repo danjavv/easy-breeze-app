@@ -9,9 +9,38 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Eye, ArrowUp } from 'lucide-react';
+import { Eye, ArrowUp, CheckCircle, XCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
-type Submission = {
+type Metrics = {
+  purity: number;
+  foaming: number;
+  detergency: number;
+  biodegradability?: number;
+};
+
+type Batch = {
+  status: string;
+  metrics: Metrics;
+  batch_label: string;
+  failure_reasons?: string[];
+};
+
+type SubmissionSummary = {
+  total_batches: number;
+  failed_batches: number;
+  passed_batches: number;
+};
+
+type SubmissionResult = {
+  results: Batch[];
+  summary: SubmissionSummary;
+  processed_at: string;
+  submission_id: string;
+  submission_label: string;
+};
+
+type Submission = SubmissionResult | {
   id?: string;
   date: string;
   label: string;
@@ -45,6 +74,25 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
     return 'text-muted-foreground';
   };
 
+  // Format date from ISO string
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        month: '2-digit', 
+        day: '2-digit',
+        year: '2-digit'
+      });
+    } catch (e) {
+      return dateString;
+    }
+  };
+
+  // Function to determine if the submission is the new format
+  const isNewFormatSubmission = (submission: any): submission is SubmissionResult => {
+    return submission.results && Array.isArray(submission.results) && submission.summary;
+  };
+
   return (
     <div className="bg-card rounded-md border shadow-sm">
       <div className="p-4 border-b flex justify-between items-center">
@@ -68,25 +116,62 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
           </TableHeader>
           <TableBody>
             {submissions.length > 0 ? (
-              submissions.map((submission, index) => (
-                <TableRow key={index}>
-                  <TableCell>{submission.date}</TableCell>
-                  <TableCell className="font-medium">{submission.label}</TableCell>
-                  <TableCell>{submission.batches}</TableCell>
-                  <TableCell className={submission.statusColor || getStatusColor(submission.status)}>
-                    {submission.status}
-                  </TableCell>
-                  <TableCell>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => viewSubmission(submission.id || `submission-${index}`)}
-                    >
-                      <Eye className="h-4 w-4 mr-1" /> View
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+              submissions.map((submission, index) => {
+                // Handle the new format submissions
+                if (isNewFormatSubmission(submission)) {
+                  const { summary, processed_at, submission_id, submission_label } = submission;
+                  const statusText = `${summary.passed_batches} Pass / ${summary.failed_batches} Fail`;
+                  const statusClass = summary.failed_batches === 0 ? 'text-green-500' : 'text-amber-500';
+                  
+                  return (
+                    <TableRow key={index}>
+                      <TableCell>{formatDate(processed_at)}</TableCell>
+                      <TableCell className="font-medium">{submission_label}</TableCell>
+                      <TableCell>{summary.total_batches}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {summary.failed_batches === 0 ? (
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-amber-500" />
+                          )}
+                          <span className={statusClass}>{statusText}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => viewSubmission(submission_id)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" /> View
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                } else {
+                  // Handle the old format submissions
+                  return (
+                    <TableRow key={index}>
+                      <TableCell>{submission.date}</TableCell>
+                      <TableCell className="font-medium">{submission.label}</TableCell>
+                      <TableCell>{submission.batches}</TableCell>
+                      <TableCell className={submission.statusColor || getStatusColor(submission.status)}>
+                        {submission.status}
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => viewSubmission(submission.id || `submission-${index}`)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" /> View
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                }
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
