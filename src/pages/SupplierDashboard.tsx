@@ -43,6 +43,10 @@ const SupplierDashboard = () => {
 
   const fetchPastSubmissions = async () => {
     setLoading(true);
+    
+    // Log the supplier ID being sent
+    console.log('Sending request with supplierID:', supplierID);
+    
     try {
       const response = await fetch('https://danjavv.app.n8n.cloud/webhook-test/7e057feb-401a-4110-9fcc-b00817876790', {
         method: 'POST',
