@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -67,19 +68,20 @@ const SupplierRegistrationForm = ({ onBack, onLoginClick }: SupplierRegistration
         return;
       }
       
-      const webhookUrl = 'https://danjavv.app.n8n.cloud/webhook/59f900d2-b5fe-4c3f-bde6-6e1d2bb061d5';
+      // Updated to use GET request to the new webhook URL
+      const webhookUrl = 'https://danjavv.app.n8n.cloud/webhook/11174ce3-72a2-4e03-b981-5b0e3d9ecd53';
       
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
+      // Encode parameters for GET request
+      const params = new URLSearchParams({
+        company_name: companyName,
+        email: email
+      });
+      
+      const response = await fetch(`${webhookUrl}?${params.toString()}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          company_name: companyName,
-          email: email,
-          notification_email: notificationEmail,
-          password: password
-        })
+        }
       });
       
       if (!response.ok) {
