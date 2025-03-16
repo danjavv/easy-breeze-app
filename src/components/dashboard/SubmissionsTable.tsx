@@ -35,6 +35,16 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
     navigate('/new-submission');
   };
 
+  // Function to determine status color based on status text
+  const getStatusColor = (status: string) => {
+    if (status.toLowerCase().includes('pass')) {
+      return status.toLowerCase().includes('0 pass') ? 'text-red-500' : 'text-amber-500';
+    }
+    if (status.toLowerCase().includes('fail')) return 'text-red-500';
+    if (status.toLowerCase().includes('pending')) return 'text-blue-500';
+    return 'text-muted-foreground';
+  };
+
   return (
     <div className="bg-card rounded-md border shadow-sm">
       <div className="p-4 border-b flex justify-between items-center">
@@ -63,7 +73,9 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
                   <TableCell>{submission.date}</TableCell>
                   <TableCell className="font-medium">{submission.label}</TableCell>
                   <TableCell>{submission.batches}</TableCell>
-                  <TableCell className={submission.statusColor}>{submission.status}</TableCell>
+                  <TableCell className={submission.statusColor || getStatusColor(submission.status)}>
+                    {submission.status}
+                  </TableCell>
                   <TableCell>
                     <Button 
                       variant="ghost" 
