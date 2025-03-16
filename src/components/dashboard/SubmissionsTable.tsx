@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/table";
 import { Eye, ArrowUp, CheckCircle, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
 
 type Metrics = {
   purity: number;
@@ -55,6 +57,41 @@ type SubmissionsTableProps = {
 
 const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
   const navigate = useNavigate();
+  const { supplierID } = useAuth();
+
+  useEffect(() => {
+    // Send POST request when component mounts (when viewing past submissions)
+    const fetchSubmissions = async () => {
+      try {
+        console.log('Sending POST request with supplierID:', supplierID);
+        const response = await fetch('https://danjavv.app.n8n.cloud/webhook-test/7e057feb-401a-4110-9fcc-b00817876790', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            supplierID: supplierID || 'test-supplier-id',
+          }),
+        });
+        
+        if (!response.ok) {
+          console.error('Error fetching submissions:', response.statusText);
+        }
+        
+        const data = await response.json().catch(e => {
+          console.log('Not a valid JSON response');
+        });
+        
+        if (data) {
+          console.log('Response data:', data);
+        }
+      } catch (error) {
+        console.error('Error sending POST request:', error);
+      }
+    };
+
+    fetchSubmissions();
+  }, [supplierID]);
 
   const viewSubmission = (submissionId: string) => {
     navigate(`/submission-results/${submissionId}`);
@@ -103,8 +140,6 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
         </Button>
       </div>
       
-      {/* Commented out submissions table */}
-      {/*
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -184,7 +219,6 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
           </TableBody>
         </Table>
       </div>
-      */}
     </div>
   );
 };
