@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +12,7 @@ import { AlertCircle, Clock, History, ArrowUpRight } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 type SubmissionResult = {
   results: {
@@ -43,6 +45,7 @@ const SupplierDashboard = () => {
   const [pastSubmissions, setPastSubmissions] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showSubmissions, setShowSubmissions] = useState(false);
+  const [progress, setProgress] = useState(0);
   
   // Sample data for fallback
   const sampleSubmissions = [
@@ -69,15 +72,39 @@ const SupplierDashboard = () => {
     console.log("Supplier Dashboard - supplierID from context:", supplierID);
   }, [supplierID]);
 
+  // Progress bar animation during loading
+  useEffect(() => {
+    if (loading) {
+      const interval = setInterval(() => {
+        setProgress((prevProgress) => {
+          // Slowly increase to 70%, then wait for actual completion
+          return prevProgress < 70 ? prevProgress + 5 : prevProgress;
+        });
+      }, 300);
+      
+      return () => {
+        clearInterval(interval);
+        setProgress(0);
+      };
+    }
+  }, [loading]);
+
   const fetchPastSubmissions = async () => {
     setLoading(true);
     setError(null);
     setShowSubmissions(true);
+    setProgress(10);
     
     // Log the supplier ID being sent
     console.log('Sending request with supplierID:', supplierID);
     
     try {
+      // Show immediate loading feedback
+      toast({
+        title: "Loading Submissions",
+        description: "Please wait while we fetch your past submissions...",
+      });
+      
       const response = await fetch('https://danjavv.app.n8n.cloud/webhook-test/7e057feb-401a-4110-9fcc-b00817876790', {
         method: 'POST',
         headers: {
@@ -92,6 +119,9 @@ const SupplierDashboard = () => {
         throw new Error('Failed to fetch submissions');
       }
 
+      // Complete the progress bar
+      setProgress(100);
+      
       const data = await response.json();
       console.log('Past submissions:', data);
       
@@ -131,8 +161,19 @@ const SupplierDashboard = () => {
       setError('Failed to fetch submissions. Please try again later.');
       // Fallback to sample data on error
       setPastSubmissions(sampleSubmissions);
+      
+      toast({
+        title: "Error Loading Submissions",
+        description: "There was a problem fetching your submissions. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setLoading(false);
+      // Ensure progress reaches 100% for visual completion
+      setProgress(100);
+      // Short delay before removing loading state to allow animations to complete
+      setTimeout(() => {
+        setLoading(false);
+      }, 500);
     }
   };
 
@@ -143,6 +184,22 @@ const SupplierDashboard = () => {
   // Function to render loading state
   const renderLoadingState = () => (
     <div className="space-y-6">
+      <Alert variant="default" className="bg-blue-50 border-blue-200">
+        <Clock className="h-4 w-4 text-blue-500" />
+        <AlertTitle>Loading Submissions</AlertTitle>
+        <AlertDescription>
+          Please wait while we retrieve your past submissions. This may take a moment...
+        </AlertDescription>
+      </Alert>
+      
+      <div className="mb-4">
+        <div className="flex justify-between mb-2 text-sm">
+          <span>Loading progress</span>
+          <span>{progress}%</span>
+        </div>
+        <Progress value={progress} className="h-2" />
+      </div>
+      
       <Card>
         <CardHeader>
           <Skeleton className="h-8 w-1/3" />
@@ -151,9 +208,6 @@ const SupplierDashboard = () => {
         <CardContent>
           <div className="space-y-2">
             <Skeleton className="h-12 w-full" />
-            <div className="py-3">
-              <Progress value={70} className="h-2" />
-            </div>
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
           </div>
@@ -223,8 +277,8 @@ const SupplierDashboard = () => {
             {/* Show loading state when loading */}
             {loading && showSubmissions && renderLoadingState()}
             
-            {/* Only show submissions content when showSubmissions is true */}
-            {showSubmissions && (
+            {/* Only show submissions content when showSubmissions is true and not loading */}
+            {showSubmissions && !loading && (
               <SubmissionsTable 
                 submissions={pastSubmissions} 
                 isLoading={loading} 
