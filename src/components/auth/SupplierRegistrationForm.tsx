@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -43,6 +42,16 @@ const SupplierRegistrationForm = ({ onBack, onLoginClick }: SupplierRegistration
     }
   };
 
+  const hashPassword = (password: string): string => {
+    let hash = 0;
+    for (let i = 0; i < password.length; i++) {
+      const char = password.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return hash.toString(16);
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -68,13 +77,15 @@ const SupplierRegistrationForm = ({ onBack, onLoginClick }: SupplierRegistration
         return;
       }
       
-      // Updated to use GET request to the new webhook URL
       const webhookUrl = 'https://danjavv.app.n8n.cloud/webhook/11174ce3-72a2-4e03-b981-5b0e3d9ecd53';
       
-      // Encode parameters for GET request
+      const passwordHash = hashPassword(password);
+      
       const params = new URLSearchParams({
         company_name: companyName,
-        email: email
+        email: email,
+        notification_email: notificationEmail,
+        password_hash: passwordHash
       });
       
       const response = await fetch(`${webhookUrl}?${params.toString()}`, {
