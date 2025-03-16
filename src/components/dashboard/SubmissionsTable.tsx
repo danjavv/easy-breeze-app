@@ -103,6 +103,8 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
         </Button>
       </div>
       
+      {/* Commented out submissions table */}
+      {/*
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -182,6 +184,7 @@ const SubmissionsTable = ({ submissions }: SubmissionsTableProps) => {
           </TableBody>
         </Table>
       </div>
+      */}
     </div>
   );
 };
