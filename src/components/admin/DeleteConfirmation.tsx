@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2, Loader2 } from 'lucide-react';
@@ -27,9 +26,9 @@ const DeleteConfirmation: React.FC<DeleteConfirmationProps> = ({
     setIsDeleting(true);
     
     try {
-      // Send webhook with the supplier ID
+      // Send webhook with the supplier ID using DELETE method
       const response = await fetch('https://danjavv.app.n8n.cloud/webhook-test/f10f55eb-e794-4df9-a9b4-7e1fc2d3b537', {
-        method: 'POST',
+        method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
