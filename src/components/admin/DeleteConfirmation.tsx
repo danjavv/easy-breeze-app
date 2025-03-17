@@ -66,14 +66,17 @@ const DeleteConfirmation: React.FC<DeleteConfirmationProps> = ({
   };
   
   return (
-    <>
-      <div className="py-4">
+    <div className="flex flex-col space-y-4 mt-4">
+      <div className="py-2">
         <p className="mb-2">
           You are about to delete the supplier account for{" "}
           <span className="font-semibold">{supplier.company_name}</span>.
         </p>
+        <p className="text-sm text-muted-foreground">
+          This action cannot be undone.
+        </p>
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-2 mt-4">
         <Button 
           variant="outline" 
           onClick={onCancel}
@@ -100,7 +103,7 @@ const DeleteConfirmation: React.FC<DeleteConfirmationProps> = ({
           )}
         </Button>
       </div>
-    </>
+    </div>
   );
 };
 
