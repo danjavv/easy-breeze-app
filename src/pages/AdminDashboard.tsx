@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -105,16 +104,11 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteSupplier = () => {
+    // This is now handled in the DeleteConfirmation component
+    // The API call is made there, and this function is called after successful deletion
     if (!supplierToDelete) return;
     
     setSuppliers(prev => prev.filter(supplier => supplier.id !== supplierToDelete.id));
-    
-    toast({
-      title: "Supplier deleted",
-      description: `Supplier ${supplierToDelete.company_name} has been deleted successfully.`,
-      variant: "destructive"
-    });
-    
     setIsDeleteDialogOpen(false);
     setSupplierToDelete(null);
   };
