@@ -60,7 +60,7 @@ const AdminBaselineConfig = () => {
       };
 
       // Send POST request to the webhook
-      const response = await fetch('https://danjavv.app.n8n.cloud/webhook-test/b912a264-8bca-4bba-8d47-535eae93b7eb', {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/b912a264-8bca-4bba-8d47-535eae93b7eb', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

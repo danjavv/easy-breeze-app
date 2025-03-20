@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,7 +46,6 @@ const SupplierDashboard = () => {
   const [showSubmissions, setShowSubmissions] = useState(false);
   const [progress, setProgress] = useState(0);
   
-  // Sample data for fallback
   const sampleSubmissions = [
     { 
       id: 'acme-q2-1',
@@ -67,17 +65,14 @@ const SupplierDashboard = () => {
     },
   ];
 
-  // Log the supplier ID when the component mounts
   useEffect(() => {
     console.log("Supplier Dashboard - supplierID from context:", supplierID);
   }, [supplierID]);
 
-  // Progress bar animation during loading
   useEffect(() => {
     if (loading) {
       const interval = setInterval(() => {
         setProgress((prevProgress) => {
-          // Slowly increase to 70%, then wait for actual completion
           return prevProgress < 70 ? prevProgress + 5 : prevProgress;
         });
       }, 300);
@@ -95,17 +90,15 @@ const SupplierDashboard = () => {
     setShowSubmissions(true);
     setProgress(10);
     
-    // Log the supplier ID being sent
     console.log('Sending request with supplierID:', supplierID);
     
     try {
-      // Show immediate loading feedback
       toast({
         title: "Loading Submissions",
         description: "Please wait while we fetch your past submissions...",
       });
       
-      const response = await fetch('https://danjavv.app.n8n.cloud/webhook-test/7e057feb-401a-4110-9fcc-b00817876790', {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/7e057feb-401a-4110-9fcc-b00817876790', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,17 +112,14 @@ const SupplierDashboard = () => {
         throw new Error('Failed to fetch submissions');
       }
 
-      // Complete the progress bar
       setProgress(100);
       
       const data = await response.json();
       console.log('Past submissions:', data);
       
-      // If data is an array with valid submission data
       if (Array.isArray(data) && data.length > 0) {
         setPastSubmissions(data);
         
-        // Count total submissions
         const submissionCount = data.length;
         
         toast({
@@ -137,9 +127,7 @@ const SupplierDashboard = () => {
           description: `Found ${submissionCount} submission(s) for your account.`,
         });
       } 
-      // If data has a message property (like workflow started)
       else if (data.message) {
-        // Keep sample data for display but show toast
         setPastSubmissions(sampleSubmissions);
         
         toast({
@@ -147,7 +135,6 @@ const SupplierDashboard = () => {
           description: data.message,
         });
       } 
-      // Fallback
       else {
         setPastSubmissions(sampleSubmissions);
         
@@ -159,7 +146,6 @@ const SupplierDashboard = () => {
     } catch (error) {
       console.error('Error fetching past submissions:', error);
       setError('Failed to fetch submissions. Please try again later.');
-      // Fallback to sample data on error
       setPastSubmissions(sampleSubmissions);
       
       toast({
@@ -168,9 +154,7 @@ const SupplierDashboard = () => {
         variant: "destructive",
       });
     } finally {
-      // Ensure progress reaches 100% for visual completion
       setProgress(100);
-      // Short delay before removing loading state to allow animations to complete
       setTimeout(() => {
         setLoading(false);
       }, 500);
@@ -181,7 +165,6 @@ const SupplierDashboard = () => {
     navigate('/new-submission');
   };
 
-  // Function to render loading state
   const renderLoadingState = () => (
     <div className="space-y-6">
       <Alert variant="default" className="bg-blue-50 border-blue-200">
@@ -216,28 +199,21 @@ const SupplierDashboard = () => {
     </div>
   );
 
-  // Sample data
   const supplierName = 'ACME Corporation';
   const activePeriod = 'Q2 2023';
   const deadline = 'June 30, 2023 - 23:59 UTC';
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Sidebar Component */}
       <SupplierSidebar activeItem={activeItem} setActiveItem={setActiveItem} />
       
-      {/* Main content */}
       <div className="flex-1 flex flex-col">
-        {/* Header Component */}
         <SupplierHeader supplierName={supplierName} />
         
-        {/* Main content area */}
         <main className="flex-1 p-6 pt-20 md:pt-6">
           <div className="max-w-6xl mx-auto">
-            {/* Dashboard Header Component */}
             <DashboardHeader activePeriod={activePeriod} deadline={deadline} />
             
-            {/* Action Buttons */}
             <div className="mb-6 flex flex-wrap gap-3">
               <Button 
                 variant="outline"
@@ -262,7 +238,6 @@ const SupplierDashboard = () => {
               </Button>
             </div>
             
-            {/* Error message if any */}
             {error && (
               <Card className="mb-6 border-red-200 bg-red-50">
                 <CardContent className="pt-6">
@@ -274,10 +249,8 @@ const SupplierDashboard = () => {
               </Card>
             )}
             
-            {/* Show loading state when loading */}
             {loading && showSubmissions && renderLoadingState()}
             
-            {/* Only show submissions content when showSubmissions is true and not loading */}
             {showSubmissions && !loading && (
               <SubmissionsTable 
                 submissions={pastSubmissions} 

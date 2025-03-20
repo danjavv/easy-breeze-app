@@ -1,3 +1,4 @@
+
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -66,7 +67,7 @@ const SubmissionsTable = ({ submissions, isLoading = false, onRefresh }: Submiss
     const fetchSubmissions = async () => {
       try {
         console.log('Sending POST request with supplierID:', supplierID);
-        const response = await fetch('https://danjavv.app.n8n.cloud/webhook-test/7e057feb-401a-4110-9fcc-b00817876790', {
+        const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/7e057feb-401a-4110-9fcc-b00817876790', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
