@@ -4,6 +4,7 @@ import { Users, Settings, RefreshCw } from 'lucide-react';
 import DashboardCard from '@/components/admin/DashboardCard';
 import { Supplier } from '@/components/admin/SupplierList';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface DashboardCardsGridProps {
   suppliers: Supplier[];
@@ -17,7 +18,34 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
   onFetchSuppliers,
 }) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const pendingSupplierCount = suppliers.filter(s => s.status === 'Pending').length;
+  
+  const handleManageSuppliers = async () => {
+    try {
+      // Trigger webhook before fetching suppliers
+      await fetch('https://danjaved008.app.n8n.cloud/webhook-test/37825e51-69ed-4104-9def-af272b819973', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'manage_suppliers' }),
+      });
+      
+      // Now fetch suppliers
+      onFetchSuppliers();
+    } catch (error) {
+      console.error('Error triggering webhook:', error);
+      toast({
+        title: "Connection Error",
+        description: "Failed to connect to the server. Proceeding with supplier management.",
+        variant: "destructive"
+      });
+      
+      // Still fetch suppliers even if webhook fails
+      onFetchSuppliers();
+    }
+  };
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -33,7 +61,7 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
         buttonIcon={isLoading ? RefreshCw : Users}
         loading={isLoading}
         loadingText="Loading..."
-        onClick={onFetchSuppliers}
+        onClick={handleManageSuppliers}
       />
 
       <DashboardCard
