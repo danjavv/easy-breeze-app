@@ -49,7 +49,11 @@ const AdminAllSubmissions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const initialSubmissions = location.state?.submissions || [];
+  const initialSubmissionsData = location.state?.submissions || [];
+  const initialSubmissions = Array.isArray(initialSubmissionsData) 
+    ? initialSubmissionsData 
+    : [initialSubmissionsData];
+  
   const fromWebhook = location.state?.fromWebhook || false;
   
   const [submissions, setSubmissions] = useState<Submission[]>(initialSubmissions);
@@ -67,11 +71,13 @@ const AdminAllSubmissions = () => {
     }
   }, []);
 
-  const processWebhookData = (webhookData: any[]) => {
+  const processWebhookData = (webhookData: any) => {
     try {
       console.log('Processing webhook data:', webhookData);
       
-      const processedSubmissions = webhookData.map(item => {
+      const dataArray = Array.isArray(webhookData) ? webhookData : [webhookData];
+      
+      const processedSubmissions = dataArray.map(item => {
         return {
           submissionid: item.id || item.submissionid || `webhook-${Math.random().toString(36).substr(2, 9)}`,
           submission_label: item.label || item.submission_label || 'Webhook Submission',
@@ -184,7 +190,8 @@ const AdminAllSubmissions = () => {
       const data = await response.json();
       console.log('Webhook submissions response (refresh):', data);
       
-      processWebhookData(data);
+      const dataArray = Array.isArray(data) ? data : [data];
+      processWebhookData(dataArray);
     } catch (error) {
       console.error('Error fetching submissions from webhook:', error);
       toast({
@@ -214,10 +221,9 @@ const AdminAllSubmissions = () => {
     });
   };
 
-  const paginatedSubmissions = submissions.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const paginatedSubmissions = Array.isArray(submissions) 
+    ? submissions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+    : [];
 
   const renderPaginationItems = () => {
     const items = [];

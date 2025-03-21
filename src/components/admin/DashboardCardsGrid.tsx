@@ -176,8 +176,16 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
       const data = await response.json();
       console.log('Webhook submissions response:', data);
       
+      // Create an array of submissions, even if data is a single object
+      const submissionsArray = Array.isArray(data) ? data : [data];
+      
       // Navigate to the submissions page with the data from webhook
-      navigate('/admin-all-submissions', { state: { submissions: data, fromWebhook: true } });
+      navigate('/admin-all-submissions', { 
+        state: { 
+          submissions: submissionsArray, 
+          fromWebhook: true 
+        } 
+      });
       
       toast({
         title: "Submissions loaded",
