@@ -24,23 +24,8 @@ const AdminBaselineConfig = () => {
     purity: 40,
   });
 
-  // State for threshold values
-  const [thresholdValues, setThresholdValues] = useState({
-    detergency: 500,
-    foaming: 300,
-    biodegradability: 600,
-    purity: 60,
-  });
-
   const handleBaseValueChange = (key: keyof typeof baseValues, value: string) => {
     setBaseValues(prev => ({
-      ...prev,
-      [key]: parseFloat(value) || 0
-    }));
-  };
-
-  const handleThresholdValueChange = (key: keyof typeof thresholdValues, value: string) => {
-    setThresholdValues(prev => ({
       ...prev,
       [key]: parseFloat(value) || 0
     }));
@@ -51,12 +36,13 @@ const AdminBaselineConfig = () => {
       // Prepare data for the webhook
       const webhookData = {
         name: configName,
-        thresholds: {
-          detergency: thresholdValues.detergency,
-          foaming: thresholdValues.foaming,
-          biodegradability: thresholdValues.biodegradability,
-          purity: thresholdValues.purity
-        }
+        baseValues: {
+          detergency: baseValues.detergency,
+          foaming: baseValues.foaming,
+          biodegradability: baseValues.biodegradability,
+          purity: baseValues.purity
+        },
+        isActive: isActive
       };
 
       // Send POST request to the webhook
@@ -160,36 +146,6 @@ const AdminBaselineConfig = () => {
                               type="number"
                               value={value}
                               onChange={(e) => handleBaseValueChange(key as keyof typeof baseValues, e.target.value)}
-                              className="w-[120px]"
-                            />
-                            {key === 'purity' && <span className="ml-2">%</span>}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Pass/Fail Thresholds</h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[200px]">Property</TableHead>
-                      <TableHead>Required Minimum</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Object.entries(thresholdValues).map(([key, value]) => (
-                      <TableRow key={key}>
-                        <TableCell className="font-medium capitalize">{key}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <Input 
-                              type="number"
-                              value={value}
-                              onChange={(e) => handleThresholdValueChange(key as keyof typeof thresholdValues, e.target.value)}
                               className="w-[120px]"
                             />
                             {key === 'purity' && <span className="ml-2">%</span>}

@@ -30,13 +30,6 @@ const AdminIngredientModels = () => {
   const [configName, setConfigName] = useState('Model 1');
   const [isActive, setIsActive] = useState(false);
   
-  const [baseValues, setBaseValues] = useState({
-    detergency: 320,
-    foaming: 250,
-    biodegradability: 500,
-    purity: 40,
-  });
-
   const [thresholdValues, setThresholdValues] = useState({
     detergency: 500,
     foaming: 300,
@@ -75,13 +68,6 @@ const AdminIngredientModels = () => {
     fetchIngredients();
   }, [location.state]);
 
-  const handleBaseValueChange = (key: keyof typeof baseValues, value: string) => {
-    setBaseValues(prev => ({
-      ...prev,
-      [key]: parseFloat(value) || 0
-    }));
-  };
-
   const handleThresholdValueChange = (key: keyof typeof thresholdValues, value: string) => {
     setThresholdValues(prev => ({
       ...prev,
@@ -94,12 +80,6 @@ const AdminIngredientModels = () => {
       // Prepare data for the webhook
       const webhookData = {
         name: configName,
-        baseValues: {
-          detergency: baseValues.detergency,
-          foaming: baseValues.foaming,
-          biodegradability: baseValues.biodegradability,
-          purity: baseValues.purity
-        },
         thresholds: {
           detergency: thresholdValues.detergency,
           foaming: thresholdValues.foaming,
@@ -124,10 +104,10 @@ const AdminIngredientModels = () => {
           .from('ingredients')
           .insert({
             name: configName,
-            detergency: baseValues.detergency,
-            foaming: baseValues.foaming,
-            biodegrability: baseValues.biodegradability,
-            purity: baseValues.purity
+            detergency: thresholdValues.detergency,
+            foaming: thresholdValues.foaming,
+            biodegrability: thresholdValues.biodegradability,
+            purity: thresholdValues.purity
           });
 
         if (error) {
@@ -204,36 +184,6 @@ const AdminIngredientModels = () => {
                   onChange={(e) => setConfigName(e.target.value)}
                   className="max-w-md"
                 />
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Base Values</h3>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[200px]">Property</TableHead>
-                      <TableHead>Value</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Object.entries(baseValues).map(([key, value]) => (
-                      <TableRow key={key}>
-                        <TableCell className="font-medium capitalize">{key}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <Input 
-                              type="number"
-                              value={value}
-                              onChange={(e) => handleBaseValueChange(key as keyof typeof baseValues, e.target.value)}
-                              className="w-[120px]"
-                            />
-                            {key === 'purity' && <span className="ml-2">%</span>}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
               </div>
 
               <div className="space-y-4">
