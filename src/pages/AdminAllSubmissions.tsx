@@ -32,7 +32,7 @@ const AdminAllSubmissions = () => {
 
   // Fetch submissions when component mounts
   useEffect(() => {
-    fetchSubmissionsFromSupabase();
+    fetchSubmissionsFromWebhook();
   }, []);
 
   const processWebhookData = (webhookData: any) => {
@@ -56,18 +56,19 @@ const AdminAllSubmissions = () => {
         } as BatchResult)) : [];
         
         return {
-          submissionid: item.id || item.submissionid || `webhook-${Math.random().toString(36).substr(2, 9)}`,
-          submission_label: item.label || item.submission_label || 'Webhook Submission',
+          submissionid: item.submissionid || item.id || `webhook-${Math.random().toString(36).substr(2, 9)}`,
+          submission_label: item.submission_label || item.label || 'Webhook Submission',
           created_at: item.created_at || item.date || new Date().toISOString(),
-          supplierid: item.supplier_id || item.supplierid || 'unknown',
+          supplierid: item.supplierid || item.supplier_id || 'unknown',
           supplier_name: item.supplier_name || item.company_name || 'External Supplier',
-          total_batches: item.total_batches || item.batches || 0,
-          passed_batches: item.passed_batches || item.passed || 0,
-          failed_batches: item.failed_batches || item.failed || 0,
+          total_batches: item.total_batches || typedResults.length || 0,
+          passed_batches: item.passed_batches || 0,
+          failed_batches: item.failed_batches || 0,
           results: typedResults
         } as Submission;
       });
       
+      console.log('Processed submissions:', processedSubmissions);
       setSubmissions(processedSubmissions);
       setTotalPages(Math.ceil(processedSubmissions.length / ITEMS_PER_PAGE) || 1);
       setFromWebhook(true);
@@ -202,8 +203,7 @@ const AdminAllSubmissions = () => {
       const data = await response.json();
       console.log('Webhook submissions response (refresh):', data);
       
-      const dataArray = Array.isArray(data) ? data : [data];
-      processWebhookData(dataArray);
+      processWebhookData(data);
     } catch (error) {
       console.error('Error fetching submissions from webhook:', error);
       toast({
@@ -237,6 +237,11 @@ const AdminAllSubmissions = () => {
     (currentPage - 1) * ITEMS_PER_PAGE, 
     currentPage * ITEMS_PER_PAGE
   );
+
+  console.log('Current page:', currentPage);
+  console.log('Total pages:', totalPages);
+  console.log('Paginated submissions:', paginatedSubmissions);
+  console.log('All submissions:', submissions);
 
   return (
     <div className="min-h-screen bg-muted/40">

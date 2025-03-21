@@ -31,6 +31,8 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ submissions, format
     return id.length > 8 ? `${id.substring(0, 8)}...` : id;
   };
 
+  console.log("Submissions in SubmissionsTable:", submissions);
+
   return (
     <div className="overflow-x-auto">
       <Table>
@@ -46,55 +48,63 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ submissions, format
           </TableRow>
         </TableHeader>
         <TableBody>
-          {submissions.map((submission) => (
-            <TableRow key={submission.submissionid}>
-              <TableCell className="whitespace-nowrap">
-                {formatDate(submission.created_at)}
-              </TableCell>
-              <TableCell className="font-medium">
-                {submission.submission_label || 'Untitled Submission'}
-              </TableCell>
-              <TableCell>{submission.supplier_name || 'Unknown Supplier'}</TableCell>
-              <TableCell>
-                <Tooltip>
-                  <TooltipTrigger className="text-xs text-muted-foreground">
-                    {truncateId(submission.supplierid)}
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{submission.supplierid}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TableCell>
-              <TableCell>
-                {submission.total_batches === null ? (
-                  <span className="text-muted-foreground">No batches</span>
-                ) : (
-                  <span>
-                    {submission.passed_batches} / {submission.total_batches} passed
-                  </span>
-                )}
-              </TableCell>
-              <TableCell>
-                {submission.results && submission.results.length > 0 ? (
-                  <BatchDetails 
-                    results={submission.results}
-                    submissionLabel={submission.submission_label || 'Untitled'}
-                  />
-                ) : (
-                  <span className="text-muted-foreground text-sm">No data</span>
-                )}
-              </TableCell>
-              <TableCell className="text-right">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => viewSubmissionDetails(submission.submissionid)}
-                >
-                  <Eye className="h-4 w-4 mr-1" /> View
-                </Button>
+          {submissions && submissions.length > 0 ? (
+            submissions.map((submission) => (
+              <TableRow key={submission.submissionid}>
+                <TableCell className="whitespace-nowrap">
+                  {formatDate(submission.created_at)}
+                </TableCell>
+                <TableCell className="font-medium">
+                  {submission.submission_label || 'Untitled Submission'}
+                </TableCell>
+                <TableCell>{submission.supplier_name || 'Unknown Supplier'}</TableCell>
+                <TableCell>
+                  <Tooltip>
+                    <TooltipTrigger className="text-xs text-muted-foreground">
+                      {truncateId(submission.supplierid)}
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{submission.supplierid}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TableCell>
+                <TableCell>
+                  {submission.total_batches === null ? (
+                    <span className="text-muted-foreground">No batches</span>
+                  ) : (
+                    <span>
+                      {submission.passed_batches} / {submission.total_batches} passed
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {submission.results && submission.results.length > 0 ? (
+                    <BatchDetails 
+                      results={submission.results}
+                      submissionLabel={submission.submission_label || 'Untitled'}
+                    />
+                  ) : (
+                    <span className="text-muted-foreground text-sm">No data</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => viewSubmissionDetails(submission.submissionid)}
+                  >
+                    <Eye className="h-4 w-4 mr-1" /> View
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                No submissions found
               </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
     </div>
