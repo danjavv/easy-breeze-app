@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LoginFormProps {
   onBack: () => void;
@@ -38,40 +39,93 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
         return;
       }
       
-      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook/3f878768-29d0-43f6-a567-c5f127ff8855';
-      
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password
-        })
+      // First, try to authenticate with Supabase
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
-      
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+
+      if (authError) {
+        console.error("Authentication error:", authError);
+        throw new Error(authError.message || "Authentication failed");
       }
       
-      const responseData = await response.json();
-      console.log("Login response:", responseData);
-      
-      const data = Array.isArray(responseData) ? responseData[0] : responseData;
-      
-      if (data && data.supplierid) {
-        setSupplierID(data.supplierid);
-        console.log("Stored supplierid:", data.supplierid);
+      if (authData.user) {
+        console.log("Authenticated with Supabase:", authData.user);
         
-        setUserRole('supplier');
+        // Now fetch supplier information
+        const { data: supplierData, error: supplierError } = await supabase
+          .from('suppliers')
+          .select('id, company_name, status')
+          .eq('email', email)
+          .single();
+          
+        if (supplierError && supplierError.code !== 'PGRST116') {
+          console.error("Error fetching supplier:", supplierError);
+          throw new Error("Could not verify supplier account");
+        }
         
-        toast({
-          title: "Login successful",
-          description: "Welcome back to SilentSource!",
-        });
-        
-        navigate('/supplier-dashboard');
+        if (supplierData) {
+          setSupplierID(supplierData.id);
+          console.log("Stored supplierid:", supplierData.id);
+          
+          setUserRole('supplier');
+          
+          toast({
+            title: "Login successful",
+            description: "Welcome back to SilentSource!",
+          });
+          
+          navigate('/supplier-dashboard');
+        } else {
+          // Fallback to try the webhook approach if no supplier record is found
+          try {
+            const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook/3f878768-29d0-43f6-a567-c5f127ff8855';
+            
+            const response = await fetch(webhookUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email,
+                password
+              })
+            });
+            
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            
+            const responseData = await response.json();
+            console.log("Login response:", responseData);
+            
+            const data = Array.isArray(responseData) ? responseData[0] : responseData;
+            
+            if (data && data.supplierid) {
+              setSupplierID(data.supplierid);
+              console.log("Stored supplierid from webhook:", data.supplierid);
+              
+              setUserRole('supplier');
+              
+              toast({
+                title: "Login successful",
+                description: "Welcome back to SilentSource!",
+              });
+              
+              navigate('/supplier-dashboard');
+            } else {
+              toast({
+                title: "Login failed",
+                description: "Invalid email or password",
+                variant: "destructive"
+              });
+            }
+          } catch (webhookError) {
+            console.error("Webhook fallback error:", webhookError);
+            throw new Error("Login service is currently unavailable");
+          }
+        }
       } else {
         toast({
           title: "Login failed",
