@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Settings, RefreshCw, Database, FileText, Flask } from 'lucide-react';
+import { Users, Settings, RefreshCw, Database, FileText, Beaker } from 'lucide-react';
 import DashboardCard from '@/components/admin/DashboardCard';
 import { Supplier } from '@/components/admin/SupplierList';
 import { useNavigate } from 'react-router-dom';
@@ -238,7 +238,7 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
         <DashboardCard
           title="Detergent Configuration"
           description="Set quality standards"
-          icon={Flask}
+          icon={Beaker}
           value="Quality Standards"
           subtitle="Define passing thresholds"
           buttonText="Detergent Configuration"

@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Save, Flask } from 'lucide-react';
+import { ArrowLeft, Save, Beaker } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
@@ -114,7 +114,7 @@ const AdminBaselineConfig = () => {
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="text-2xl flex items-center">
-              <Flask className="mr-2 h-5 w-5 text-primary" />
+              <Beaker className="mr-2 h-5 w-5 text-primary" />
               Detergent Configuration
             </CardTitle>
           </CardHeader>
