@@ -80,7 +80,7 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
         } else {
           // Fallback to try the webhook approach if no supplier record is found
           try {
-            const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook/3f878768-29d0-43f6-a567-c5f127ff8855';
+            const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook-test/3f878768-29d0-43f6-a567-c5f127ff8855';
             
             const response = await fetch(webhookUrl, {
               method: 'POST',
