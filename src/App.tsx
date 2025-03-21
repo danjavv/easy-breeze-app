@@ -10,6 +10,7 @@ import SubmissionResults from '@/pages/SubmissionResults';
 import AdminDashboard from '@/pages/AdminDashboard';
 import AdminBaselineConfig from '@/pages/AdminBaselineConfig';
 import AdminIngredientModels from '@/pages/AdminIngredientModels';
+import AdminAllSubmissions from '@/pages/AdminAllSubmissions';
 import NotFound from '@/pages/NotFound';
 import { Toaster } from 'sonner';
 
@@ -27,6 +28,7 @@ function App() {
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/admin-baseline-config" element={<AdminBaselineConfig />} />
           <Route path="/admin-ingredient-models" element={<AdminIngredientModels />} />
+          <Route path="/admin-all-submissions" element={<AdminAllSubmissions />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />

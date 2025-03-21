@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Users, Settings, RefreshCw, Database } from 'lucide-react';
+import { Users, Settings, RefreshCw, Database, FileText } from 'lucide-react';
 import DashboardCard from '@/components/admin/DashboardCard';
 import { Supplier } from '@/components/admin/SupplierList';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +14,16 @@ interface Ingredient {
   detergency?: number | null;
   foaming?: number | null;
   biodegrability?: number | null;
+}
+
+interface Submission {
+  submissionid: string;
+  submission_label: string | null;
+  created_at: string;
+  supplierid: string;
+  total_batches: number | null;
+  passed_batches: number | null;
+  failed_batches: number | null;
 }
 
 interface DashboardCardsGridProps {
@@ -35,6 +44,8 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
   const [fetchedSuppliers, setFetchedSuppliers] = useState<Supplier[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
   const pendingSupplierCount = suppliers.filter(s => s.status === 'Pending').length;
   
   const handleManageSuppliers = async () => {
@@ -144,10 +155,46 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
       });
     }
   };
-  
+
+  const handleViewAllSubmissions = async () => {
+    try {
+      setIsLoadingSubmissions(true);
+      
+      // Fetch submissions from Supabase
+      const { data, error } = await supabase
+        .from('submissions')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      console.log('Submissions data:', data);
+      setSubmissions(data);
+      
+      // Navigate to the submissions view page
+      navigate('/admin-all-submissions', { state: { submissions: data } });
+      
+      toast({
+        title: "Submissions loaded",
+        description: `Successfully loaded ${data.length} submissions.`,
+      });
+    } catch (error) {
+      console.error('Error fetching submissions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch submissions. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingSubmissions(false);
+    }
+  };
+
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <DashboardCard
           title="Suppliers"
           description="Manage supplier accounts"
@@ -184,6 +231,19 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
           loading={isLoadingIngredients}
           loadingText="Loading..."
           onClick={handleFetchIngredients}
+        />
+
+        <DashboardCard
+          title="All Submissions"
+          description="View all supplier submissions"
+          icon={FileText}
+          value={submissions.length || 0}
+          subtitle="Total submissions"
+          buttonText="View Submissions"
+          buttonIcon={isLoadingSubmissions ? RefreshCw : FileText}
+          loading={isLoadingSubmissions}
+          loadingText="Loading..."
+          onClick={handleViewAllSubmissions}
         />
       </div>
       
