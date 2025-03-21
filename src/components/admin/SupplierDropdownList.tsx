@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Supplier } from '@/components/admin/SupplierList';
+import { Supplier, SupplierSubmission } from '@/components/admin/SupplierList';
 import { 
   CheckCircle, 
   ChevronDown, 
@@ -29,28 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface SupplierSubmission {
-  submission_id: string;
-  submission_label: string;
-  processed_at: string;
-  summary: {
-    total_batches: number;
-    failed_batches: number;
-    passed_batches: number;
-  };
-  results: {
-    status: string;
-    metrics: {
-      purity: number;
-      foaming: number;
-      detergency: number;
-      biodegradability: number;
-    };
-    batch_label: string;
-    failure_reasons?: string[];
-  }[];
-}
 
 interface SupplierDropdownListProps {
   suppliers: Supplier[];

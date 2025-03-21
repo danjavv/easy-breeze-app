@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,28 @@ import { AlertTriangle, CheckCircle, RefreshCw, Trash2, XCircle } from 'lucide-r
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
+
+export interface SupplierSubmission {
+  submission_id: string;
+  submission_label: string;
+  processed_at: string;
+  summary: {
+    total_batches: number;
+    failed_batches: number;
+    passed_batches: number;
+  };
+  results: {
+    status: string;
+    metrics: {
+      purity: number;
+      foaming: number;
+      detergency: number;
+      biodegradability: number;
+    };
+    batch_label: string;
+    failure_reasons?: string[];
+  }[];
+}
 
 export interface Supplier {
   id: string;
@@ -15,6 +36,7 @@ export interface Supplier {
   created_at: string;
   notification_email?: string;
   password_hash?: string;
+  submissions?: SupplierSubmission[] | null;
 }
 
 interface SupplierListProps {

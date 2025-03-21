@@ -45,13 +45,16 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
       const data = await response.json();
       console.log('Webhook response:', data);
       
+      // Handle both single object and array responses
+      const supplierArray = Array.isArray(data) ? data : [data];
+      
       // Update suppliers with the fetched data
-      setFetchedSuppliers(data);
+      setFetchedSuppliers(supplierArray);
       setShowSupplierList(true);
       
       toast({
         title: "Suppliers loaded",
-        description: `Successfully loaded ${data.length} suppliers.`,
+        description: `Successfully loaded ${supplierArray.length} suppliers.`,
       });
     } catch (error) {
       console.error('Error triggering webhook:', error);
