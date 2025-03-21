@@ -69,6 +69,39 @@ export type Database = {
         }
         Relationships: []
       }
+      submissions: {
+        Row: {
+          created_at: string
+          failed_batches: number | null
+          passed_batches: number | null
+          results: Json[] | null
+          submission_label: string | null
+          submissionid: string
+          supplierid: string
+          total_batches: number | null
+        }
+        Insert: {
+          created_at?: string
+          failed_batches?: number | null
+          passed_batches?: number | null
+          results?: Json[] | null
+          submission_label?: string | null
+          submissionid: string
+          supplierid: string
+          total_batches?: number | null
+        }
+        Update: {
+          created_at?: string
+          failed_batches?: number | null
+          passed_batches?: number | null
+          results?: Json[] | null
+          submission_label?: string | null
+          submissionid?: string
+          supplierid?: string
+          total_batches?: number | null
+        }
+        Relationships: []
+      }
       suppliers: {
         Row: {
           company_name: string
@@ -78,7 +111,6 @@ export type Database = {
           notification_email: string | null
           password_hash: string | null
           status: string | null
-          submissions: Json[] | null
         }
         Insert: {
           company_name: string
@@ -88,7 +120,6 @@ export type Database = {
           notification_email?: string | null
           password_hash?: string | null
           status?: string | null
-          submissions?: Json[] | null
         }
         Update: {
           company_name?: string
@@ -98,7 +129,6 @@ export type Database = {
           notification_email?: string | null
           password_hash?: string | null
           status?: string | null
-          submissions?: Json[] | null
         }
         Relationships: []
       }

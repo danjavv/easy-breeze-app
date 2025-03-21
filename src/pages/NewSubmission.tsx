@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Upload, FileCode, Check, Loader } from 'lucide-react';
@@ -7,12 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from '@/contexts/AuthContext';
+import DetergentSelector, { Detergent } from '@/components/DetergentSelector';
 
 const NewSubmission = () => {
   const [submissionLabel, setSubmissionLabel] = useState('ACME_Q2_Batch_2');
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [selectedDetergent, setSelectedDetergent] = useState<Detergent | null>(null);
   const navigate = useNavigate();
   
   const { supplierID } = useAuth();
@@ -73,6 +76,13 @@ const NewSubmission = () => {
       return;
     }
 
+    if (!selectedDetergent) {
+      toast.error("Missing Detergent", {
+        description: "Please select a detergent before submitting."
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
     toast.info("Processing Submission", {
@@ -83,6 +93,8 @@ const NewSubmission = () => {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('submissionLabel', submissionLabel);
+      formData.append('detergentId', selectedDetergent.id);
+      formData.append('detergentName', selectedDetergent.name);
       
       if (supplierID) {
         formData.append('supplierid', supplierID);
@@ -154,10 +166,29 @@ const NewSubmission = () => {
                   />
                 </div>
                 
+                <div className="space-y-2 border rounded-lg p-4 bg-muted/10">
+                  <div className="font-medium text-lg flex items-center gap-2">
+                    <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm">1</div>
+                    Select Detergent
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Select the detergent associated with this LAS submission.
+                  </p>
+                  
+                  <DetergentSelector onDetergentSelect={setSelectedDetergent} />
+                  
+                  {selectedDetergent && (
+                    <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-2 rounded mt-2">
+                      <Check size={16} />
+                      <span>Selected: {selectedDetergent.name}</span>
+                    </div>
+                  )}
+                </div>
+                
                 <div className="space-y-4 pt-4">
                   <div className="space-y-2 border rounded-lg p-4 bg-muted/10">
                     <div className="font-medium text-lg flex items-center gap-2">
-                      <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm">1</div>
+                      <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm">2</div>
                       Download Template
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
@@ -176,7 +207,7 @@ const NewSubmission = () => {
                   
                   <div className="space-y-2 border rounded-lg p-4 bg-muted/10">
                     <div className="font-medium text-lg flex items-center gap-2">
-                      <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm">2</div>
+                      <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm">3</div>
                       Upload Completed CSV
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
@@ -223,7 +254,7 @@ const NewSubmission = () => {
                 <Button 
                   type="submit" 
                   className="w-full py-6 text-lg"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !selectedDetergent}
                 >
                   {isSubmitting ? (
                     <>
