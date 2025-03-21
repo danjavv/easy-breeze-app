@@ -1,12 +1,10 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Save } from 'lucide-react';
+import ModelAssignmentForm from './ModelAssignmentForm';
+import AssignmentsTable from './AssignmentsTable';
 
 interface Model {
   id: string;
@@ -130,114 +128,29 @@ const ModelAssignmentSection = () => {
     }
   };
 
-  const getIngredientName = (id: string) => {
-    return ingredients.find(i => i.id === id)?.name || 'Unknown';
-  };
-
-  const getModelName = (id: string) => {
-    return models.find(m => m.id === id)?.name || 'Unknown';
-  };
-
   return (
     <Card className="mb-8">
       <CardHeader>
         <CardTitle className="text-2xl">Assign Model to Detergent</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="ingredient-select">Select Detergent</Label>
-              <Select 
-                value={selectedIngredient} 
-                onValueChange={setSelectedIngredient}
-                disabled={isLoading}
-              >
-                <SelectTrigger id="ingredient-select" className="w-full">
-                  <SelectValue placeholder="Select a detergent" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ingredients.length === 0 ? (
-                    <div className="py-6 text-center text-sm text-muted-foreground">
-                      {isLoading ? "Loading..." : "No detergents found"}
-                    </div>
-                  ) : (
-                    ingredients.map((ingredient) => (
-                      <SelectItem key={ingredient.id} value={ingredient.id}>
-                        {ingredient.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="model-select">Assign Model</Label>
-              <Select 
-                value={selectedModel} 
-                onValueChange={setSelectedModel}
-                disabled={isLoading || !selectedIngredient}
-              >
-                <SelectTrigger id="model-select" className="w-full">
-                  <SelectValue placeholder="Select a model" />
-                </SelectTrigger>
-                <SelectContent>
-                  {models.length === 0 ? (
-                    <div className="py-6 text-center text-sm text-muted-foreground">
-                      {isLoading ? "Loading..." : "No models found"}
-                    </div>
-                  ) : (
-                    models.map((model) => (
-                      <SelectItem key={model.id} value={model.id}>
-                        {model.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {existingAssignments.length > 0 && (
-            <div className="pt-4">
-              <h3 className="text-lg font-medium mb-2">Current Assignments</h3>
-              <div className="border rounded-md overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Detergent
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Assigned Model
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {existingAssignments.map((assignment, index) => (
-                      <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {getIngredientName(assignment.ingredient_id)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {getModelName(assignment.model_id)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          <div className="flex justify-end space-x-4 pt-4">
-            <Button onClick={handleSave} disabled={isLoading || !selectedIngredient || !selectedModel}>
-              <Save className="mr-2 h-4 w-4" />
-              Save Assignment
-            </Button>
-          </div>
-        </div>
+        <ModelAssignmentForm 
+          ingredients={ingredients}
+          models={models}
+          selectedIngredient={selectedIngredient}
+          selectedModel={selectedModel}
+          isLoading={isLoading}
+          onIngredientChange={setSelectedIngredient}
+          onModelChange={setSelectedModel}
+          onSave={handleSave}
+        />
+        
+        <AssignmentsTable 
+          assignments={existingAssignments}
+          ingredients={ingredients}
+          models={models}
+          isLoading={isLoading}
+        />
       </CardContent>
     </Card>
   );
