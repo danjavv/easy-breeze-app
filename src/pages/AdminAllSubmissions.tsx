@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -16,7 +15,7 @@ import AdminHeader from '@/components/admin/AdminHeader';
 import SubmissionsTable from '@/components/admin/SubmissionsTable';
 import PaginationControls from '@/components/admin/PaginationControls';
 import EmptySubmissions from '@/components/admin/EmptySubmissions';
-import { Submission, BatchResult } from '@/types/submissions';
+import { Submission } from '@/types/submissions';
 
 const ITEMS_PER_PAGE = 10;
 const WEBHOOK_URL = 'https://danjaved008.app.n8n.cloud/webhook-test/be46fb03-6f2d-4f9e-8963-f7aba3eb4101';
@@ -63,7 +62,7 @@ const AdminAllSubmissions = () => {
             biodegradability: result.metrics?.biodegradability || 0
           },
           failure_reasons: result.failure_reasons || []
-        } as BatchResult)) : [];
+        })) : [];
         
         return {
           submissionid: item.submissionid || item.id || `webhook-${Math.random().toString(36).substr(2, 9)}`,
