@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import AdminHeader from '@/components/admin/AdminHeader';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,6 +32,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -61,6 +70,7 @@ const formSchema = z.object({
 const AdminIngredientModels = () => {
   const { setUserRole } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
@@ -75,18 +85,34 @@ const AdminIngredientModels = () => {
     },
   });
 
+  useEffect(() => {
+    // Check if we have ingredients from the location state (passed from DashboardCardsGrid)
+    if (location.state?.ingredients) {
+      setIngredients(location.state.ingredients);
+    } else {
+      // If not, fetch them directly
+      fetchIngredients();
+    }
+  }, [location.state]);
+
   const fetchIngredients = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('ingredients')
-        .select('*');
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/f653e0a6-4246-4a21-b122-f8a0fc4727ac', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        throw new Error('Failed to fetch ingredients');
       }
       
-      setIngredients(data || []);
+      const data = await response.json();
+      const ingredientsArray = Array.isArray(data) ? data : [data];
+      
+      setIngredients(ingredientsArray);
     } catch (error) {
       console.error('Error fetching ingredients:', error);
       toast({
@@ -98,10 +124,6 @@ const AdminIngredientModels = () => {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchIngredients();
-  }, []);
 
   const handleSignOut = () => {
     setUserRole(null);
@@ -255,50 +277,63 @@ const AdminIngredientModels = () => {
           </Button>
         </div>
 
-        {/* Grid of ingredients */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {ingredients.map((ingredient) => (
-            <Card key={ingredient.id} className="h-full">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg">{ingredient.name || 'Unnamed Ingredient'}</CardTitle>
-                <CardDescription>
-                  Models: {ingredient.models ? ingredient.models.length : 0}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-2">Properties:</p>
-                <ul className="text-sm space-y-1">
-                  {ingredient.purity !== null && (
-                    <li>Purity: {ingredient.purity}</li>
-                  )}
-                  {ingredient.detergency !== null && (
-                    <li>Detergency: {ingredient.detergency}</li>
-                  )}
-                  {ingredient.foaming !== null && (
-                    <li>Foaming: {ingredient.foaming}</li>
-                  )}
-                  {ingredient.biodegrability !== null && (
-                    <li>Biodegradability: {ingredient.biodegrability}</li>
-                  )}
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full"
-                  onClick={() => {
-                    setSelectedIngredient(ingredient);
-                    setIsDialogOpen(true);
-                  }}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Model
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+        {/* Ingredients Table */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Available Ingredients</CardTitle>
+            <CardDescription>
+              View all ingredients and add models to them
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Purity</TableHead>
+                  <TableHead>Detergency</TableHead>
+                  <TableHead>Foaming</TableHead>
+                  <TableHead>Biodegradability</TableHead>
+                  <TableHead>Models</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ingredients.length > 0 ? (
+                  ingredients.map((ingredient) => (
+                    <TableRow key={ingredient.id}>
+                      <TableCell className="font-medium">{ingredient.name || 'Unnamed'}</TableCell>
+                      <TableCell>{ingredient.purity !== null ? ingredient.purity : '-'}</TableCell>
+                      <TableCell>{ingredient.detergency !== null ? ingredient.detergency : '-'}</TableCell>
+                      <TableCell>{ingredient.foaming !== null ? ingredient.foaming : '-'}</TableCell>
+                      <TableCell>{ingredient.biodegrability !== null ? ingredient.biodegrability : '-'}</TableCell>
+                      <TableCell>{ingredient.models ? ingredient.models.length : 0}</TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => {
+                            setSelectedIngredient(ingredient);
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Model
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
+                      {isLoading ? 'Loading ingredients...' : 'No ingredients found'}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
 
         {/* Selected ingredient models display */}
         {selectedIngredient && (

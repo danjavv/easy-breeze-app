@@ -94,21 +94,30 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
     try {
       setIsLoadingIngredients(true);
       
-      // Fetch ingredients from Supabase
-      const { data, error } = await supabase
-        .from('ingredients')
-        .select('*');
+      // Fetch ingredients from webhook instead of Supabase
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/f653e0a6-4246-4a21-b122-f8a0fc4727ac', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       
-      if (error) {
-        throw error;
+      if (!response.ok) {
+        throw new Error('Failed to fetch ingredients');
       }
       
-      setIngredients(data || []);
-      navigate('/admin-ingredient-models');
+      const data = await response.json();
+      console.log('Webhook response (ingredients):', data);
+      
+      // Make sure we're working with an array
+      const ingredientsArray = Array.isArray(data) ? data : [data];
+      
+      setIngredients(ingredientsArray);
+      navigate('/admin-ingredient-models', { state: { ingredients: ingredientsArray } });
       
       toast({
         title: "Ingredients loaded",
-        description: `Successfully loaded ${data?.length || 0} ingredients.`,
+        description: `Successfully loaded ${ingredientsArray.length} ingredients.`,
       });
     } catch (error) {
       console.error('Error fetching ingredients:', error);
