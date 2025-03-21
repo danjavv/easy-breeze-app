@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Settings, RefreshCw, Database, FileText } from 'lucide-react';
+import { Users, Settings, RefreshCw, Database, FileText, Flask } from 'lucide-react';
 import DashboardCard from '@/components/admin/DashboardCard';
 import { Supplier } from '@/components/admin/SupplierList';
 import { useNavigate } from 'react-router-dom';
@@ -52,7 +52,6 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
     try {
       setIsLoadingSuppliers(true);
       
-      // Trigger webhook to fetch suppliers with a GET request
       const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/37825e51-69ed-4104-9def-af272b819973', {
         method: 'GET',
         headers: {
@@ -70,10 +69,8 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
       const data = await response.json();
       console.log('Webhook response:', data);
       
-      // Make sure we're working with an array
       const supplierArray = Array.isArray(data) ? data : [data];
       
-      // Update suppliers with the fetched data
       setFetchedSuppliers(supplierArray);
       setShowSupplierList(true);
       
@@ -89,12 +86,10 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
         variant: "destructive"
       });
       
-      // Fall back to existing suppliers if available
       if (suppliers.length > 0) {
         setFetchedSuppliers(suppliers);
         setShowSupplierList(true);
       } else {
-        // If no suppliers, call the original fetch function
         onFetchSuppliers();
       }
     } finally {
@@ -106,7 +101,6 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
     try {
       setIsLoadingIngredients(true);
       
-      // Fetch ingredients from Supabase directly
       const { data, error } = await supabase
         .from('ingredients')
         .select('*');
@@ -117,7 +111,6 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
       
       console.log('Ingredients data:', data);
       
-      // Ensure we're working with an array of ingredients
       const ingredientsArray = Array.isArray(data) ? data : [data];
       
       setIngredients(ingredientsArray);
@@ -141,10 +134,8 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
 
   const handleToggleSupplierStatus = async (supplier: Supplier) => {
     try {
-      // Toggle the status between 'Pending' and 'Approved'
       const newStatus = supplier.status === 'Pending' ? 'Approved' : 'Pending';
       
-      // Update the supplier status in local state
       setFetchedSuppliers(prev => 
         prev.map(s => s.id === supplier.id ? { ...s, status: newStatus as 'Pending' | 'Approved' | 'Rejected' } : s)
       );
@@ -165,7 +156,6 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
 
   const handleDeleteSupplier = async (supplierId: string) => {
     try {
-      // Update the local state by removing the deleted supplier
       setFetchedSuppliers(prev => prev.filter(s => s.id !== supplierId));
       
       toast({
@@ -186,7 +176,6 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
     try {
       setIsLoadingSubmissions(true);
       
-      // Call webhook to get submissions data
       const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/be46fb03-6f2d-4f9e-8963-f7aba3eb4101', {
         method: 'GET',
         headers: {
@@ -201,10 +190,8 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
       const data = await response.json();
       console.log('Webhook submissions response:', data);
       
-      // Create an array of submissions, even if data is a single object
       const submissionsArray = Array.isArray(data) ? data : [data];
       
-      // Navigate to the submissions page with the data from webhook
       navigate('/admin-all-submissions', { 
         state: { 
           submissions: submissionsArray, 
@@ -224,7 +211,6 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
         variant: "destructive"
       });
       
-      // Fallback to direct navigation if webhook fails
       navigate('/admin-all-submissions');
     } finally {
       setIsLoadingSubmissions(false);
@@ -250,12 +236,12 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
         />
 
         <DashboardCard
-          title="Baseline Configuration"
+          title="Detergent Configuration"
           description="Set quality standards"
-          icon={Settings}
+          icon={Flask}
           value="Quality Standards"
           subtitle="Define passing thresholds"
-          buttonText="Configure Standards"
+          buttonText="Detergent Configuration"
           onClick={() => navigate('/admin-baseline-config')}
         />
 
