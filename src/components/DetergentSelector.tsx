@@ -17,7 +17,7 @@ interface DetergentSelectorProps {
 
 const DetergentSelector: React.FC<DetergentSelectorProps> = ({ onDetergentSelect }) => {
   const [detergents, setDetergents] = useState<Detergent[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDetergent, setSelectedDetergent] = useState<string | null>(null);
 
