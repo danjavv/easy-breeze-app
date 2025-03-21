@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Users, Settings, RefreshCw, Database, FileText } from 'lucide-react';
 import DashboardCard from '@/components/admin/DashboardCard';
@@ -53,13 +52,15 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
     try {
       setIsLoadingSuppliers(true);
       
-      // Trigger webhook to fetch suppliers
+      // Trigger webhook to fetch suppliers with a GET request
       const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/37825e51-69ed-4104-9def-af272b819973', {
-        method: 'POST',
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ action: 'manage_suppliers' }),
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       });
       
       if (!response.ok) {
@@ -135,6 +136,30 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
       });
     } finally {
       setIsLoadingIngredients(false);
+    }
+  };
+
+  const handleToggleSupplierStatus = async (supplier: Supplier) => {
+    try {
+      // Toggle the status between 'Pending' and 'Approved'
+      const newStatus = supplier.status === 'Pending' ? 'Approved' : 'Pending';
+      
+      // Update the supplier status in local state
+      setFetchedSuppliers(prev => 
+        prev.map(s => s.id === supplier.id ? { ...s, status: newStatus as 'Pending' | 'Approved' | 'Rejected' } : s)
+      );
+      
+      toast({
+        title: `Supplier ${newStatus}`,
+        description: `${supplier.company_name}'s status updated to ${newStatus}.`,
+      });
+    } catch (error) {
+      console.error('Error toggling supplier status:', error);
+      toast({
+        title: "Update Failed",
+        description: "There was an error updating the supplier status.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -266,6 +291,7 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
           suppliers={fetchedSuppliers} 
           onClose={() => setShowSupplierList(false)}
           onDelete={handleDeleteSupplier}
+          onToggleStatus={handleToggleSupplierStatus}
         />
       )}
     </>
