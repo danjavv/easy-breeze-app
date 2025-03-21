@@ -31,7 +31,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ submissions, format
     return id.length > 8 ? `${id.substring(0, 8)}...` : id;
   };
 
-  console.log("Submissions in SubmissionsTable:", submissions);
+  console.log("Submissions in SubmissionsTable component:", submissions);
 
   return (
     <div className="overflow-x-auto">

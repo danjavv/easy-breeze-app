@@ -19,13 +19,14 @@ import EmptySubmissions from '@/components/admin/EmptySubmissions';
 import { Submission, BatchResult } from '@/types/submissions';
 
 const ITEMS_PER_PAGE = 10;
+const WEBHOOK_URL = 'https://danjaved008.app.n8n.cloud/webhook-test/be46fb03-6f2d-4f9e-8963-f7aba3eb4101';
 
 const AdminAllSubmissions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [fromWebhook, setFromWebhook] = useState(false);
@@ -39,7 +40,16 @@ const AdminAllSubmissions = () => {
     try {
       console.log('Processing webhook data:', webhookData);
       
+      // Handle both array and single object responses
       const dataArray = Array.isArray(webhookData) ? webhookData : [webhookData];
+      
+      if (dataArray.length === 0) {
+        console.log('No data returned from webhook');
+        setSubmissions([]);
+        setTotalPages(1);
+        setIsLoading(false);
+        return;
+      }
       
       const processedSubmissions = dataArray.map(item => {
         // Ensure results are properly typed as BatchResult[]
@@ -72,6 +82,7 @@ const AdminAllSubmissions = () => {
       setSubmissions(processedSubmissions);
       setTotalPages(Math.ceil(processedSubmissions.length / ITEMS_PER_PAGE) || 1);
       setFromWebhook(true);
+      setIsLoading(false);
       
       toast({
         title: "Webhook data processed",
@@ -84,6 +95,43 @@ const AdminAllSubmissions = () => {
         description: "Failed to process webhook data. Using raw data instead.",
         variant: "destructive"
       });
+      setIsLoading(false);
+    }
+  };
+
+  const fetchSubmissionsFromWebhook = async () => {
+    try {
+      setIsLoading(true);
+      
+      console.log(`Fetching from webhook: ${WEBHOOK_URL}`);
+      
+      const response = await fetch(WEBHOOK_URL, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch submissions: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Webhook submissions response:', data);
+      
+      processWebhookData(data);
+    } catch (error) {
+      console.error('Error fetching submissions from webhook:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch submissions from webhook. Trying database...",
+        variant: "destructive"
+      });
+      
+      fetchSubmissionsFromSupabase();
     }
   };
 
@@ -103,6 +151,14 @@ const AdminAllSubmissions = () => {
       }
       
       console.log('Submissions data:', submissionsData);
+      
+      if (!submissionsData || submissionsData.length === 0) {
+        setSubmissions([]);
+        setTotalPages(1);
+        setFromWebhook(false);
+        setIsLoading(false);
+        return;
+      }
       
       const supplierIds = [...new Set(submissionsData.map(s => s.supplierid))];
       
@@ -168,6 +224,7 @@ const AdminAllSubmissions = () => {
       }
       
       setFromWebhook(false);
+      setIsLoading(false);
       
       toast({
         title: "Submissions loaded",
@@ -180,40 +237,6 @@ const AdminAllSubmissions = () => {
         description: "Failed to fetch submissions data",
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchSubmissionsFromWebhook = async () => {
-    try {
-      setIsLoading(true);
-      
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/be46fb03-6f2d-4f9e-8963-f7aba3eb4101', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch submissions: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('Webhook submissions response (refresh):', data);
-      
-      processWebhookData(data);
-    } catch (error) {
-      console.error('Error fetching submissions from webhook:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch submissions from webhook. Trying database...",
-        variant: "destructive"
-      });
-      
-      fetchSubmissionsFromSupabase();
-    } finally {
       setIsLoading(false);
     }
   };
