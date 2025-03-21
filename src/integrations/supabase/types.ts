@@ -42,7 +42,7 @@ export type Database = {
       models: {
         Row: {
           created_at: string | null
-          id: string | null
+          id: string
           name: string
           threshold_biodegrability: number | null
           threshold_detergency: number | null
@@ -51,7 +51,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          id?: string | null
+          id?: string
           name: string
           threshold_biodegrability?: number | null
           threshold_detergency?: number | null
@@ -60,7 +60,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
-          id?: string | null
+          id?: string
           name?: string
           threshold_biodegrability?: number | null
           threshold_detergency?: number | null

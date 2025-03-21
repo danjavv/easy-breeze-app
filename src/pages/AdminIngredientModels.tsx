@@ -89,8 +89,8 @@ const AdminIngredientModels = () => {
         isActive: isActive
       };
 
-      // Send POST request to the webhook
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/adf1644a-241c-4d1c-8964-69d89e7fab14', {
+      // Send POST request to the updated webhook
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/9ec560b0-44db-4f4f-84e3-bb1b4f9acb82', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
