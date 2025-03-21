@@ -15,7 +15,7 @@ import AdminHeader from '@/components/admin/AdminHeader';
 import SubmissionsTable from '@/components/admin/SubmissionsTable';
 import PaginationControls from '@/components/admin/PaginationControls';
 import EmptySubmissions from '@/components/admin/EmptySubmissions';
-import { Submission } from '@/types/submissions';
+import { Submission, BatchResult } from '@/types/submissions';
 
 const ITEMS_PER_PAGE = 10;
 const WEBHOOK_URL = 'https://danjaved008.app.n8n.cloud/webhook-test/be46fb03-6f2d-4f9e-8963-f7aba3eb4101';
@@ -30,7 +30,6 @@ const AdminAllSubmissions = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [fromWebhook, setFromWebhook] = useState(false);
 
-  // Fetch submissions when component mounts
   useEffect(() => {
     fetchSubmissionsFromWebhook();
   }, []);
@@ -39,7 +38,6 @@ const AdminAllSubmissions = () => {
     try {
       console.log('Processing webhook data:', webhookData);
       
-      // Handle both array and single object responses
       const dataArray = Array.isArray(webhookData) ? webhookData : [webhookData];
       
       if (dataArray.length === 0) {
@@ -51,7 +49,6 @@ const AdminAllSubmissions = () => {
       }
       
       const processedSubmissions = dataArray.map(item => {
-        // Ensure results are properly typed as BatchResult[]
         const typedResults = item.results ? item.results.map((result: any) => ({
           status: result.status || 'UNKNOWN',
           batch_label: result.batch_label || `Batch`,
@@ -179,7 +176,6 @@ const AdminAllSubmissions = () => {
           return acc;
         }, {} as Record<string, string>);
         
-        // Ensure results are properly typed as BatchResult[]
         const enhancedSubmissions = submissionsData.map(submission => {
           const typedResults = submission.results ? submission.results.map((result: any) => ({
             status: result.status || 'UNKNOWN',
@@ -191,7 +187,7 @@ const AdminAllSubmissions = () => {
               biodegradability: result.metrics?.biodegradability || 0
             },
             failure_reasons: result.failure_reasons || []
-          } as BatchResult)) : [];
+          })) : [];
           
           return {
             ...submission,
@@ -215,7 +211,7 @@ const AdminAllSubmissions = () => {
               biodegradability: result.metrics?.biodegradability || 0
             },
             failure_reasons: result.failure_reasons || []
-          } as BatchResult)) : []
+          })) : []
         } as Submission)) : [];
         
         setSubmissions(typedSubmissions);
