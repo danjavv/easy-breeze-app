@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -22,6 +21,16 @@ interface Ingredient {
   created_at?: string;
 }
 
+interface WebhookResponse {
+  id?: string;
+  name?: string;
+  threshold_detergency?: number | null;
+  threshold_foaming?: number | null;
+  threshold_biodegradability?: number | null;
+  threshold_purity?: number | null;
+  created_at?: string;
+}
+
 const AdminIngredientModels = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,7 +38,6 @@ const AdminIngredientModels = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [configName, setConfigName] = useState('Model 1');
   const [isActive, setIsActive] = useState(false);
-  
   const [thresholdValues, setThresholdValues] = useState({
     detergency: 500,
     foaming: 300,
@@ -77,7 +85,6 @@ const AdminIngredientModels = () => {
 
   const handleSave = async () => {
     try {
-      // Prepare data for the webhook
       const webhookData = {
         name: configName,
         thresholds: {
@@ -89,7 +96,6 @@ const AdminIngredientModels = () => {
         isActive: isActive
       };
 
-      // Send POST request to the updated webhook
       const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/9ec560b0-44db-4f4f-84e3-bb1b4f9acb82', {
         method: 'POST',
         headers: {
@@ -99,26 +105,39 @@ const AdminIngredientModels = () => {
       });
 
       if (response.ok) {
-        // Also save to Supabase
-        const { error } = await supabase
-          .from('ingredients')
-          .insert({
-            name: configName,
-            detergency: thresholdValues.detergency,
-            foaming: thresholdValues.foaming,
-            biodegrability: thresholdValues.biodegradability,
-            purity: thresholdValues.purity
-          });
+        try {
+          const responseData: WebhookResponse = await response.json();
+          
+          if (responseData && responseData.id) {
+            console.log('Webhook response:', responseData);
+            
+            const { error } = await supabase
+              .from('ingredients')
+              .insert({
+                name: configName,
+                detergency: thresholdValues.detergency,
+                foaming: thresholdValues.foaming,
+                biodegradability: thresholdValues.biodegradability,
+                purity: thresholdValues.purity
+              });
 
-        if (error) {
-          throw error;
-        }
+            if (error) {
+              console.error('Supabase error:', error);
+            }
 
-        toast.success('Ingredient model saved successfully');
-        if (isActive) {
-          toast.info('Model set as active');
+            toast.success('Ingredient model saved successfully');
+            if (isActive) {
+              toast.info('Model set as active');
+            }
+            navigate('/admin-dashboard');
+          } else {
+            toast.error('Invalid response from server');
+            console.error('Invalid webhook response:', responseData);
+          }
+        } catch (jsonError) {
+          toast.error('Failed to parse server response');
+          console.error('JSON parsing error:', jsonError);
         }
-        navigate('/admin-dashboard');
       } else {
         toast.error('Failed to save configuration');
         console.error('Failed to save configuration:', await response.text());
