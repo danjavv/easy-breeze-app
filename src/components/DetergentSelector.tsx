@@ -61,19 +61,12 @@ const DetergentSelector: React.FC<DetergentSelectorProps> = ({ onDetergentSelect
       
       let data = await response.json();
       
-      // Handle if the data isn't an array (e.g., if it's a single object)
-      if (!Array.isArray(data)) {
-        // If it's a single object, convert it to an array
-        if (data && typeof data === 'object') {
-          data = [data];
-        } else {
-          data = [];
-        }
-      }
+      // Ensure data is always an array
+      const detergentsArray = Array.isArray(data) ? data : [data];
       
-      if (data.length > 0) {
+      if (detergentsArray.length > 0) {
         // Process and save the detergents data
-        const formattedDetergents = data.map((item: any) => ({
+        const formattedDetergents = detergentsArray.map((item: any) => ({
           id: item.id || `detergent-${Math.random().toString(36).substr(2, 9)}`,
           name: item.name || 'Unknown Detergent'
         }));
