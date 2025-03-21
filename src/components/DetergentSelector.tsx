@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -61,11 +60,9 @@ const DetergentSelector: React.FC<DetergentSelectorProps> = ({ onDetergentSelect
       
       let data = await response.json();
       
-      // Ensure data is always an array
       const detergentsArray = Array.isArray(data) ? data : [data];
       
       if (detergentsArray.length > 0) {
-        // Process and save the detergents data
         const formattedDetergents = detergentsArray.map((item: any) => ({
           id: item.id || `detergent-${Math.random().toString(36).substr(2, 9)}`,
           name: item.name || 'Unknown Detergent'
@@ -102,12 +99,12 @@ const DetergentSelector: React.FC<DetergentSelectorProps> = ({ onDetergentSelect
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 p-4 rounded-lg border border-border/50 bg-gradient-to-br from-background to-muted/30">
       <div className="flex justify-between items-center">
         <Button
           variant="outline"
           onClick={loadDetergentsFromWebhook}
-          className="mb-2"
+          className="mb-2 transition-all duration-300 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200"
           disabled={isLoadingWebhook}
         >
           <Download className="mr-2 h-4 w-4" />
@@ -116,14 +113,14 @@ const DetergentSelector: React.FC<DetergentSelectorProps> = ({ onDetergentSelect
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="detergent-search">Search Detergents</Label>
+        <Label htmlFor="detergent-search" className="text-sm font-medium">Search Detergents</Label>
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             id="detergent-search"
             type="search"
             placeholder="Search by name..."
-            className="pl-8"
+            className="pl-8 transition-all duration-300 focus:ring-2 focus:ring-primary/20"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -131,29 +128,36 @@ const DetergentSelector: React.FC<DetergentSelectorProps> = ({ onDetergentSelect
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="detergent-select">Select Detergent</Label>
+        <Label htmlFor="detergent-select" className="text-sm font-medium">Select Detergent</Label>
         <Select 
           value={selectedDetergent || ""} 
           onValueChange={handleSelect}
           disabled={isLoading}
         >
-          <SelectTrigger id="detergent-select" className="w-full">
+          <SelectTrigger id="detergent-select" className="w-full bg-background transition-all duration-300 focus:ring-2 focus:ring-primary/20">
             <SelectValue placeholder="Select a detergent" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="max-h-[300px]">
             {filteredDetergents.length === 0 ? (
               <div className="py-6 text-center text-sm text-muted-foreground">
                 {isLoading ? "Loading..." : "No detergents found"}
               </div>
             ) : (
               filteredDetergents.map((detergent) => (
-                <SelectItem key={detergent.id} value={detergent.id}>
+                <SelectItem 
+                  key={detergent.id} 
+                  value={detergent.id}
+                  className="cursor-pointer transition-colors hover:bg-muted"
+                >
                   {detergent.name}
                 </SelectItem>
               ))
             )}
           </SelectContent>
         </Select>
+        <p className="text-xs text-muted-foreground mt-1">
+          {detergents.length > 0 ? `${detergents.length} detergents available` : "No detergents loaded"}
+        </p>
       </div>
     </div>
   );

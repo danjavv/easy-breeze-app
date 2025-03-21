@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, Settings, RefreshCw, Database, FileText, Beaker } from 'lucide-react';
+import { Users, Settings, RefreshCw, Database, FileText, Beaker, PieChart } from 'lucide-react';
 import DashboardCard from '@/components/admin/DashboardCard';
 import { Supplier } from '@/components/admin/SupplierList';
 import { useNavigate } from 'react-router-dom';
@@ -233,6 +233,8 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
           loading={isLoadingSuppliers}
           loadingText="Loading..."
           onClick={handleManageSuppliers}
+          gradient="bg-gradient-to-br from-blue-50 to-indigo-50"
+          accentColor="border-l-indigo-400"
         />
 
         <DashboardCard
@@ -243,6 +245,8 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
           subtitle="Define passing thresholds"
           buttonText="Detergent Configuration"
           onClick={() => navigate('/admin-baseline-config')}
+          gradient="bg-gradient-to-br from-green-50 to-teal-50"
+          accentColor="border-l-teal-400"
         />
 
         <DashboardCard
@@ -256,6 +260,8 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
           loading={isLoadingIngredients}
           loadingText="Loading..."
           onClick={handleFetchIngredients}
+          gradient="bg-gradient-to-br from-purple-50 to-pink-50"
+          accentColor="border-l-purple-400"
         />
 
         <DashboardCard
@@ -269,6 +275,8 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
           loading={isLoadingSubmissions}
           loadingText="Loading..."
           onClick={handleViewAllSubmissions}
+          gradient="bg-gradient-to-br from-amber-50 to-orange-50"
+          accentColor="border-l-amber-400"
         />
       </div>
       
