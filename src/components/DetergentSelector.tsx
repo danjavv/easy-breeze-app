@@ -59,9 +59,19 @@ const DetergentSelector: React.FC<DetergentSelectorProps> = ({ onDetergentSelect
         throw new Error('Failed to fetch detergents from webhook');
       }
       
-      const data = await response.json();
+      let data = await response.json();
       
-      if (Array.isArray(data) && data.length > 0) {
+      // Handle if the data isn't an array (e.g., if it's a single object)
+      if (!Array.isArray(data)) {
+        // If it's a single object, convert it to an array
+        if (data && typeof data === 'object') {
+          data = [data];
+        } else {
+          data = [];
+        }
+      }
+      
+      if (data.length > 0) {
         // Process and save the detergents data
         const formattedDetergents = data.map((item: any) => ({
           id: item.id || `detergent-${Math.random().toString(36).substr(2, 9)}`,
