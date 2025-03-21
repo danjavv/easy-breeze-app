@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Users, Settings, RefreshCw, Database, FileText } from 'lucide-react';
 import DashboardCard from '@/components/admin/DashboardCard';
@@ -160,17 +161,38 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
     try {
       setIsLoadingSubmissions(true);
       
-      // Navigate directly to the submissions page
-      // Let the page itself handle data fetching
-      navigate('/admin-all-submissions');
+      // Call webhook to get submissions data
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/be46fb03-6f2d-4f9e-8963-f7aba3eb4101', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       
+      if (!response.ok) {
+        throw new Error(`Failed to fetch submissions: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Webhook submissions response:', data);
+      
+      // Navigate to the submissions page with the data from webhook
+      navigate('/admin-all-submissions', { state: { submissions: data, fromWebhook: true } });
+      
+      toast({
+        title: "Submissions loaded",
+        description: `Successfully loaded submissions from webhook.`,
+      });
     } catch (error) {
-      console.error('Error handling submissions navigation:', error);
+      console.error('Error fetching submissions from webhook:', error);
       toast({
         title: "Error",
-        description: "Failed to navigate to submissions page. Please try again.",
+        description: "Failed to fetch submissions from webhook. Falling back to direct database access.",
         variant: "destructive"
       });
+      
+      // Fallback to direct navigation if webhook fails
+      navigate('/admin-all-submissions');
     } finally {
       setIsLoadingSubmissions(false);
     }

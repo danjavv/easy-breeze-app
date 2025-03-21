@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -49,7 +48,9 @@ const AdminAllSubmissions = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
   const initialSubmissions = location.state?.submissions || [];
+  const fromWebhook = location.state?.fromWebhook || false;
   
   const [submissions, setSubmissions] = useState<Submission[]>(initialSubmissions);
   const [isLoading, setIsLoading] = useState(false);
@@ -58,20 +59,53 @@ const AdminAllSubmissions = () => {
     Math.ceil(initialSubmissions.length / ITEMS_PER_PAGE) || 1
   );
 
-  // Add useEffect to fetch submissions data when component mounts
   useEffect(() => {
-    // Only fetch if no submissions were passed in state
-    if (submissions.length === 0) {
-      fetchSubmissions();
+    if (submissions.length === 0 && !fromWebhook) {
+      fetchSubmissionsFromSupabase();
+    } else if (fromWebhook) {
+      processWebhookData(submissions);
     }
   }, []);
 
-  const fetchSubmissions = async () => {
+  const processWebhookData = (webhookData: any[]) => {
+    try {
+      console.log('Processing webhook data:', webhookData);
+      
+      const processedSubmissions = webhookData.map(item => {
+        return {
+          submissionid: item.id || item.submissionid || `webhook-${Math.random().toString(36).substr(2, 9)}`,
+          submission_label: item.label || item.submission_label || 'Webhook Submission',
+          created_at: item.created_at || item.date || new Date().toISOString(),
+          supplierid: item.supplier_id || item.supplierid || 'unknown',
+          supplier_name: item.supplier_name || item.company_name || 'External Supplier',
+          total_batches: item.total_batches || item.batches || 0,
+          passed_batches: item.passed_batches || item.passed || 0,
+          failed_batches: item.failed_batches || item.failed || 0
+        };
+      });
+      
+      setSubmissions(processedSubmissions);
+      setTotalPages(Math.ceil(processedSubmissions.length / ITEMS_PER_PAGE) || 1);
+      
+      toast({
+        title: "Webhook data processed",
+        description: `Successfully processed ${processedSubmissions.length} submissions from webhook.`,
+      });
+    } catch (error) {
+      console.error('Error processing webhook data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process webhook data. Using raw data instead.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const fetchSubmissionsFromSupabase = async () => {
     try {
       setIsLoading(true);
-      console.log('Fetching submissions data...');
+      console.log('Fetching submissions data from Supabase...');
       
-      // Fetch submissions
       const { data: submissionsData, error: submissionsError } = await supabase
         .from('submissions')
         .select('*')
@@ -84,10 +118,8 @@ const AdminAllSubmissions = () => {
       
       console.log('Submissions data:', submissionsData);
       
-      // Get unique supplier IDs
       const supplierIds = [...new Set(submissionsData.map(s => s.supplierid))];
       
-      // Fetch supplier names for each submission if there are supplier IDs
       if (supplierIds.length > 0) {
         const { data: suppliersData, error: suppliersError } = await supabase
           .from('suppliers')
@@ -101,13 +133,11 @@ const AdminAllSubmissions = () => {
         
         console.log('Suppliers data:', suppliersData);
         
-        // Create a mapping of supplier IDs to names
         const supplierMap = suppliersData.reduce((acc, supplier) => {
           acc[supplier.id] = supplier.company_name;
           return acc;
         }, {} as Record<string, string>);
         
-        // Add supplier names to the submissions
         const enhancedSubmissions = submissionsData.map(submission => ({
           ...submission,
           supplier_name: supplierMap[submission.supplierid] || 'Unknown Supplier'
@@ -135,11 +165,44 @@ const AdminAllSubmissions = () => {
       setIsLoading(false);
     }
   };
-  
+
+  const fetchSubmissionsFromWebhook = async () => {
+    try {
+      setIsLoading(true);
+      
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/be46fb03-6f2d-4f9e-8963-f7aba3eb4101', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch submissions: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Webhook submissions response (refresh):', data);
+      
+      processWebhookData(data);
+    } catch (error) {
+      console.error('Error fetching submissions from webhook:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch submissions from webhook. Trying database...",
+        variant: "destructive"
+      });
+      
+      fetchSubmissionsFromSupabase();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSignOut = () => {
     navigate('/auth');
   };
-  
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -150,17 +213,16 @@ const AdminAllSubmissions = () => {
       minute: '2-digit'
     });
   };
-  
+
   const paginatedSubmissions = submissions.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
-  
+
   const renderPaginationItems = () => {
     const items = [];
     const maxPagesToShow = 5;
     
-    // Always show first page
     items.push(
       <PaginationItem key="page-1">
         <PaginationLink 
@@ -172,7 +234,6 @@ const AdminAllSubmissions = () => {
       </PaginationItem>
     );
     
-    // If there are more than maxPagesToShow pages, show ellipsis after first page
     if (totalPages > maxPagesToShow && currentPage > 3) {
       items.push(
         <PaginationItem key="ellipsis-1">
@@ -181,7 +242,6 @@ const AdminAllSubmissions = () => {
       );
     }
     
-    // Show current page and adjacent pages
     for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
       if (i <= 1 || i >= totalPages) continue;
       items.push(
@@ -196,7 +256,6 @@ const AdminAllSubmissions = () => {
       );
     }
     
-    // If there are more than maxPagesToShow pages, show ellipsis before last page
     if (totalPages > maxPagesToShow && currentPage < totalPages - 2) {
       items.push(
         <PaginationItem key="ellipsis-2">
@@ -205,7 +264,6 @@ const AdminAllSubmissions = () => {
       );
     }
     
-    // Always show last page if there's more than one page
     if (totalPages > 1) {
       items.push(
         <PaginationItem key={`page-${totalPages}`}>
@@ -221,7 +279,7 @@ const AdminAllSubmissions = () => {
     
     return items;
   };
-  
+
   return (
     <div className="min-h-screen bg-muted/40">
       <AdminHeader onSignOut={handleSignOut} />
@@ -239,13 +297,15 @@ const AdminAllSubmissions = () => {
             </Button>
             <h1 className="text-2xl font-bold">All Submissions</h1>
             <p className="text-muted-foreground">
-              View and manage all supplier submissions
+              {fromWebhook 
+                ? "Submissions data from external webhook" 
+                : "View and manage all supplier submissions"}
             </p>
           </div>
           
           <Button 
             variant="outline"
-            onClick={fetchSubmissions}
+            onClick={fromWebhook ? fetchSubmissionsFromWebhook : fetchSubmissionsFromSupabase}
             disabled={isLoading}
           >
             {isLoading ? (
@@ -253,7 +313,7 @@ const AdminAllSubmissions = () => {
             ) : (
               <RefreshCw className="mr-2 h-4 w-4" />
             )}
-            Refresh
+            Refresh {fromWebhook ? "from Webhook" : ""}
           </Button>
         </div>
         
@@ -261,7 +321,9 @@ const AdminAllSubmissions = () => {
           <CardHeader className="pb-2">
             <CardTitle>Submission History</CardTitle>
             <CardDescription>
-              All submissions from suppliers, sorted by most recent
+              {fromWebhook 
+                ? "Submissions retrieved from external webhook" 
+                : "All submissions from suppliers, sorted by most recent"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -385,7 +447,7 @@ const AdminAllSubmissions = () => {
                     <Button 
                       variant="outline" 
                       className="mt-4"
-                      onClick={fetchSubmissions}
+                      onClick={fetchSubmissionsFromSupabase}
                     >
                       <RefreshCw className="mr-2 h-4 w-4" />
                       Refresh Data
