@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,13 +11,14 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import ModelAssignmentSection from '@/components/admin/ModelAssignmentSection';
 
 interface Ingredient {
   id: string;
   name: string;
   detergency?: number | null;
   foaming?: number | null;
-  biodegrability?: number | null;
+  biodegradability?: number | null;
   purity?: number | null;
   created_at?: string;
 }
@@ -111,14 +113,15 @@ const AdminIngredientModels = () => {
           if (responseData && responseData.id) {
             console.log('Webhook response:', responseData);
             
+            // Save to Supabase models table instead of ingredients
             const { error } = await supabase
-              .from('ingredients')
+              .from('models')
               .insert({
                 name: configName,
-                detergency: thresholdValues.detergency,
-                foaming: thresholdValues.foaming,
-                biodegradability: thresholdValues.biodegradability,
-                purity: thresholdValues.purity
+                threshold_detergency: thresholdValues.detergency,
+                threshold_foaming: thresholdValues.foaming,
+                threshold_biodegrability: thresholdValues.biodegradability,
+                threshold_purity: thresholdValues.purity
               });
 
             if (error) {
@@ -189,9 +192,10 @@ const AdminIngredientModels = () => {
           Back to Dashboard
         </Button>
         
+        {/* Create New Model Card */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle className="text-2xl">Ingredient Model</CardTitle>
+            <CardTitle className="text-2xl">Create New Model</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
@@ -261,6 +265,9 @@ const AdminIngredientModels = () => {
             </div>
           </CardContent>
         </Card>
+        
+        {/* Assign Model to Detergent Section */}
+        <ModelAssignmentSection />
       </main>
     </div>
   );
