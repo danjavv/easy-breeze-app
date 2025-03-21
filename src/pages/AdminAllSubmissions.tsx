@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
 import {
@@ -21,30 +21,18 @@ import { Submission, BatchResult } from '@/types/submissions';
 const ITEMS_PER_PAGE = 10;
 
 const AdminAllSubmissions = () => {
-  const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const initialSubmissionsData = location.state?.submissions || [];
-  const initialSubmissions = Array.isArray(initialSubmissionsData) 
-    ? initialSubmissionsData 
-    : [initialSubmissionsData];
-  
-  const fromWebhook = location.state?.fromWebhook || false;
-  
-  const [submissions, setSubmissions] = useState<Submission[]>(initialSubmissions);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(
-    Math.ceil(initialSubmissions.length / ITEMS_PER_PAGE) || 1
-  );
+  const [totalPages, setTotalPages] = useState(1);
+  const [fromWebhook, setFromWebhook] = useState(false);
 
+  // Fetch submissions when component mounts
   useEffect(() => {
-    if (submissions.length === 0 && !fromWebhook) {
-      fetchSubmissionsFromSupabase();
-    } else if (fromWebhook) {
-      processWebhookData(submissions);
-    }
+    fetchSubmissionsFromSupabase();
   }, []);
 
   const processWebhookData = (webhookData: any) => {
@@ -82,6 +70,7 @@ const AdminAllSubmissions = () => {
       
       setSubmissions(processedSubmissions);
       setTotalPages(Math.ceil(processedSubmissions.length / ITEMS_PER_PAGE) || 1);
+      setFromWebhook(true);
       
       toast({
         title: "Webhook data processed",
@@ -152,15 +141,32 @@ const AdminAllSubmissions = () => {
             ...submission,
             supplier_name: supplierMap[submission.supplierid] || 'Unknown Supplier',
             results: typedResults
-          };
+          } as Submission;
         });
         
         setSubmissions(enhancedSubmissions);
         setTotalPages(Math.ceil(enhancedSubmissions.length / ITEMS_PER_PAGE) || 1);
       } else {
-        setSubmissions(submissionsData || []);
-        setTotalPages(Math.ceil((submissionsData?.length || 0) / ITEMS_PER_PAGE) || 1);
+        const typedSubmissions = submissionsData ? submissionsData.map(submission => ({
+          ...submission,
+          results: submission.results ? submission.results.map((result: any) => ({
+            status: result.status || 'UNKNOWN',
+            batch_label: result.batch_label || `Batch`,
+            metrics: {
+              purity: result.metrics?.purity || 0,
+              foaming: result.metrics?.foaming || 0,
+              detergency: result.metrics?.detergency || 0,
+              biodegradability: result.metrics?.biodegradability || 0
+            },
+            failure_reasons: result.failure_reasons || []
+          } as BatchResult)) : []
+        } as Submission)) : [];
+        
+        setSubmissions(typedSubmissions);
+        setTotalPages(Math.ceil((typedSubmissions.length || 0) / ITEMS_PER_PAGE) || 1);
       }
+      
+      setFromWebhook(false);
       
       toast({
         title: "Submissions loaded",

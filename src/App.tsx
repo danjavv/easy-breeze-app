@@ -2,6 +2,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
 import SupplierDashboard from '@/pages/SupplierDashboard';
@@ -17,22 +18,24 @@ import { Toaster } from 'sonner';
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/supplier-dashboard" element={<SupplierDashboard />} />
-          <Route path="/new-submission" element={<NewSubmission />} />
-          <Route path="/submission-results" element={<SubmissionResults />} />
-          <Route path="/submission-results/:submissionId" element={<SubmissionResults />} />
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/admin-baseline-config" element={<AdminBaselineConfig />} />
-          <Route path="/admin-ingredient-models" element={<AdminIngredientModels />} />
-          <Route path="/admin-all-submissions" element={<AdminAllSubmissions />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster />
-      </AuthProvider>
+      <TooltipProvider>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/supplier-dashboard" element={<SupplierDashboard />} />
+            <Route path="/new-submission" element={<NewSubmission />} />
+            <Route path="/submission-results" element={<SubmissionResults />} />
+            <Route path="/submission-results/:submissionId" element={<SubmissionResults />} />
+            <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            <Route path="/admin-baseline-config" element={<AdminBaselineConfig />} />
+            <Route path="/admin-ingredient-models" element={<AdminIngredientModels />} />
+            <Route path="/admin-all-submissions" element={<AdminAllSubmissions />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
+        </AuthProvider>
+      </TooltipProvider>
     </Router>
   );
 }
