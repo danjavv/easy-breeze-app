@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox'; 
 import { 
   Card, 
   CardContent, 
@@ -16,35 +17,18 @@ import {
   CardTitle 
 } from '@/components/ui/card';
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, 
+  TableBody, 
+  TableCaption, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
 } from "@/components/ui/table";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { ArrowLeft, Plus, RefreshCw, Trash } from 'lucide-react';
+import { ArrowLeft, Save, RefreshCw, Plus, Trash } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast as sonnerToast } from 'sonner';
 
 interface Ingredient {
   id: string;
@@ -59,13 +43,12 @@ interface Ingredient {
 interface Model {
   name: string;
   description: string;
-  parameters: Record<string, any>;
+  detergency: number;
+  foaming: number;
+  biodegrability: number;
+  purity: number;
+  parameters?: Record<string, any>;
 }
-
-const formSchema = z.object({
-  name: z.string().min(1, "Model name is required"),
-  description: z.string().min(1, "Description is required"),
-});
 
 const AdminIngredientModels = () => {
   const { setUserRole } = useAuth();
@@ -75,14 +58,26 @@ const AdminIngredientModels = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isModelConfigOpen, setIsModelConfigOpen] = useState(false);
+  
+  // Configuration state for the model
+  const [configName, setConfigName] = useState('Model 1');
+  const [isActive, setIsActive] = useState(false);
+  
+  // Values for base model properties
+  const [baseValues, setBaseValues] = useState({
+    detergency: 320,
+    foaming: 250,
+    biodegradability: 500,
+    purity: 40,
+  });
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-    },
+  // Values for model thresholds
+  const [thresholdValues, setThresholdValues] = useState({
+    detergency: 500,
+    foaming: 300,
+    biodegradability: 600,
+    purity: 60,
   });
 
   useEffect(() => {
@@ -137,19 +132,66 @@ const AdminIngredientModels = () => {
     navigate('/auth');
   };
 
-  const handleAddModel = async (values: z.infer<typeof formSchema>) => {
+  const handleBaseValueChange = (key: keyof typeof baseValues, value: string) => {
+    setBaseValues(prev => ({
+      ...prev,
+      [key]: parseFloat(value) || 0
+    }));
+  };
+
+  const handleThresholdValueChange = (key: keyof typeof thresholdValues, value: string) => {
+    setThresholdValues(prev => ({
+      ...prev,
+      [key]: parseFloat(value) || 0
+    }));
+  };
+
+  const startModelConfig = (ingredient: Ingredient) => {
+    setSelectedIngredient(ingredient);
+    
+    // Set default model name based on existing models
+    const modelCount = ingredient.models ? ingredient.models.length + 1 : 1;
+    setConfigName(`Model ${modelCount}`);
+    
+    // Use ingredient values as defaults if available
+    if (ingredient) {
+      setBaseValues({
+        detergency: ingredient.detergency || 320,
+        foaming: ingredient.foaming || 250,
+        biodegradability: ingredient.biodegrability || 500,
+        purity: ingredient.purity || 40,
+      });
+      
+      // Set thresholds slightly higher than base values
+      setThresholdValues({
+        detergency: (ingredient.detergency || 320) + 180,
+        foaming: (ingredient.foaming || 250) + 50,
+        biodegradability: (ingredient.biodegrability || 500) + 100,
+        purity: (ingredient.purity || 40) + 20,
+      });
+    }
+    
+    setIsModelConfigOpen(true);
+  };
+
+  const handleSaveModel = async () => {
     if (!selectedIngredient) return;
     
     setIsLoading(true);
     try {
       // Create a new model object
       const newModel: Model = {
-        name: values.name,
-        description: values.description,
+        name: configName,
+        description: isActive ? "Active Model" : "Inactive Model",
+        detergency: thresholdValues.detergency,
+        foaming: thresholdValues.foaming,
+        biodegrability: thresholdValues.biodegradability,
+        purity: thresholdValues.purity,
         parameters: {
-          // Default parameters
           version: 1,
           created_at: new Date().toISOString(),
+          isActive: isActive,
+          baseValues: {...baseValues},
         }
       };
       
@@ -182,20 +224,15 @@ const AdminIngredientModels = () => {
         prev ? { ...prev, models: updatedModels } : null
       );
       
-      setIsDialogOpen(false);
-      form.reset();
+      sonnerToast.success('Model configuration saved successfully');
+      if (isActive) {
+        sonnerToast.info('Model set as active');
+      }
       
-      toast({
-        title: "Model created",
-        description: `Successfully added model "${values.name}" to ingredient "${selectedIngredient.name}".`,
-      });
+      setIsModelConfigOpen(false);
     } catch (error) {
       console.error('Error creating model:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create model. Please try again.",
-        variant: "destructive"
-      });
+      sonnerToast.error('Failed to save model configuration');
     } finally {
       setIsLoading(false);
     }
@@ -236,20 +273,127 @@ const AdminIngredientModels = () => {
         );
       }
       
-      toast({
-        title: "Model deleted",
-        description: "The model has been deleted successfully.",
-      });
+      sonnerToast.success('Model deleted successfully');
     } catch (error) {
       console.error('Error deleting model:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete model. Please try again.",
-        variant: "destructive"
-      });
+      sonnerToast.error('Failed to delete model');
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  const handleCancel = () => {
+    setIsModelConfigOpen(false);
+  };
+  
+  // Render the model configuration UI
+  const renderModelConfig = () => {
+    if (!isModelConfigOpen || !selectedIngredient) return null;
+    
+    return (
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="text-2xl">Model Configuration for {selectedIngredient.name}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="config-name">Model Name</Label>
+              <Input 
+                id="config-name"
+                value={configName}
+                onChange={(e) => setConfigName(e.target.value)}
+                className="max-w-md"
+              />
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Base Values</h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[200px]">Property</TableHead>
+                    <TableHead>Value</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Object.entries(baseValues).map(([key, value]) => (
+                    <TableRow key={key}>
+                      <TableCell className="font-medium capitalize">{key}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Input 
+                            type="number"
+                            value={value}
+                            onChange={(e) => handleBaseValueChange(key as keyof typeof baseValues, e.target.value)}
+                            className="w-[120px]"
+                          />
+                          {key === 'purity' && <span className="ml-2">%</span>}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Model Thresholds</h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[200px]">Property</TableHead>
+                    <TableHead>Required Minimum</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {Object.entries(thresholdValues).map(([key, value]) => (
+                    <TableRow key={key}>
+                      <TableCell className="font-medium capitalize">{key}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Input 
+                            type="number"
+                            value={value}
+                            onChange={(e) => handleThresholdValueChange(key as keyof typeof thresholdValues, e.target.value)}
+                            className="w-[120px]"
+                          />
+                          {key === 'purity' && <span className="ml-2">%</span>}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="active" 
+                checked={isActive}
+                onCheckedChange={(checked) => setIsActive(checked as boolean)}
+              />
+              <label
+                htmlFor="active"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Set as Active Model
+              </label>
+            </div>
+
+            <div className="flex justify-end space-x-4 pt-4">
+              <Button variant="outline" onClick={handleCancel}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveModel}>
+                <Save className="mr-2 h-4 w-4" />
+                Save Model
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   return (
@@ -284,174 +428,128 @@ const AdminIngredientModels = () => {
           </Button>
         </div>
 
-        {/* Ingredients Table */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Available Ingredients</CardTitle>
-            <CardDescription>
-              View all ingredients and add models to them
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Purity</TableHead>
-                  <TableHead>Detergency</TableHead>
-                  <TableHead>Foaming</TableHead>
-                  <TableHead>Biodegradability</TableHead>
-                  <TableHead>Models</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ingredients.length > 0 ? (
-                  ingredients.map((ingredient) => (
-                    <TableRow key={ingredient.id}>
-                      <TableCell className="font-medium">{ingredient.name || 'Unnamed'}</TableCell>
-                      <TableCell>{ingredient.purity !== null ? ingredient.purity : '-'}</TableCell>
-                      <TableCell>{ingredient.detergency !== null ? ingredient.detergency : '-'}</TableCell>
-                      <TableCell>{ingredient.foaming !== null ? ingredient.foaming : '-'}</TableCell>
-                      <TableCell>{ingredient.biodegrability !== null ? ingredient.biodegrability : '-'}</TableCell>
-                      <TableCell>{ingredient.models ? ingredient.models.length : 0}</TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => {
-                            setSelectedIngredient(ingredient);
-                            setIsDialogOpen(true);
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Model
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
-                      {isLoading ? 'Loading ingredients...' : 'No ingredients found'}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        {/* Model Configuration UI */}
+        {isModelConfigOpen && renderModelConfig()}
 
-        {/* Selected ingredient models display */}
-        {selectedIngredient && (
-          <Card className="mt-6">
+        {/* If not configuring a model, show the ingredients table */}
+        {!isModelConfigOpen && (
+          <Card className="mb-8">
             <CardHeader>
-              <CardTitle>{selectedIngredient.name} Models</CardTitle>
+              <CardTitle>Available Ingredients</CardTitle>
               <CardDescription>
-                All available models for {selectedIngredient.name}
+                View all ingredients and manage models for them
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {selectedIngredient.models && selectedIngredient.models.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {selectedIngredient.models.map((model, index) => (
-                    <Card key={index} className="border border-muted">
-                      <CardHeader className="py-3 px-4">
-                        <div className="flex justify-between items-center">
-                          <CardTitle className="text-base">{model.name}</CardTitle>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteModel(selectedIngredient.id, index)}
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Purity</TableHead>
+                    <TableHead>Detergency</TableHead>
+                    <TableHead>Foaming</TableHead>
+                    <TableHead>Biodegradability</TableHead>
+                    <TableHead>Models</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {ingredients.length > 0 ? (
+                    ingredients.map((ingredient) => (
+                      <TableRow key={ingredient.id}>
+                        <TableCell className="font-medium">{ingredient.name || 'Unnamed'}</TableCell>
+                        <TableCell>{ingredient.purity !== null ? ingredient.purity : '-'}</TableCell>
+                        <TableCell>{ingredient.detergency !== null ? ingredient.detergency : '-'}</TableCell>
+                        <TableCell>{ingredient.foaming !== null ? ingredient.foaming : '-'}</TableCell>
+                        <TableCell>{ingredient.biodegrability !== null ? ingredient.biodegrability : '-'}</TableCell>
+                        <TableCell>{ingredient.models ? ingredient.models.length : 0}</TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => startModelConfig(ingredient)}
                           >
-                            <Trash className="h-4 w-4 text-destructive" />
+                            <Plus className="h-4 w-4 mr-2" />
+                            Manage Models
                           </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="py-2 px-4">
-                        <p className="text-sm">{model.description}</p>
-                        <div className="mt-2">
-                          <p className="text-xs text-muted-foreground">
-                            Created: {new Date(model.parameters.created_at).toLocaleDateString()}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Version: {model.parameters.version}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground">No models available for this ingredient.</p>
-              )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
+                        {isLoading ? 'Loading ingredients...' : 'No ingredients found'}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         )}
 
-        {/* Dialog for adding a new model */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Model</DialogTitle>
-              <DialogDescription>
-                Create a new model for {selectedIngredient?.name}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleAddModel)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Model Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter model name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter model description" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <DialogFooter>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      'Create Model'
-                    )}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        {/* Display models for the selected ingredient if not in config mode */}
+        {!isModelConfigOpen && selectedIngredient && selectedIngredient.models && selectedIngredient.models.length > 0 && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>{selectedIngredient.name} - Available Models</CardTitle>
+              <CardDescription>
+                All configured models for {selectedIngredient.name}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Detergency</TableHead>
+                    <TableHead>Foaming</TableHead>
+                    <TableHead>Biodegradability</TableHead>
+                    <TableHead>Purity</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {selectedIngredient.models.map((model, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{model.name}</TableCell>
+                      <TableCell>{model.detergency || model.parameters?.thresholds?.detergency || '-'}</TableCell>
+                      <TableCell>{model.foaming || model.parameters?.thresholds?.foaming || '-'}</TableCell>
+                      <TableCell>{model.biodegrability || model.parameters?.thresholds?.biodegradability || '-'}</TableCell>
+                      <TableCell>{model.purity || model.parameters?.thresholds?.purity || '-'}</TableCell>
+                      <TableCell>
+                        {model.parameters?.isActive ? 
+                          <span className="text-green-500 font-medium">Active</span> : 
+                          <span className="text-muted-foreground">Inactive</span>
+                        }
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteModel(selectedIngredient.id, index)}
+                        >
+                          <Trash className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+            <CardFooter className="flex justify-end">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => startModelConfig(selectedIngredient)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Another Model
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
       </main>
     </div>
   );

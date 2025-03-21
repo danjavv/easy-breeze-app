@@ -16,7 +16,6 @@ export type Database = {
           detergency: number | null
           foaming: number | null
           id: string
-          models: Json[] | null
           name: string | null
           purity: number | null
         }
@@ -26,7 +25,6 @@ export type Database = {
           detergency?: number | null
           foaming?: number | null
           id?: string
-          models?: Json[] | null
           name?: string | null
           purity?: number | null
         }
@@ -36,8 +34,37 @@ export type Database = {
           detergency?: number | null
           foaming?: number | null
           id?: string
-          models?: Json[] | null
           name?: string | null
+          purity?: number | null
+        }
+        Relationships: []
+      }
+      models: {
+        Row: {
+          biodegrability: number | null
+          created_at: string | null
+          detergency: number | null
+          foaming: number | null
+          id: number
+          name: string
+          purity: number | null
+        }
+        Insert: {
+          biodegrability?: number | null
+          created_at?: string | null
+          detergency?: number | null
+          foaming?: number | null
+          id?: number
+          name: string
+          purity?: number | null
+        }
+        Update: {
+          biodegrability?: number | null
+          created_at?: string | null
+          detergency?: number | null
+          foaming?: number | null
+          id?: number
+          name?: string
           purity?: number | null
         }
         Relationships: []
