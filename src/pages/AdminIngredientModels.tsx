@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -90,59 +91,61 @@ const AdminIngredientModels = () => {
 
   const handleSave = async () => {
     try {
-      const modelData = {
-        name: configName,
-        detergency: baseValues.detergency,
-        foaming: baseValues.foaming,
-        biodegradability: baseValues.biodegradability,
-        purity: baseValues.purity
-      };
-
+      // Prepare data for the webhook
       const webhookData = {
-        modelData: modelData,
-        thresholds: thresholdValues,
-        isActive: isActive,
-        timestamp: new Date().toISOString()
+        name: configName,
+        baseValues: {
+          detergency: baseValues.detergency,
+          foaming: baseValues.foaming,
+          biodegradability: baseValues.biodegradability,
+          purity: baseValues.purity
+        },
+        thresholds: {
+          detergency: thresholdValues.detergency,
+          foaming: thresholdValues.foaming,
+          biodegradability: thresholdValues.biodegradability,
+          purity: thresholdValues.purity
+        },
+        isActive: isActive
       };
 
-      toast.info('Sending webhook request...');
+      // Send POST request to the webhook
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/adf1644a-241c-4d1c-8964-69d89e7fab14', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData),
+      });
 
-      try {
-        const webhookResponse = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/adf1644a-241c-4d1c-8964-69d89e7fab14', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(webhookData),
-        });
+      if (response.ok) {
+        // Also save to Supabase
+        const { error } = await supabase
+          .from('ingredients')
+          .insert({
+            name: configName,
+            detergency: baseValues.detergency,
+            foaming: baseValues.foaming,
+            biodegrability: baseValues.biodegradability,
+            purity: baseValues.purity
+          });
 
-        if (!webhookResponse.ok) {
-          console.error('Webhook response not OK:', webhookResponse.status);
-          toast.warning('Webhook request sent but returned an error. Continuing with Supabase save.');
-        } else {
-          toast.success('Webhook request sent successfully');
+        if (error) {
+          throw error;
         }
-      } catch (webhookError) {
-        console.error('Webhook error:', webhookError);
-        toast.warning('Failed to send webhook request. Continuing with Supabase save.');
-      }
 
-      const { error } = await supabase
-        .from('ingredients')
-        .insert(modelData);
-
-      if (error) {
-        throw error;
+        toast.success('Ingredient model saved successfully');
+        if (isActive) {
+          toast.info('Model set as active');
+        }
+        navigate('/admin-dashboard');
+      } else {
+        toast.error('Failed to save configuration');
+        console.error('Failed to save configuration:', await response.text());
       }
-
-      toast.success('Ingredient model saved successfully');
-      if (isActive) {
-        toast.info('Model set as active');
-      }
-      navigate('/admin-dashboard');
     } catch (error) {
-      console.error('Error saving model:', error);
-      toast.error('Failed to save model');
+      toast.error('Error saving configuration');
+      console.error('Error saving configuration:', error);
     }
   };
 
