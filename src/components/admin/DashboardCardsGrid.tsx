@@ -94,7 +94,7 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
     try {
       setIsLoadingIngredients(true);
       
-      // Fetch ingredients from webhook instead of Supabase
+      // Fetch ingredients from webhook
       const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/f653e0a6-4246-4a21-b122-f8a0fc4727ac', {
         method: 'GET',
         headers: {
@@ -109,7 +109,7 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
       const data = await response.json();
       console.log('Webhook response (ingredients):', data);
       
-      // Make sure we're working with an array
+      // Ensure we're working with an array of ingredients
       const ingredientsArray = Array.isArray(data) ? data : [data];
       
       setIngredients(ingredientsArray);

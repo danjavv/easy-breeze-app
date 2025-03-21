@@ -88,7 +88,12 @@ const AdminIngredientModels = () => {
   useEffect(() => {
     // Check if we have ingredients from the location state (passed from DashboardCardsGrid)
     if (location.state?.ingredients) {
-      setIngredients(location.state.ingredients);
+      // Ensure we have an array of ingredients
+      const ingredientsArray = Array.isArray(location.state.ingredients) 
+        ? location.state.ingredients 
+        : [location.state.ingredients];
+      
+      setIngredients(ingredientsArray);
     } else {
       // If not, fetch them directly
       fetchIngredients();
@@ -110,6 +115,8 @@ const AdminIngredientModels = () => {
       }
       
       const data = await response.json();
+      
+      // Ensure we're working with an array of ingredients
       const ingredientsArray = Array.isArray(data) ? data : [data];
       
       setIngredients(ingredientsArray);
