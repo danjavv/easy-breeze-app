@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, RefreshCw, User, Calendar, FileCheck, FileX } from 'lucide-react';
+import { ArrowLeft, RefreshCw, User, Calendar, FileCheck, FileX, ChevronDown, Info } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -30,6 +31,34 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import AdminHeader from '@/components/admin/AdminHeader';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+interface BatchResult {
+  status: string;
+  metrics: {
+    purity: number;
+    foaming: number;
+    detergency: number;
+    biodegradability: number;
+  };
+  batch_label: string;
+  failure_reasons?: string[];
+}
 
 interface Submission {
   submissionid: string;
@@ -40,6 +69,7 @@ interface Submission {
   passed_batches: number | null;
   failed_batches: number | null;
   supplier_name?: string;
+  results?: BatchResult[];
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -62,6 +92,7 @@ const AdminAllSubmissions = () => {
   const [totalPages, setTotalPages] = useState(
     Math.ceil(initialSubmissions.length / ITEMS_PER_PAGE) || 1
   );
+  const [expandedSubmissionId, setExpandedSubmissionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (submissions.length === 0 && !fromWebhook) {
@@ -86,7 +117,8 @@ const AdminAllSubmissions = () => {
           supplier_name: item.supplier_name || item.company_name || 'External Supplier',
           total_batches: item.total_batches || item.batches || 0,
           passed_batches: item.passed_batches || item.passed || 0,
-          failed_batches: item.failed_batches || item.failed || 0
+          failed_batches: item.failed_batches || item.failed || 0,
+          results: item.results || []
         };
       });
       
@@ -221,6 +253,10 @@ const AdminAllSubmissions = () => {
     });
   };
 
+  const toggleSubmissionDetails = (submissionId: string) => {
+    setExpandedSubmissionId(expandedSubmissionId === submissionId ? null : submissionId);
+  };
+
   const paginatedSubmissions = Array.isArray(submissions) 
     ? submissions.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
     : [];
@@ -345,6 +381,7 @@ const AdminAllSubmissions = () => {
                         <TableHead>Supplier</TableHead>
                         <TableHead>Batches</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Details</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -354,52 +391,118 @@ const AdminAllSubmissions = () => {
                           0;
                           
                         return (
-                          <TableRow key={submission.submissionid}>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4 text-muted-foreground" />
-                                {formatDate(submission.created_at)}
-                              </div>
-                            </TableCell>
-                            <TableCell className="font-mono text-xs">
-                              {submission.submissionid.split('-')[0]}...
-                            </TableCell>
-                            <TableCell>
-                              {submission.submission_label || 'Untitled Submission'}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <User className="h-4 w-4 text-muted-foreground" />
-                                {submission.supplier_name || 'Unknown Supplier'}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {submission.total_batches || 0} total
-                            </TableCell>
-                            <TableCell>
-                              {submission.total_batches && submission.passed_batches !== null && submission.failed_batches !== null ? (
+                          <React.Fragment key={submission.submissionid}>
+                            <TableRow>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                                  {formatDate(submission.created_at)}
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-mono text-xs">
+                                {submission.submissionid.split('-')[0]}...
+                              </TableCell>
+                              <TableCell>
+                                {submission.submission_label || 'Untitled Submission'}
+                              </TableCell>
+                              <TableCell>
                                 <div className="flex flex-col gap-1">
                                   <div className="flex items-center gap-2">
-                                    <FileCheck className="h-4 w-4 text-green-500" />
-                                    <span className="text-green-500">
-                                      {submission.passed_batches} Passed
-                                    </span>
+                                    <User className="h-4 w-4 text-muted-foreground" />
+                                    {submission.supplier_name || 'Unknown Supplier'}
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <FileX className="h-4 w-4 text-red-500" />
-                                    <span className="text-red-500">
-                                      {submission.failed_batches} Failed
-                                    </span>
-                                  </div>
-                                  <Badge className={passRate > 80 ? 'bg-green-500' : passRate > 50 ? 'bg-amber-500' : 'bg-red-500'}>
-                                    {passRate.toFixed(0)}% Pass rate
-                                  </Badge>
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger className="text-xs text-muted-foreground hover:text-foreground">
+                                        ID: {submission.supplierid.substring(0, 8)}...
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p className="font-mono text-xs">{submission.supplierid}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
                                 </div>
-                              ) : (
-                                <Badge variant="outline">No data</Badge>
-                              )}
-                            </TableCell>
-                          </TableRow>
+                              </TableCell>
+                              <TableCell>
+                                {submission.total_batches || 0} total
+                              </TableCell>
+                              <TableCell>
+                                {submission.total_batches && submission.passed_batches !== null && submission.failed_batches !== null ? (
+                                  <div className="flex flex-col gap-1">
+                                    <div className="flex items-center gap-2">
+                                      <FileCheck className="h-4 w-4 text-green-500" />
+                                      <span className="text-green-500">
+                                        {submission.passed_batches} Passed
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <FileX className="h-4 w-4 text-red-500" />
+                                      <span className="text-red-500">
+                                        {submission.failed_batches} Failed
+                                      </span>
+                                    </div>
+                                    <Badge className={passRate > 80 ? 'bg-green-500' : passRate > 50 ? 'bg-amber-500' : 'bg-red-500'}>
+                                      {passRate.toFixed(0)}% Pass rate
+                                    </Badge>
+                                  </div>
+                                ) : (
+                                  <Badge variant="outline">No data</Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {submission.results && submission.results.length > 0 ? (
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button 
+                                        variant="destructive" 
+                                        className="flex items-center gap-1" 
+                                        size="sm"
+                                      >
+                                        <Info className="h-4 w-4" />
+                                        Batches
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-80 max-h-96 overflow-y-auto p-0">
+                                      <div className="p-4 border-b">
+                                        <h4 className="font-semibold">Batch Details</h4>
+                                        <p className="text-sm text-muted-foreground">{submission.submission_label}</p>
+                                      </div>
+                                      <div className="divide-y">
+                                        {submission.results.map((batch, idx) => (
+                                          <div key={idx} className="p-4">
+                                            <div className="flex justify-between items-center mb-2">
+                                              <span className="font-semibold">{batch.batch_label || `Batch ${idx + 1}`}</span>
+                                              <Badge variant={batch.status === 'PASS' ? 'success' : 'destructive'}>
+                                                {batch.status}
+                                              </Badge>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                              <div>Purity: <span className="font-medium">{batch.metrics.purity}</span></div>
+                                              <div>Foaming: <span className="font-medium">{batch.metrics.foaming}</span></div>
+                                              <div>Detergency: <span className="font-medium">{batch.metrics.detergency}</span></div>
+                                              <div>Biodegradability: <span className="font-medium">{batch.metrics.biodegradability}</span></div>
+                                            </div>
+                                            {batch.failure_reasons && batch.failure_reasons.length > 0 && (
+                                              <div className="mt-2">
+                                                <p className="text-sm font-medium text-destructive">Failure Reasons:</p>
+                                                <ul className="text-xs text-destructive list-disc pl-4">
+                                                  {batch.failure_reasons.map((reason, i) => (
+                                                    <li key={i}>{reason}</li>
+                                                  ))}
+                                                </ul>
+                                              </div>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </PopoverContent>
+                                  </Popover>
+                                ) : (
+                                  <Badge variant="outline">No batches</Badge>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          </React.Fragment>
                         );
                       })}
                     </TableBody>
