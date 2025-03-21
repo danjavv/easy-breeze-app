@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RoleSelection from '@/components/auth/RoleSelection';
 import SupplierRegistrationForm from '@/components/auth/SupplierRegistrationForm';
@@ -12,12 +12,13 @@ const Auth = () => {
   const { userRole } = useAuth();
   const navigate = useNavigate();
 
-  // If user is already authenticated, redirect to appropriate dashboard
-  if (userRole) {
-    const dashboardRoute = userRole === 'admin' ? '/admin-dashboard' : '/supplier-dashboard';
-    navigate(dashboardRoute);
-    return null;
-  }
+  // Check authentication state and redirect if necessary
+  useEffect(() => {
+    if (userRole) {
+      const dashboardRoute = userRole === 'admin' ? '/admin-dashboard' : '/supplier-dashboard';
+      navigate(dashboardRoute);
+    }
+  }, [userRole, navigate]);
 
   const handleStartRegistration = () => {
     setIsRegistering(true);

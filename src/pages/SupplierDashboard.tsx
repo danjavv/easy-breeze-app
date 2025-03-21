@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -99,7 +100,7 @@ const SupplierDashboard = () => {
         description: "Please wait while we fetch your past submissions...",
       });
       
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/7e057feb-401a-4110-9fcc-b00817876790', {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/7e057feb-401a-4110-9fcc-b00817876790', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
