@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -52,7 +53,7 @@ const DetergentSelector: React.FC<DetergentSelectorProps> = ({ onDetergentSelect
   const loadDetergentsFromWebhook = async () => {
     setIsLoadingWebhook(true);
     try {
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/b65a9a50-5a55-462a-a29b-7f6572aa2dcc');
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/b65a9a50-5a55-462a-a29b-7f6572aa2dcc');
       
       if (!response.ok) {
         throw new Error('Failed to fetch detergents from webhook');

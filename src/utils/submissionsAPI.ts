@@ -1,9 +1,8 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Submission, BatchResult } from '@/types/submissions';
 import { useToast } from '@/hooks/use-toast';
 
-const WEBHOOK_URL = 'https://danjaved008.app.n8n.cloud/webhook-test/be46fb03-6f2d-4f9e-8963-f7aba3eb4101';
+const WEBHOOK_URL = 'https://danjaved008.app.n8n.cloud/webhook/be46fb03-6f2d-4f9e-8963-f7aba3eb4101';
 
 // Function to return mock data when the webhook is unavailable
 export const processMockSubmissionData = (): Submission[] => {

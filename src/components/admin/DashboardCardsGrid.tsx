@@ -52,7 +52,7 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
     try {
       setIsLoadingSuppliers(true);
       
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/37825e51-69ed-4104-9def-af272b819973', {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/37825e51-69ed-4104-9def-af272b819973', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -176,7 +176,7 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
     try {
       setIsLoadingSubmissions(true);
       
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/be46fb03-6f2d-4f9e-8963-f7aba3eb4101', {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/be46fb03-6f2d-4f9e-8963-f7aba3eb4101', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

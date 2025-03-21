@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -37,7 +38,7 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
         return;
       }
       
-      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook-test/3f878768-29d0-43f6-a567-c5f127ff8855';
+      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook/3f878768-29d0-43f6-a567-c5f127ff8855';
       
       const response = await fetch(webhookUrl, {
         method: 'POST',

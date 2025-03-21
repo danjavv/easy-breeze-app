@@ -28,7 +28,7 @@ const DeleteConfirmation: React.FC<DeleteConfirmationProps> = ({
     
     try {
       // Send webhook with the supplier ID using POST method
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/f10f55eb-e794-4df9-a9b4-7e1fc2d3b537', {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/f10f55eb-e794-4df9-a9b4-7e1fc2d3b537', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
