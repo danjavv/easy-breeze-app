@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Search } from "lucide-react";
+import { Search, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Detergent {
@@ -17,7 +19,8 @@ interface DetergentSelectorProps {
 
 const DetergentSelector: React.FC<DetergentSelectorProps> = ({ onDetergentSelect }) => {
   const [detergents, setDetergents] = useState<Detergent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingWebhook, setIsLoadingWebhook] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDetergent, setSelectedDetergent] = useState<string | null>(null);
 
@@ -47,6 +50,44 @@ const DetergentSelector: React.FC<DetergentSelectorProps> = ({ onDetergentSelect
     }
   };
 
+  const loadDetergentsFromWebhook = async () => {
+    setIsLoadingWebhook(true);
+    try {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/b65a9a50-5a55-462a-a29b-7f6572aa2dcc');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch detergents from webhook');
+      }
+      
+      const data = await response.json();
+      
+      if (Array.isArray(data) && data.length > 0) {
+        // Process and save the detergents data
+        const formattedDetergents = data.map((item: any) => ({
+          id: item.id || `detergent-${Math.random().toString(36).substr(2, 9)}`,
+          name: item.name || 'Unknown Detergent'
+        }));
+        
+        setDetergents(formattedDetergents);
+        
+        toast.success("Detergents Loaded", {
+          description: `Successfully loaded ${formattedDetergents.length} detergents from external source.`
+        });
+      } else {
+        toast.error("No Detergents Found", {
+          description: "The webhook didn't return any detergent data."
+        });
+      }
+    } catch (error) {
+      console.error('Error loading detergents from webhook:', error);
+      toast.error("Failed to Load Detergents", {
+        description: "Could not fetch detergents from the external source. Please try again."
+      });
+    } finally {
+      setIsLoadingWebhook(false);
+    }
+  };
+
   const filteredDetergents = searchQuery 
     ? detergents.filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase()))
     : detergents;
@@ -59,6 +100,18 @@ const DetergentSelector: React.FC<DetergentSelectorProps> = ({ onDetergentSelect
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <Button
+          variant="outline"
+          onClick={loadDetergentsFromWebhook}
+          className="mb-2"
+          disabled={isLoadingWebhook}
+        >
+          <Download className="mr-2 h-4 w-4" />
+          {isLoadingWebhook ? 'Loading...' : 'Load Detergents'}
+        </Button>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="detergent-search">Search Detergents</Label>
         <div className="relative">
