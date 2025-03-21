@@ -42,10 +42,10 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
         throw new Error('Failed to fetch suppliers');
       }
       
-      const data = await response.json();
+      let data = await response.json();
       console.log('Webhook response:', data);
       
-      // Handle both single object and array responses
+      // Ensure data is always treated as an array
       const supplierArray = Array.isArray(data) ? data : [data];
       
       // Update suppliers with the fetched data
