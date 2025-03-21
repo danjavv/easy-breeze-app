@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Submission } from '@/types/submissions';
-import { fetchSubmissionsFromWebhook, fetchSubmissionsFromSupabase } from '@/utils/submissionsAPI';
+import { fetchSubmissionsFromWebhook, fetchSubmissionsFromSupabase, processMockSubmissionData } from '@/utils/submissionsAPI';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -22,21 +22,34 @@ export const useSubmissions = () => {
   const loadSubmissionsFromWebhook = async () => {
     try {
       setIsLoading(true);
-      const data = await fetchSubmissionsFromWebhook();
+      let data;
+      
+      try {
+        data = await fetchSubmissionsFromWebhook();
+      } catch (error) {
+        console.error('Error loading webhook data:', error);
+        // If the fetch fails, use the mock data
+        data = processMockSubmissionData();
+        
+        toast({
+          title: "Using mock data",
+          description: "Couldn't connect to webhook, using mock submission data instead.",
+        });
+      }
       
       setSubmissions(data);
       setTotalPages(Math.ceil(data.length / ITEMS_PER_PAGE) || 1);
       setFromWebhook(true);
       
       toast({
-        title: "Webhook data processed",
-        description: `Successfully processed ${data.length} submissions from webhook.`,
+        title: "Data processed",
+        description: `Successfully processed ${data.length} submissions.`,
       });
     } catch (error) {
       console.error('Error loading webhook data:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch submissions from webhook. Trying database...",
+        description: "Failed to process submissions. Trying database...",
         variant: "destructive"
       });
       

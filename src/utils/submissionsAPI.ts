@@ -5,6 +5,84 @@ import { useToast } from '@/hooks/use-toast';
 
 const WEBHOOK_URL = 'https://danjaved008.app.n8n.cloud/webhook-test/be46fb03-6f2d-4f9e-8963-f7aba3eb4101';
 
+// Function to return mock data when the webhook is unavailable
+export const processMockSubmissionData = (): Submission[] => {
+  const mockSubmission = {
+    "created_at": "2025-03-21T21:33:24+00:00",
+    "submission_label": "ACME_Q2_Batch_2",
+    "total_batches": 5,
+    "passed_batches": 2,
+    "failed_batches": 3,
+    "results": [
+      {
+        "status": "FAIL",
+        "metrics": {
+          "purity": 5,
+          "foaming": 315,
+          "detergency": 520,
+          "biodegradability": 160
+        },
+        "batch_label": "ACME_LAS_001",
+        "failure_reasons": [
+          "Biodegradability (160 < required 600)",
+          "Purity (5 < required 60)"
+        ]
+      },
+      {
+        "status": "FAIL",
+        "metrics": {
+          "purity": 25,
+          "foaming": 735,
+          "detergency": 1040,
+          "biodegradability": 480
+        },
+        "batch_label": "ACME_LAS_002",
+        "failure_reasons": [
+          "Biodegradability (480 < required 600)",
+          "Purity (25 < required 60)"
+        ]
+      },
+      {
+        "status": "FAIL",
+        "metrics": {
+          "purity": 45,
+          "foaming": 1155,
+          "detergency": 1560,
+          "biodegradability": 800
+        },
+        "batch_label": "ACME_LAS_003",
+        "failure_reasons": [
+          "Purity (45 < required 60)"
+        ]
+      },
+      {
+        "status": "PASS",
+        "metrics": {
+          "purity": 65,
+          "foaming": 1575,
+          "detergency": 2080,
+          "biodegradability": 1120
+        },
+        "batch_label": "ACME_LAS_004"
+      },
+      {
+        "status": "PASS",
+        "metrics": {
+          "purity": 85,
+          "foaming": 1995,
+          "detergency": 2600,
+          "biodegradability": 1440
+        },
+        "batch_label": "ACME_LAS_005"
+      }
+    ],
+    "supplierid": "43bf87df-c7b7-407f-9680-7e8a330e9b44",
+    "submissionid": "d1c2f7e5-7d82-4d92-bcc6-b7b392fdd5a4"
+  };
+
+  return [mockSubmission as Submission];
+};
+
 // Process webhook data into properly typed submissions
 export const processWebhookData = (webhookData: any): Submission[] => {
   try {
@@ -78,6 +156,18 @@ export const fetchSubmissionsFromWebhook = async (): Promise<Submission[]> => {
     console.error('Error fetching submissions from webhook:', error);
     throw error;
   }
+};
+
+// Format date for display
+export const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 };
 
 // Fetch submissions from Supabase database
@@ -164,16 +254,4 @@ export const fetchSubmissionsFromSupabase = async (): Promise<Submission[]> => {
     console.error('Error fetching submissions:', error);
     throw error;
   }
-};
-
-// Format date for display
-export const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
 };
