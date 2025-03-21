@@ -1,11 +1,22 @@
 
-import React, { useState } from 'react';
-import { Users, Settings, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, Settings, RefreshCw, Database } from 'lucide-react';
 import DashboardCard from '@/components/admin/DashboardCard';
 import { Supplier } from '@/components/admin/SupplierList';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import SupplierDropdownList from '@/components/admin/SupplierDropdownList';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Ingredient {
+  id: string;
+  name: string;
+  purity?: number | null;
+  detergency?: number | null;
+  foaming?: number | null;
+  biodegrability?: number | null;
+  models?: any[] | null;
+}
 
 interface DashboardCardsGridProps {
   suppliers: Supplier[];
@@ -23,6 +34,8 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
   const [showSupplierList, setShowSupplierList] = useState(false);
   const [isLoadingSuppliers, setIsLoadingSuppliers] = useState(false);
   const [fetchedSuppliers, setFetchedSuppliers] = useState<Supplier[]>([]);
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
   const pendingSupplierCount = suppliers.filter(s => s.status === 'Pending').length;
   
   const handleManageSuppliers = async () => {
@@ -77,6 +90,38 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
     }
   };
 
+  const handleFetchIngredients = async () => {
+    try {
+      setIsLoadingIngredients(true);
+      
+      // Fetch ingredients from Supabase
+      const { data, error } = await supabase
+        .from('ingredients')
+        .select('*');
+      
+      if (error) {
+        throw error;
+      }
+      
+      setIngredients(data || []);
+      navigate('/admin-ingredient-models');
+      
+      toast({
+        title: "Ingredients loaded",
+        description: `Successfully loaded ${data?.length || 0} ingredients.`,
+      });
+    } catch (error) {
+      console.error('Error fetching ingredients:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch ingredients. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingIngredients(false);
+    }
+  };
+
   const handleDeleteSupplier = async (supplierId: string) => {
     try {
       // Update the local state by removing the deleted supplier
@@ -98,7 +143,7 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
   
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <DashboardCard
           title="Suppliers"
           description="Manage supplier accounts"
@@ -122,6 +167,19 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
           subtitle="Define passing thresholds"
           buttonText="Configure Standards"
           onClick={() => navigate('/admin-baseline-config')}
+        />
+
+        <DashboardCard
+          title="Ingredient Models"
+          description="Manage ingredient models"
+          icon={Database}
+          value={ingredients.length || 0}
+          subtitle="Available ingredients"
+          buttonText="Manage Models"
+          buttonIcon={isLoadingIngredients ? RefreshCw : Database}
+          loading={isLoadingIngredients}
+          loadingText="Loading..."
+          onClick={handleFetchIngredients}
         />
       </div>
       

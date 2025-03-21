@@ -16,6 +16,7 @@ export type Database = {
           detergency: number | null
           foaming: number | null
           id: string
+          models: Json[] | null
           name: string | null
           purity: number | null
         }
@@ -25,6 +26,7 @@ export type Database = {
           detergency?: number | null
           foaming?: number | null
           id?: string
+          models?: Json[] | null
           name?: string | null
           purity?: number | null
         }
@@ -34,6 +36,7 @@ export type Database = {
           detergency?: number | null
           foaming?: number | null
           id?: string
+          models?: Json[] | null
           name?: string | null
           purity?: number | null
         }

@@ -9,6 +9,7 @@ import NewSubmission from '@/pages/NewSubmission';
 import SubmissionResults from '@/pages/SubmissionResults';
 import AdminDashboard from '@/pages/AdminDashboard';
 import AdminBaselineConfig from '@/pages/AdminBaselineConfig';
+import AdminIngredientModels from '@/pages/AdminIngredientModels';
 import NotFound from '@/pages/NotFound';
 import { Toaster } from 'sonner';
 
@@ -25,6 +26,7 @@ function App() {
           <Route path="/submission-results/:submissionId" element={<SubmissionResults />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/admin-baseline-config" element={<AdminBaselineConfig />} />
+          <Route path="/admin-ingredient-models" element={<AdminIngredientModels />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />
