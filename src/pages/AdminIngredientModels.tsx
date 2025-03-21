@@ -105,7 +105,28 @@ const AdminIngredientModels = () => {
         purity: baseValues.purity
       };
 
-      // Save to Supabase
+      // Send webhook request with all the details
+      const webhookData = {
+        modelData: modelData,
+        thresholds: thresholdValues,
+        isActive: isActive,
+        timestamp: new Date().toISOString()
+      };
+
+      // Make the webhook request
+      const webhookResponse = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/adf1644a-241c-4d1c-8964-69d89e7fab14', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData),
+      });
+
+      if (!webhookResponse.ok) {
+        throw new Error('Webhook request failed');
+      }
+
+      // Also save to Supabase
       const { error } = await supabase
         .from('ingredients')
         .insert(modelData);
