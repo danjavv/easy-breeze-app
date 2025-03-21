@@ -49,13 +49,15 @@ const SupplierDropdownList: React.FC<SupplierDropdownListProps> = ({
     }
   };
 
+  console.log('Suppliers in dropdown:', suppliers.length, suppliers);
+
   return (
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Supplier Management</DialogTitle>
           <DialogDescription>
-            View and manage supplier accounts
+            View and manage supplier accounts ({suppliers.length} suppliers)
           </DialogDescription>
         </DialogHeader>
 
@@ -71,12 +73,12 @@ const SupplierDropdownList: React.FC<SupplierDropdownListProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {suppliers.length > 0 ? (
+              {suppliers && suppliers.length > 0 ? (
                 suppliers.map((supplier) => (
                   <TableRow key={supplier.id}>
                     <TableCell className="font-medium">{supplier.company_name}</TableCell>
                     <TableCell>{supplier.email}</TableCell>
-                    <TableCell>{getStatusBadge(supplier.status)}</TableCell>
+                    <TableCell>{getStatusBadge(supplier.status || 'Pending')}</TableCell>
                     <TableCell>{formatDate(supplier.created_at)}</TableCell>
                     <TableCell className="flex justify-end space-x-2">
                       <Button 

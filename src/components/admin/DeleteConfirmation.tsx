@@ -48,15 +48,11 @@ const DeleteConfirmation: React.FC<DeleteConfirmationProps> = ({
       const data = await response.json();
       console.log('Delete response:', data);
       
-      if (data.message === 'deleted successfully' || true) { // Allow any successful response
-        toast({
-          title: "Delete Successful",
-          description: `Supplier ${supplier.company_name} has been deleted.`,
-        });
-        onConfirm();
-      } else {
-        throw new Error('Unexpected response from server');
-      }
+      toast({
+        title: "Delete Successful",
+        description: `Supplier ${supplier.company_name} has been deleted.`,
+      });
+      onConfirm();
     } catch (error) {
       console.error('Error deleting supplier:', error);
       toast({
