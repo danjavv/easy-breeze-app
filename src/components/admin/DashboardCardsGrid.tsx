@@ -239,7 +239,7 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
           title="Detergent Configuration"
           description="Set quality standards"
           icon={Beaker}
-          value="Quality Standards"
+          value=""
           subtitle="Define passing thresholds"
           buttonText="Detergent Configuration"
           onClick={() => navigate('/admin-baseline-config')}
