@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -30,7 +29,6 @@ const AdminIngredientModels = () => {
   const [configName, setConfigName] = useState('Model 1');
   const [isActive, setIsActive] = useState(false);
   
-  // State for base values
   const [baseValues, setBaseValues] = useState({
     detergency: 320,
     foaming: 250,
@@ -38,7 +36,6 @@ const AdminIngredientModels = () => {
     purity: 40,
   });
 
-  // State for threshold values
   const [thresholdValues, setThresholdValues] = useState({
     detergency: 500,
     foaming: 300,
@@ -46,17 +43,14 @@ const AdminIngredientModels = () => {
     purity: 60,
   });
 
-  // Fetch ingredients from Supabase on component mount
   useEffect(() => {
     const fetchIngredients = async () => {
       try {
         setIsLoading(true);
         
-        // Check if ingredients were passed via location state
         if (location.state?.ingredients && location.state.ingredients.length > 0) {
           setIngredients(location.state.ingredients);
         } else {
-          // If not, fetch from Supabase
           const { data, error } = await supabase
             .from('ingredients')
             .select('*');
@@ -96,16 +90,14 @@ const AdminIngredientModels = () => {
 
   const handleSave = async () => {
     try {
-      // Prepare model data
       const modelData = {
         name: configName,
         detergency: baseValues.detergency,
         foaming: baseValues.foaming,
-        biodegrability: baseValues.biodegradability,
+        biodegradability: baseValues.biodegradability,
         purity: baseValues.purity
       };
 
-      // Send webhook request with all the details
       const webhookData = {
         modelData: modelData,
         thresholds: thresholdValues,
@@ -113,20 +105,28 @@ const AdminIngredientModels = () => {
         timestamp: new Date().toISOString()
       };
 
-      // Make the webhook request
-      const webhookResponse = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/adf1644a-241c-4d1c-8964-69d89e7fab14', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(webhookData),
-      });
+      toast.info('Sending webhook request...');
 
-      if (!webhookResponse.ok) {
-        throw new Error('Webhook request failed');
+      try {
+        const webhookResponse = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/adf1644a-241c-4d1c-8964-69d89e7fab14', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(webhookData),
+        });
+
+        if (!webhookResponse.ok) {
+          console.error('Webhook response not OK:', webhookResponse.status);
+          toast.warning('Webhook request sent but returned an error. Continuing with Supabase save.');
+        } else {
+          toast.success('Webhook request sent successfully');
+        }
+      } catch (webhookError) {
+        console.error('Webhook error:', webhookError);
+        toast.warning('Failed to send webhook request. Continuing with Supabase save.');
       }
 
-      // Also save to Supabase
       const { error } = await supabase
         .from('ingredients')
         .insert(modelData);
