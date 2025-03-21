@@ -15,7 +15,6 @@ interface Ingredient {
   detergency?: number | null;
   foaming?: number | null;
   biodegrability?: number | null;
-  models?: any[] | null;
 }
 
 interface DashboardCardsGridProps {
@@ -94,20 +93,16 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
     try {
       setIsLoadingIngredients(true);
       
-      // Fetch ingredients from webhook
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/f653e0a6-4246-4a21-b122-f8a0fc4727ac', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      // Fetch ingredients from Supabase directly
+      const { data, error } = await supabase
+        .from('ingredients')
+        .select('*');
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch ingredients');
+      if (error) {
+        throw error;
       }
       
-      const data = await response.json();
-      console.log('Webhook response (ingredients):', data);
+      console.log('Ingredients data:', data);
       
       // Ensure we're working with an array of ingredients
       const ingredientsArray = Array.isArray(data) ? data : [data];

@@ -37,7 +37,6 @@ interface Ingredient {
   detergency?: number | null;
   foaming?: number | null;
   biodegrability?: number | null;
-  models?: any[] | null;
 }
 
 interface Model {
@@ -98,18 +97,14 @@ const AdminIngredientModels = () => {
   const fetchIngredients = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/f653e0a6-4246-4a21-b122-f8a0fc4727ac', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      // Fetch ingredients from Supabase directly
+      const { data, error } = await supabase
+        .from('ingredients')
+        .select('*');
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch ingredients');
+      if (error) {
+        throw error;
       }
-      
-      const data = await response.json();
       
       // Ensure we're working with an array of ingredients
       const ingredientsArray = Array.isArray(data) ? data : [data];
@@ -149,8 +144,8 @@ const AdminIngredientModels = () => {
   const startModelConfig = (ingredient: Ingredient) => {
     setSelectedIngredient(ingredient);
     
-    // Set default model name based on existing models
-    const modelCount = ingredient.models ? ingredient.models.length + 1 : 1;
+    // Set default model name based on existing models count
+    const modelCount = 1; // Since we don't have models in the ingredient type, start with 1
     setConfigName(`Model ${modelCount}`);
     
     // Use ingredient values as defaults if available
@@ -195,8 +190,19 @@ const AdminIngredientModels = () => {
         }
       };
       
-      // Get current models array or initialize it
-      const currentModels = selectedIngredient.models || [];
+      // Get current models array from the database
+      const { data: ingredientData, error: fetchError } = await supabase
+        .from('ingredients')
+        .select('*')
+        .eq('id', selectedIngredient.id)
+        .single();
+      
+      if (fetchError) {
+        throw fetchError;
+      }
+      
+      // Check if we have models data or initialize an empty array
+      const currentModels = ingredientData.models || [];
       
       // Add new model to the array
       const updatedModels = [...currentModels, newModel];
@@ -204,25 +210,19 @@ const AdminIngredientModels = () => {
       // Update the ingredient in the database
       const { error } = await supabase
         .from('ingredients')
-        .update({ models: updatedModels })
+        .update({ 
+          // Use JSON data instead of trying to access a 'models' property
+          // that might not exist in the Ingredient interface
+          models: updatedModels 
+        })
         .eq('id', selectedIngredient.id);
       
       if (error) {
         throw error;
       }
       
-      // Update local state
-      setIngredients(prev => 
-        prev.map(ing => 
-          ing.id === selectedIngredient.id 
-            ? { ...ing, models: updatedModels } 
-            : ing
-        )
-      );
-      
-      setSelectedIngredient(prev => 
-        prev ? { ...prev, models: updatedModels } : null
-      );
+      // Refresh the ingredients data after save
+      fetchIngredients();
       
       sonnerToast.success('Model configuration saved successfully');
       if (isActive) {
@@ -241,37 +241,38 @@ const AdminIngredientModels = () => {
   const handleDeleteModel = async (ingredientId: string, modelIndex: number) => {
     setIsLoading(true);
     try {
-      // Find the ingredient
-      const ingredient = ingredients.find(ing => ing.id === ingredientId);
-      if (!ingredient || !ingredient.models) return;
+      // Get current models from the database
+      const { data: ingredientData, error: fetchError } = await supabase
+        .from('ingredients')
+        .select('*')
+        .eq('id', ingredientId)
+        .single();
+      
+      if (fetchError) {
+        throw fetchError;
+      }
+      
+      // Get the current models array or initialize an empty one
+      const currentModels = ingredientData.models || [];
       
       // Remove the model at the specified index
-      const updatedModels = ingredient.models.filter((_, index) => index !== modelIndex);
+      const updatedModels = currentModels.filter((_, index) => index !== modelIndex);
       
       // Update the ingredient in the database
       const { error } = await supabase
         .from('ingredients')
-        .update({ models: updatedModels })
+        .update({ 
+          // Use JSON data directly
+          models: updatedModels
+        })
         .eq('id', ingredientId);
       
       if (error) {
         throw error;
       }
       
-      // Update local state
-      setIngredients(prev => 
-        prev.map(ing => 
-          ing.id === ingredientId 
-            ? { ...ing, models: updatedModels } 
-            : ing
-        )
-      );
-      
-      if (selectedIngredient?.id === ingredientId) {
-        setSelectedIngredient(prev => 
-          prev ? { ...prev, models: updatedModels } : null
-        );
-      }
+      // Refresh ingredients data after deletion
+      fetchIngredients();
       
       sonnerToast.success('Model deleted successfully');
     } catch (error) {
@@ -396,6 +397,84 @@ const AdminIngredientModels = () => {
     );
   };
 
+  // Function to display models for the selected ingredient
+  const renderModels = () => {
+    if (!selectedIngredient) return null;
+    
+    // Get the models from ingredient data
+    const { data } = supabase
+      .from('ingredients')
+      .select('models')
+      .eq('id', selectedIngredient.id)
+      .single();
+    
+    const models = data?.models || [];
+    
+    if (models.length === 0) return null;
+    
+    return (
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>{selectedIngredient.name} - Available Models</CardTitle>
+          <CardDescription>
+            All configured models for {selectedIngredient.name}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Detergency</TableHead>
+                <TableHead>Foaming</TableHead>
+                <TableHead>Biodegradability</TableHead>
+                <TableHead>Purity</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {models.map((model: any, index: number) => (
+                <TableRow key={index}>
+                  <TableCell className="font-medium">{model.name}</TableCell>
+                  <TableCell>{model.detergency || model.parameters?.thresholds?.detergency || '-'}</TableCell>
+                  <TableCell>{model.foaming || model.parameters?.thresholds?.foaming || '-'}</TableCell>
+                  <TableCell>{model.biodegrability || model.parameters?.thresholds?.biodegradability || '-'}</TableCell>
+                  <TableCell>{model.purity || model.parameters?.thresholds?.purity || '-'}</TableCell>
+                  <TableCell>
+                    {model.parameters?.isActive ? 
+                      <span className="text-green-500 font-medium">Active</span> : 
+                      <span className="text-muted-foreground">Inactive</span>
+                    }
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteModel(selectedIngredient.id, index)}
+                    >
+                      <Trash className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+        <CardFooter className="flex justify-end">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => startModelConfig(selectedIngredient)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Another Model
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-muted/40">
       <AdminHeader onSignOut={handleSignOut} />
@@ -449,7 +528,6 @@ const AdminIngredientModels = () => {
                     <TableHead>Detergency</TableHead>
                     <TableHead>Foaming</TableHead>
                     <TableHead>Biodegradability</TableHead>
-                    <TableHead>Models</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -462,7 +540,6 @@ const AdminIngredientModels = () => {
                         <TableCell>{ingredient.detergency !== null ? ingredient.detergency : '-'}</TableCell>
                         <TableCell>{ingredient.foaming !== null ? ingredient.foaming : '-'}</TableCell>
                         <TableCell>{ingredient.biodegrability !== null ? ingredient.biodegrability : '-'}</TableCell>
-                        <TableCell>{ingredient.models ? ingredient.models.length : 0}</TableCell>
                         <TableCell className="text-right">
                           <Button 
                             variant="outline" 
@@ -477,7 +554,7 @@ const AdminIngredientModels = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
+                      <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
                         {isLoading ? 'Loading ingredients...' : 'No ingredients found'}
                       </TableCell>
                     </TableRow>
@@ -489,67 +566,7 @@ const AdminIngredientModels = () => {
         )}
 
         {/* Display models for the selected ingredient if not in config mode */}
-        {!isModelConfigOpen && selectedIngredient && selectedIngredient.models && selectedIngredient.models.length > 0 && (
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>{selectedIngredient.name} - Available Models</CardTitle>
-              <CardDescription>
-                All configured models for {selectedIngredient.name}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Detergency</TableHead>
-                    <TableHead>Foaming</TableHead>
-                    <TableHead>Biodegradability</TableHead>
-                    <TableHead>Purity</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {selectedIngredient.models.map((model, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{model.name}</TableCell>
-                      <TableCell>{model.detergency || model.parameters?.thresholds?.detergency || '-'}</TableCell>
-                      <TableCell>{model.foaming || model.parameters?.thresholds?.foaming || '-'}</TableCell>
-                      <TableCell>{model.biodegrability || model.parameters?.thresholds?.biodegradability || '-'}</TableCell>
-                      <TableCell>{model.purity || model.parameters?.thresholds?.purity || '-'}</TableCell>
-                      <TableCell>
-                        {model.parameters?.isActive ? 
-                          <span className="text-green-500 font-medium">Active</span> : 
-                          <span className="text-muted-foreground">Inactive</span>
-                        }
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteModel(selectedIngredient.id, index)}
-                        >
-                          <Trash className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => startModelConfig(selectedIngredient)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Another Model
-              </Button>
-            </CardFooter>
-          </Card>
-        )}
+        {!isModelConfigOpen && selectedIngredient && renderModels()}
       </main>
     </div>
   );
