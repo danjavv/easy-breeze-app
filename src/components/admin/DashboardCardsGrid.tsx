@@ -160,31 +160,15 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
     try {
       setIsLoadingSubmissions(true);
       
-      // Fetch submissions from Supabase
-      const { data, error } = await supabase
-        .from('submissions')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Navigate directly to the submissions page
+      // Let the page itself handle data fetching
+      navigate('/admin-all-submissions');
       
-      if (error) {
-        throw error;
-      }
-      
-      console.log('Submissions data:', data);
-      setSubmissions(data);
-      
-      // Navigate to the submissions view page
-      navigate('/admin-all-submissions', { state: { submissions: data } });
-      
-      toast({
-        title: "Submissions loaded",
-        description: `Successfully loaded ${data.length} submissions.`,
-      });
     } catch (error) {
-      console.error('Error fetching submissions:', error);
+      console.error('Error handling submissions navigation:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch submissions. Please try again.",
+        description: "Failed to navigate to submissions page. Please try again.",
         variant: "destructive"
       });
     } finally {

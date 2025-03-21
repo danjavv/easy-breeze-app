@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, RefreshCw, User, Calendar, FileCheck, FileX } from 'lucide-react';
@@ -58,9 +58,18 @@ const AdminAllSubmissions = () => {
     Math.ceil(initialSubmissions.length / ITEMS_PER_PAGE) || 1
   );
 
+  // Add useEffect to fetch submissions data when component mounts
+  useEffect(() => {
+    // Only fetch if no submissions were passed in state
+    if (submissions.length === 0) {
+      fetchSubmissions();
+    }
+  }, []);
+
   const fetchSubmissions = async () => {
     try {
       setIsLoading(true);
+      console.log('Fetching submissions data...');
       
       // Fetch submissions
       const { data: submissionsData, error: submissionsError } = await supabase
@@ -68,7 +77,12 @@ const AdminAllSubmissions = () => {
         .select('*')
         .order('created_at', { ascending: false });
       
-      if (submissionsError) throw submissionsError;
+      if (submissionsError) {
+        console.error('Error fetching submissions:', submissionsError);
+        throw submissionsError;
+      }
+      
+      console.log('Submissions data:', submissionsData);
       
       // Get unique supplier IDs
       const supplierIds = [...new Set(submissionsData.map(s => s.supplierid))];
@@ -80,7 +94,12 @@ const AdminAllSubmissions = () => {
           .select('id, company_name')
           .in('id', supplierIds);
         
-        if (suppliersError) throw suppliersError;
+        if (suppliersError) {
+          console.error('Error fetching suppliers:', suppliersError);
+          throw suppliersError;
+        }
+        
+        console.log('Suppliers data:', suppliersData);
         
         // Create a mapping of supplier IDs to names
         const supplierMap = suppliersData.reduce((acc, supplier) => {
@@ -97,13 +116,13 @@ const AdminAllSubmissions = () => {
         setSubmissions(enhancedSubmissions);
         setTotalPages(Math.ceil(enhancedSubmissions.length / ITEMS_PER_PAGE) || 1);
       } else {
-        setSubmissions(submissionsData);
-        setTotalPages(Math.ceil(submissionsData.length / ITEMS_PER_PAGE) || 1);
+        setSubmissions(submissionsData || []);
+        setTotalPages(Math.ceil((submissionsData?.length || 0) / ITEMS_PER_PAGE) || 1);
       }
       
       toast({
         title: "Submissions loaded",
-        description: `Successfully loaded ${submissionsData.length} submissions.`,
+        description: `Successfully loaded ${submissionsData?.length || 0} submissions.`,
       });
     } catch (error) {
       console.error('Error fetching submissions:', error);
@@ -116,11 +135,6 @@ const AdminAllSubmissions = () => {
       setIsLoading(false);
     }
   };
-  
-  // If no submissions were passed in state, fetch them
-  if (submissions.length === 0 && !isLoading) {
-    fetchSubmissions();
-  }
   
   const handleSignOut = () => {
     navigate('/auth');
