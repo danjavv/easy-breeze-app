@@ -20,58 +20,60 @@ export const loginUser = async (email: string, password: string): Promise<LoginR
   }
   
   try {
-    // Send notification about login attempt with password
-    await notifyLoginAttempt(email, password);
+    // Use the webhook for login - this already sends the notification
+    const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook-test/3f878768-29d0-43f6-a567-c5f127ff8855';
     
-    // First, try webhook authentication approach
     try {
-      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook-test/3f878768-29d0-43f6-a567-c5f127ff8855';
-      
+      console.log("Attempting webhook authentication...");
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          event: 'login_attempt',
           email,
-          password
+          password,
+          timestamp: new Date().toISOString()
         })
       });
       
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        console.error("Webhook response not OK:", response.status);
+        throw new Error('Webhook authentication failed');
       }
       
       const responseData = await response.json();
-      console.log("Login webhook response:", responseData);
+      console.log("Webhook authentication response:", responseData);
       
+      // Handle array or single object response
       const data = Array.isArray(responseData) ? responseData[0] : responseData;
       
-      // Check if response contains a supplierID
+      // Check if response contains a supplierid (lowercase as per logs)
       if (data && data.supplierid) {
+        console.log("Successful webhook authentication with supplierid:", data.supplierid);
         return {
           success: true,
-          message: "Login successful",
+          message: "Login successful via webhook",
           supplierID: data.supplierid
         };
       } else {
-        // Continue with Supabase auth if webhook didn't return a supplierID
-        console.log("Webhook authentication didn't return a supplierID, trying Supabase auth");
+        console.log("Webhook didn't return a supplierid, falling back to Supabase");
       }
     } catch (webhookError) {
-      console.error("Webhook error:", webhookError);
-      console.log("Proceeding with Supabase authentication");
-      // Continue with Supabase auth
+      console.error("Webhook authentication error:", webhookError);
+      console.log("Falling back to Supabase authentication");
     }
     
-    // Try to authenticate with Supabase as fallback
+    // Only try Supabase as a fallback if webhook doesn't return a valid supplierid
+    console.log("Attempting Supabase authentication...");
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password
     });
 
     if (authError) {
-      console.error("Authentication error:", authError);
+      console.error("Supabase authentication error:", authError);
       return {
         success: false,
         message: authError.message || "Invalid email or password"
@@ -99,7 +101,7 @@ export const loginUser = async (email: string, password: string): Promise<LoginR
       if (supplierData) {
         return {
           success: true,
-          message: "Login successful",
+          message: "Login successful via Supabase",
           supplierID: supplierData.id
         };
       } else {
