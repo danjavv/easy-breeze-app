@@ -52,53 +52,18 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
   
   const [showSupplierManagement, setShowSupplierManagement] = useState(false);
 
-  const handleManageSuppliers = async () => {
-    try {
-      setIsLoadingSuppliers(true);
-      
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/37825e51-69ed-4104-9def-af272b819973', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch suppliers');
-      }
-      
-      const data = await response.json();
-      console.log('Webhook response:', data);
-      
-      const supplierArray = Array.isArray(data) ? data : [data];
-      
-      setFetchedSuppliers(supplierArray);
-      setShowSupplierManagement(true);
-      
-      toast({
-        title: "Suppliers loaded",
-        description: `Successfully loaded ${supplierArray.length} suppliers.`,
-      });
-    } catch (error) {
-      console.error('Error triggering webhook:', error);
-      toast({
-        title: "Connection Error",
-        description: "Failed to connect to the server. Proceeding with supplier management.",
-        variant: "destructive"
-      });
-      
-      if (suppliers.length > 0) {
-        setFetchedSuppliers(suppliers);
-        setShowSupplierManagement(true);
-      } else {
-        onFetchSuppliers();
-      }
-    } finally {
-      setIsLoadingSuppliers(false);
-    }
+  const handleManageSuppliers = () => {
+    setIsLoadingSuppliers(true);
+    
+    setFetchedSuppliers(suppliers);
+    setShowSupplierManagement(true);
+    
+    toast({
+      title: "Suppliers loaded",
+      description: `Successfully loaded ${suppliers.length} suppliers.`,
+    });
+    
+    setIsLoadingSuppliers(false);
   };
 
   const handleAddSupplier = async (newSupplier: Omit<Supplier, 'id' | 'created_at'>) => {
