@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -98,7 +97,7 @@ const AdminIngredientModels = () => {
         isActive: isActive
       };
 
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/9ec560b0-44db-4f4f-84e3-bb1b4f9acb82', {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/9ec560b0-44db-4f4f-84e3-bb1b4f9acb82', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -113,7 +112,6 @@ const AdminIngredientModels = () => {
           if (responseData && responseData.id) {
             console.log('Webhook response:', responseData);
             
-            // Save to Supabase models table instead of ingredients
             const { error } = await supabase
               .from('models')
               .insert({
@@ -192,7 +190,6 @@ const AdminIngredientModels = () => {
           Back to Dashboard
         </Button>
         
-        {/* Create New Model Card */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="text-2xl">Create New Model</CardTitle>
@@ -266,7 +263,6 @@ const AdminIngredientModels = () => {
           </CardContent>
         </Card>
         
-        {/* Assign Model to Detergent Section */}
         <ModelAssignmentSection />
       </main>
     </div>
