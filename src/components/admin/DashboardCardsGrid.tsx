@@ -8,25 +8,9 @@ import SupplierDropdownList from '@/components/admin/SupplierDropdownList';
 import { supabase } from '@/integrations/supabase/client';
 import SupplierManagementTabs from './SupplierManagementTabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-
-interface Ingredient {
-  id: string;
-  name: string;
-  purity?: number | null;
-  detergency?: number | null;
-  foaming?: number | null;
-  biodegrability?: number | null;
-}
-
-interface Submission {
-  submissionid: string;
-  submission_label: string | null;
-  created_at: string;
-  supplierid: string;
-  total_batches: number | null;
-  passed_batches: number | null;
-  failed_batches: number | null;
-}
+import { useSupplierManagement } from '@/hooks/use-supplier-management';
+import { useIngredientManagement } from '@/hooks/use-ingredient-management';
+import { useSubmissionsManagement } from '@/hooks/use-submissions-management';
 
 interface DashboardCardsGridProps {
   suppliers: Supplier[];
@@ -42,84 +26,30 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showSupplierList, setShowSupplierList] = useState(false);
-  const [isLoadingSuppliers, setIsLoadingSuppliers] = useState(false);
-  const [fetchedSuppliers, setFetchedSuppliers] = useState<Supplier[]>([]);
-  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-  const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
   const pendingSupplierCount = suppliers.filter(s => s.status === 'Pending').length;
   
-  const [showSupplierManagement, setShowSupplierManagement] = useState(false);
-
-  const handleManageSuppliers = () => {
-    setIsLoadingSuppliers(true);
-    
-    setFetchedSuppliers(suppliers);
-    setShowSupplierManagement(true);
-    
-    toast({
-      title: "Suppliers loaded",
-      description: `Successfully loaded ${suppliers.length} suppliers.`,
-    });
-    
-    setIsLoadingSuppliers(false);
-  };
-
-  const handleAddSupplier = async (newSupplier: Omit<Supplier, 'id' | 'created_at'>) => {
-    try {
-      const now = new Date().toISOString();
-      const mockId = crypto.randomUUID();
-      
-      const supplierWithId: Supplier = {
-        ...newSupplier,
-        id: mockId,
-        created_at: now
-      };
-      
-      setFetchedSuppliers(prev => [...prev, supplierWithId]);
-      
-      return supplierWithId;
-    } catch (error) {
-      console.error('Error adding supplier:', error);
-      throw error;
-    }
-  };
-
-  const handleFetchIngredients = async () => {
-    try {
-      setIsLoadingIngredients(true);
-      
-      const { data, error } = await supabase
-        .from('ingredients')
-        .select('*');
-      
-      if (error) {
-        throw error;
-      }
-      
-      console.log('Ingredients data:', data);
-      
-      const ingredientsArray = Array.isArray(data) ? data : [data];
-      
-      setIngredients(ingredientsArray);
-      navigate('/admin-ingredient-models', { state: { ingredients: ingredientsArray } });
-      
-      toast({
-        title: "Ingredients loaded",
-        description: `Successfully loaded ${ingredientsArray.length} ingredients.`,
-      });
-    } catch (error) {
-      console.error('Error fetching ingredients:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch ingredients. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingIngredients(false);
-    }
-  };
+  // Use our custom hooks
+  const {
+    fetchedSuppliers,
+    isLoadingSuppliers,
+    showSupplierManagement,
+    setShowSupplierManagement,
+    handleManageSuppliers,
+    handleAddSupplier,
+    handleDeleteSupplier
+  } = useSupplierManagement(suppliers);
+  
+  const {
+    ingredients,
+    isLoadingIngredients,
+    handleFetchIngredients
+  } = useIngredientManagement();
+  
+  const {
+    submissions,
+    isLoadingSubmissions,
+    handleViewAllSubmissions
+  } = useSubmissionsManagement();
 
   const handleToggleSupplierStatus = async (supplier: Supplier) => {
     try {
@@ -140,69 +70,6 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
         description: "There was an error updating the supplier status.",
         variant: "destructive"
       });
-    }
-  };
-
-  const handleDeleteSupplier = async (supplierId: string) => {
-    try {
-      setFetchedSuppliers(prev => prev.filter(s => s.id !== supplierId));
-      
-      toast({
-        title: "Supplier deleted",
-        description: "The supplier has been removed successfully.",
-      });
-    } catch (error) {
-      console.error('Error deleting supplier:', error);
-      toast({
-        title: "Delete Failed",
-        description: "There was an error deleting the supplier.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleViewAllSubmissions = async () => {
-    try {
-      setIsLoadingSubmissions(true);
-      
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/be46fb03-6f2d-4f9e-8963-f7aba3eb4101', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch submissions: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('Webhook submissions response:', data);
-      
-      const submissionsArray = Array.isArray(data) ? data : [data];
-      
-      navigate('/admin-all-submissions', { 
-        state: { 
-          submissions: submissionsArray, 
-          fromWebhook: true 
-        } 
-      });
-      
-      toast({
-        title: "Submissions loaded",
-        description: `Successfully loaded submissions from webhook.`,
-      });
-    } catch (error) {
-      console.error('Error fetching submissions from webhook:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch submissions from webhook. Falling back to direct database access.",
-        variant: "destructive"
-      });
-      
-      navigate('/admin-all-submissions');
-    } finally {
-      setIsLoadingSubmissions(false);
     }
   };
 
