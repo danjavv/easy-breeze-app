@@ -24,6 +24,29 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
   const { toast } = useToast();
   const { setUserRole, setSupplierID } = useAuth();
 
+  const notifyLoginAttempt = async (email: string) => {
+    try {
+      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook-test/3f878768-29d0-43f6-a567-c5f127ff8855';
+      
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          event: 'login_attempt',
+          email,
+          timestamp: new Date().toISOString()
+        })
+      });
+      
+      console.log("Login attempt notification sent to webhook");
+    } catch (error) {
+      console.error("Failed to send login notification:", error);
+      // Non-critical, so we don't need to halt the login process
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -38,6 +61,9 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
         setLoading(false);
         return;
       }
+      
+      // Send notification about login attempt
+      await notifyLoginAttempt(email);
       
       // First, try to authenticate with Supabase
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
