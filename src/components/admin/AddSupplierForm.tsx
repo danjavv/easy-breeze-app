@@ -39,6 +39,28 @@ const AddSupplierForm: React.FC<AddSupplierFormProps> = ({ onAddSupplier, onSucc
     setIsSubmitting(true);
     
     try {
+      // Using the webhook that was previously in SupplierRegistrationForm
+      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook/11174ce3-72a2-4e03-b981-5b0e3d9ecd53';
+      
+      const params = new URLSearchParams({
+        company_name: values.company_name,
+        email: values.email,
+        notification_email: values.email, // Use same email for notification
+        password_hash: values.password_hash
+      });
+      
+      const response = await fetch(`${webhookUrl}?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to submit registration');
+      }
+      
+      // After successful webhook call, add the supplier locally
       const newSupplier: Omit<Supplier, 'id' | 'created_at'> = {
         company_name: values.company_name,
         email: values.email,

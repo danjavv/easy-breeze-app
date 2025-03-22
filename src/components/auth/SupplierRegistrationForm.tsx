@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -78,27 +77,8 @@ const SupplierRegistrationForm = ({ onBack, onLoginClick }: SupplierRegistration
         return;
       }
       
-      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook/11174ce3-72a2-4e03-b981-5b0e3d9ecd53';
-      
       const passwordHash = hashPassword(password);
-      
-      const params = new URLSearchParams({
-        company_name: companyName,
-        email: email,
-        notification_email: notificationEmail,
-        password_hash: passwordHash
-      });
-      
-      const response = await fetch(`${webhookUrl}?${params.toString()}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to submit registration');
-      }
+      console.log("Registration data:", { companyName, email, notificationEmail, passwordHash });
       
       setUserRole('supplier');
       
