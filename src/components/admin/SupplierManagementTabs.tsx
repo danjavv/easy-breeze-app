@@ -48,21 +48,47 @@ const SupplierManagementTabs: React.FC<SupplierManagementTabsProps> = ({
         throw new Error(`Failed to load suppliers: ${response.status}`);
       }
       
-      let data = await response.json();
-      console.log('Loaded suppliers:', data);
+      const responseText = await response.text();
+      console.log('Raw API response:', responseText);
       
-      // Normalize the data to ensure it's always an array
-      const suppliersArray = Array.isArray(data) ? data : [data];
+      // Parse the response text manually to handle potential issues
+      let rawData;
+      try {
+        rawData = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        throw new Error('Invalid JSON response from server');
+      }
+      
+      // Ensure we're working with an array
+      let suppliersArray = [];
+      
+      if (Array.isArray(rawData)) {
+        suppliersArray = rawData;
+      } else if (typeof rawData === 'object' && rawData !== null) {
+        // Check if it's a single object with numeric keys (which would indicate an object map of suppliers)
+        const keys = Object.keys(rawData);
+        if (keys.length > 0 && keys.some(key => !isNaN(Number(key)))) {
+          // This appears to be an object map with numeric keys, convert to array
+          suppliersArray = Object.values(rawData);
+        } else {
+          // It's a single supplier object
+          suppliersArray = [rawData];
+        }
+      }
+      
+      console.log('Suppliers array after conversion:', suppliersArray);
       
       // Transform the data into the Supplier format
       const formattedSuppliers = suppliersArray.map((supplier: any) => ({
         id: supplier.id || supplier.supplierID || crypto.randomUUID(),
         company_name: supplier.company_name || supplier.companyName || 'Unknown Company',
         email: supplier.email || 'no-email@example.com',
-        status: supplier.status?.replace(/"/g, '') || 'Pending', // Remove extra quotes if present
+        status: (supplier.status || 'Pending').replace(/"/g, ''), // Remove extra quotes if present
         created_at: supplier.created_at || new Date().toISOString(),
       }));
       
+      console.log('Formatted suppliers:', formattedSuppliers);
       setLoadedSuppliers(formattedSuppliers);
       
       toast({
