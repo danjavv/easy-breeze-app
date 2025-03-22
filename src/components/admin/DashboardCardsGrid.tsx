@@ -6,8 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import SupplierDropdownList from '@/components/admin/SupplierDropdownList';
 import { supabase } from '@/integrations/supabase/client';
-import SupplierManagementTabs from './SupplierManagementTabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import SupplierManagementDialog from './SupplierManagementDialog';
 import { useSupplierManagement } from '@/hooks/use-supplier-management';
 import { useIngredientManagement } from '@/hooks/use-ingredient-management';
 import { useSubmissionsManagement } from '@/hooks/use-submissions-management';
@@ -36,7 +35,8 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
     setShowSupplierManagement,
     handleManageSuppliers,
     handleAddSupplier,
-    handleDeleteSupplier
+    handleDeleteSupplier,
+    handleToggleSupplierStatus
   } = useSupplierManagement(suppliers);
   
   const {
@@ -50,28 +50,6 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
     isLoadingSubmissions,
     handleViewAllSubmissions
   } = useSubmissionsManagement();
-
-  const handleToggleSupplierStatus = async (supplier: Supplier) => {
-    try {
-      const newStatus = supplier.status === 'Pending' ? 'Approved' : 'Pending';
-      
-      setFetchedSuppliers(prev => 
-        prev.map(s => s.id === supplier.id ? { ...s, status: newStatus as 'Pending' | 'Approved' | 'Rejected' } : s)
-      );
-      
-      toast({
-        title: `Supplier ${newStatus}`,
-        description: `${supplier.company_name}'s status updated to ${newStatus}.`,
-      });
-    } catch (error) {
-      console.error('Error toggling supplier status:', error);
-      toast({
-        title: "Update Failed",
-        description: "There was an error updating the supplier status.",
-        variant: "destructive"
-      });
-    }
-  };
 
   return (
     <>
@@ -137,22 +115,13 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
       </div>
       
       {/* Supplier Management Dialog with Tabs */}
-      <Dialog open={showSupplierManagement} onOpenChange={setShowSupplierManagement}>
-        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Supplier Management</DialogTitle>
-          </DialogHeader>
-          
-          <div className="flex-1 overflow-hidden py-4">
-            <SupplierManagementTabs 
-              suppliers={fetchedSuppliers}
-              onClose={() => setShowSupplierManagement(false)}
-              onDelete={handleDeleteSupplier}
-              onAddSupplier={handleAddSupplier}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+      <SupplierManagementDialog 
+        open={showSupplierManagement}
+        onOpenChange={setShowSupplierManagement}
+        suppliers={fetchedSuppliers}
+        onDelete={handleDeleteSupplier}
+        onAddSupplier={handleAddSupplier}
+      />
       
       {/* Keep the existing SupplierDropdownList component for backward compatibility */}
       {showSupplierList && (

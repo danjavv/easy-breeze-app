@@ -63,6 +63,31 @@ export function useSupplierManagement(initialSuppliers: Supplier[]) {
     }
   };
 
+  const handleToggleSupplierStatus = async (supplier: Supplier) => {
+    try {
+      const newStatus = supplier.status === 'Pending' ? 'Approved' : 'Pending';
+      
+      setFetchedSuppliers(prev => 
+        prev.map(s => s.id === supplier.id ? { ...s, status: newStatus as 'Pending' | 'Approved' | 'Rejected' } : s)
+      );
+      
+      toast({
+        title: `Supplier ${newStatus}`,
+        description: `${supplier.company_name}'s status updated to ${newStatus}.`,
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error toggling supplier status:', error);
+      toast({
+        title: "Update Failed",
+        description: "There was an error updating the supplier status.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   return {
     fetchedSuppliers,
     isLoadingSuppliers,
@@ -70,6 +95,7 @@ export function useSupplierManagement(initialSuppliers: Supplier[]) {
     setShowSupplierManagement,
     handleManageSuppliers,
     handleAddSupplier,
-    handleDeleteSupplier
+    handleDeleteSupplier,
+    handleToggleSupplierStatus
   };
 }
