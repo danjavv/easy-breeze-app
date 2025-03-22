@@ -49,15 +49,19 @@ export const loginUser = async (email: string, password: string): Promise<LoginR
       // Handle array or single object response
       const data = Array.isArray(responseData) ? responseData[0] : responseData;
       
-      // Check if response contains a supplierid (lowercase as per logs)
+      // Explicitly log the full response to debug
+      console.log("Full webhook response data:", data);
+      
+      // Make sure we're checking for lowercase 'supplierid'
       if (data && data.supplierid) {
-        console.log("Successful webhook authentication with supplierid:", data.supplierid);
+        console.log("Found supplierid in response:", data.supplierid);
         return {
           success: true,
           message: "Login successful via webhook",
-          supplierID: data.supplierid
+          supplierID: data.supplierid // Important: we're returning as supplierID (camelCase)
         };
       } else {
+        console.log("No supplierid found in webhook response:", data);
         console.log("Webhook didn't return a supplierid, falling back to Supabase");
       }
     } catch (webhookError) {
