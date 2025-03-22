@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import SupplierDropdownList from '@/components/admin/SupplierDropdownList';
 import { supabase } from '@/integrations/supabase/client';
+import SupplierManagementTabs from './SupplierManagementTabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface Ingredient {
   id: string;
@@ -48,6 +50,8 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
   const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
   const pendingSupplierCount = suppliers.filter(s => s.status === 'Pending').length;
   
+  const [showSupplierManagement, setShowSupplierManagement] = useState(false);
+
   const handleManageSuppliers = async () => {
     try {
       setIsLoadingSuppliers(true);
@@ -72,7 +76,7 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
       const supplierArray = Array.isArray(data) ? data : [data];
       
       setFetchedSuppliers(supplierArray);
-      setShowSupplierList(true);
+      setShowSupplierManagement(true);
       
       toast({
         title: "Suppliers loaded",
@@ -88,12 +92,32 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
       
       if (suppliers.length > 0) {
         setFetchedSuppliers(suppliers);
-        setShowSupplierList(true);
+        setShowSupplierManagement(true);
       } else {
         onFetchSuppliers();
       }
     } finally {
       setIsLoadingSuppliers(false);
+    }
+  };
+
+  const handleAddSupplier = async (newSupplier: Omit<Supplier, 'id' | 'created_at'>) => {
+    try {
+      const now = new Date().toISOString();
+      const mockId = crypto.randomUUID();
+      
+      const supplierWithId: Supplier = {
+        ...newSupplier,
+        id: mockId,
+        created_at: now
+      };
+      
+      setFetchedSuppliers(prev => [...prev, supplierWithId]);
+      
+      return supplierWithId;
+    } catch (error) {
+      console.error('Error adding supplier:', error);
+      throw error;
     }
   };
 
@@ -280,6 +304,25 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
         />
       </div>
       
+      {/* Supplier Management Dialog with Tabs */}
+      <Dialog open={showSupplierManagement} onOpenChange={setShowSupplierManagement}>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Supplier Management</DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-hidden py-4">
+            <SupplierManagementTabs 
+              suppliers={fetchedSuppliers}
+              onClose={() => setShowSupplierManagement(false)}
+              onDelete={handleDeleteSupplier}
+              onAddSupplier={handleAddSupplier}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Keep the existing SupplierDropdownList component for backward compatibility */}
       {showSupplierList && (
         <SupplierDropdownList 
           suppliers={fetchedSuppliers} 
