@@ -8,7 +8,7 @@ import SupplierList from './SupplierList';
 import { Supplier } from './SupplierList';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { RefreshCw, Loader2 } from 'lucide-react';
+import { RefreshCw, Loader2, AlertCircle } from 'lucide-react';
 
 interface SupplierManagementTabsProps {
   suppliers: Supplier[];
@@ -48,17 +48,20 @@ const SupplierManagementTabs: React.FC<SupplierManagementTabsProps> = ({
         throw new Error(`Failed to load suppliers: ${response.status}`);
       }
       
-      const data = await response.json();
+      let data = await response.json();
       console.log('Loaded suppliers:', data);
       
-      // Transform the data into the Supplier format if needed
-      const formattedSuppliers = Array.isArray(data) ? data.map((supplier: any) => ({
+      // Normalize the data to ensure it's always an array
+      const suppliersArray = Array.isArray(data) ? data : [data];
+      
+      // Transform the data into the Supplier format
+      const formattedSuppliers = suppliersArray.map((supplier: any) => ({
         id: supplier.id || supplier.supplierID || crypto.randomUUID(),
         company_name: supplier.company_name || supplier.companyName || 'Unknown Company',
         email: supplier.email || 'no-email@example.com',
-        status: supplier.status || 'Pending',
+        status: supplier.status?.replace(/"/g, '') || 'Pending', // Remove extra quotes if present
         created_at: supplier.created_at || new Date().toISOString(),
-      })) : [];
+      }));
       
       setLoadedSuppliers(formattedSuppliers);
       
@@ -171,7 +174,8 @@ const SupplierManagementTabs: React.FC<SupplierManagementTabsProps> = ({
               </Button>
               
               {error && (
-                <div className="text-destructive text-sm my-2">
+                <div className="text-destructive text-sm my-2 flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-2" />
                   {error}
                 </div>
               )}
