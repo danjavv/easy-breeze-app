@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 interface Ingredient {
@@ -9,15 +9,12 @@ interface Ingredient {
 
 interface Supplier {
   id: string;
-  company_name: string;
-  email: string;
-  status: string;
+  name: string;
 }
 
 interface SupplierAssignment {
-  supplier_id: string;
   ingredient_id: string;
-  is_enabled: boolean;
+  supplier_id: string;
 }
 
 export function useSupplierAssignments() {
@@ -36,16 +33,19 @@ export function useSupplierAssignments() {
   const fetchIngredients = async () => {
     setIsLoadingIngredients(true);
     try {
-      const { data, error } = await supabase
+      const { data: ingredientsData, error: ingredientsError } = await supabase
         .from('ingredients')
         .select('id, name')
         .order('name');
-        
-      if (error) throw error;
-      
-      if (data) {
-        setIngredients(data);
-        toast.success(`Loaded ${data.length} detergents successfully`);
+
+      if (ingredientsError) throw ingredientsError;
+
+      if (ingredientsData && ingredientsData.length > 0) {
+        setIngredients(ingredientsData);
+        toast.success(`Loaded ${ingredientsData.length} detergents successfully`);
+      } else {
+        toast.info('No detergents found');
+        setIngredients([]);
       }
     } catch (error) {
       console.error('Error fetching ingredients:', error);
@@ -58,31 +58,20 @@ export function useSupplierAssignments() {
   const fetchSuppliers = async () => {
     setIsLoadingSuppliers(true);
     try {
-      // Fetch suppliers from webhook
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/944a3d31-08ac-4446-9c67-9e543a85aa40', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
+      const { data: suppliersData, error: suppliersError } = await supabase
+        .from('suppliers')
+        .select('id, name')
+        .order('name');
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch suppliers from webhook');
+      if (suppliersError) throw suppliersError;
+
+      if (suppliersData && suppliersData.length > 0) {
+        setSuppliers(suppliersData);
+        toast.success(`Loaded ${suppliersData.length} suppliers successfully`);
+      } else {
+        toast.info('No suppliers found');
+        setSuppliers([]);
       }
-
-      const data = await response.json();
-      
-      // Transform the data into the Supplier format
-      const formattedSuppliers = data.map((supplier: any) => ({
-        id: supplier.id || supplier.supplierID || crypto.randomUUID(),
-        company_name: supplier.company_name || supplier.companyName || 'Unknown Company',
-        email: supplier.email || 'no-email@example.com',
-        status: (supplier.status || 'Pending').replace(/"/g, ''), // Remove extra quotes if present
-        created_at: supplier.created_at || new Date().toISOString(),
-      }));
-      
-      setSuppliers(formattedSuppliers);
-      toast.success(`Loaded ${formattedSuppliers.length} suppliers successfully`);
     } catch (error) {
       console.error('Error fetching suppliers:', error);
       toast.error('Failed to load suppliers');
@@ -94,13 +83,13 @@ export function useSupplierAssignments() {
   const fetchAssignments = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('supplier_ingredients')
-        .select('supplier_id, ingredient_id, is_enabled');
+        .select('ingredient_id, supplier_id');
       
-      if (error) throw error;
+      if (assignmentsError) throw assignmentsError;
       
-      setExistingAssignments(data || []);
+      setExistingAssignments(assignmentsData || []);
     } catch (error) {
       console.error('Error fetching assignments:', error);
       toast.error('Failed to load assignments');
@@ -110,14 +99,11 @@ export function useSupplierAssignments() {
   };
 
   const handleSave = async (assignments: SupplierAssignment[]) => {
-    if (!selectedIngredient) {
-      toast.error('Please select a detergent');
-      return;
-    }
-
+    if (!selectedIngredient) return;
+    
     setIsLoading(true);
     try {
-      // Delete all existing assignments for this ingredient
+      // First, delete existing assignments for this ingredient
       const { error: deleteError } = await supabase
         .from('supplier_ingredients')
         .delete()
@@ -125,7 +111,7 @@ export function useSupplierAssignments() {
         
       if (deleteError) throw deleteError;
       
-      // Insert new assignments
+      // Then, insert new assignments
       if (assignments.length > 0) {
         const { error: insertError } = await supabase
           .from('supplier_ingredients')
@@ -133,10 +119,10 @@ export function useSupplierAssignments() {
           
         if (insertError) throw insertError;
       }
-
-      // Send webhook with the assignments
+      
+      // Send webhook notification
       try {
-        await fetch('https://danjaved008.app.n8n.cloud/webhook/1b1dafe1-a89b-4447-a11a-ee07327b6d0c', {
+        const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/1b1dafe1-a89b-4447-a11a-ee07327b6d0c', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -144,18 +130,43 @@ export function useSupplierAssignments() {
           body: JSON.stringify({
             supplier_id: assignments[0]?.supplier_id,
             ingredient_id: selectedIngredient
-          })
+          }),
         });
-      } catch (webhookError) {
-        console.error('Error sending webhook:', webhookError);
-        // Don't throw the error as the main operation was successful
-      }
 
+        if (!response.ok) {
+          console.error('Webhook notification failed:', response.statusText);
+        }
+      } catch (webhookError) {
+        console.error('Error sending webhook notification:', webhookError);
+      }
+      
       toast.success('Supplier assignments saved successfully');
       fetchAssignments(); // Refresh assignments data
     } catch (error) {
       console.error('Error saving assignments:', error);
       toast.error('Failed to save supplier assignments');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (ingredientId: string) => {
+    if (!ingredientId) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('supplier_ingredients')
+        .delete()
+        .eq('ingredient_id', ingredientId);
+        
+      if (error) throw error;
+      
+      toast.success('Assignment removed successfully');
+      fetchAssignments(); // Refresh assignments data
+    } catch (error) {
+      console.error('Error deleting assignment:', error);
+      toast.error('Failed to remove assignment');
     } finally {
       setIsLoading(false);
     }
@@ -172,6 +183,9 @@ export function useSupplierAssignments() {
     existingAssignments,
     fetchIngredients,
     fetchSuppliers,
-    handleSave
+    handleSave,
+    handleDelete,
+    setSuppliers,
+    setIngredients
   };
 } 

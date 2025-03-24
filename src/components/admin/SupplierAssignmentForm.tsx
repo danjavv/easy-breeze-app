@@ -12,15 +12,12 @@ interface Ingredient {
 
 interface Supplier {
   id: string;
-  company_name: string;
-  email: string;
-  status: string;
+  name: string;
 }
 
 interface SupplierAssignment {
-  supplier_id: string;
   ingredient_id: string;
-  is_enabled: boolean;
+  supplier_id: string;
 }
 
 interface SupplierAssignmentFormProps {
@@ -29,9 +26,7 @@ interface SupplierAssignmentFormProps {
   selectedIngredient: string;
   isLoading: boolean;
   onIngredientChange: (value: string) => void;
-  onToggleSupplier: (supplierId: string, isEnabled: boolean) => void;
-  onSave: () => void;
-  assignments: SupplierAssignment[];
+  onSave: (assignments: SupplierAssignment[]) => void;
 }
 
 const SupplierAssignmentForm: React.FC<SupplierAssignmentFormProps> = ({
@@ -40,12 +35,44 @@ const SupplierAssignmentForm: React.FC<SupplierAssignmentFormProps> = ({
   selectedIngredient,
   isLoading,
   onIngredientChange,
-  onToggleSupplier,
   onSave,
-  assignments
 }) => {
+  const [assignments, setAssignments] = React.useState<SupplierAssignment[]>([]);
+
   // Find the currently selected ingredient to display its name
   const selectedIngredientName = ingredients.find(i => i.id === selectedIngredient)?.name || '';
+
+  const handleToggleSupplier = (supplierId: string, isEnabled: boolean) => {
+    if (!selectedIngredient) return;
+
+    setAssignments(prev => {
+      const existingIndex = prev.findIndex(
+        a => a.supplier_id === supplierId && a.ingredient_id === selectedIngredient
+      );
+
+      if (existingIndex >= 0) {
+        // Remove assignment if disabled
+        if (!isEnabled) {
+          return prev.filter((_, index) => index !== existingIndex);
+        }
+        return prev;
+      } else {
+        // Add new assignment if enabled
+        return [
+          ...prev,
+          {
+            supplier_id: supplierId,
+            ingredient_id: selectedIngredient,
+          }
+        ];
+      }
+    });
+  };
+
+  const handleSave = () => {
+    if (!selectedIngredient) return;
+    onSave(assignments);
+  };
 
   return (
     <div className="space-y-6">
@@ -82,43 +109,47 @@ const SupplierAssignmentForm: React.FC<SupplierAssignmentFormProps> = ({
         </p>
       </div>
       
-      {selectedIngredient && suppliers.length > 0 && (
-        <div className="space-y-4 border rounded-md p-4">
-          <h4 className="font-medium">Enable/Disable Suppliers</h4>
-          <div className="space-y-3">
-            {suppliers.map((supplier) => {
-              const assignment = assignments.find(
-                a => a.supplier_id === supplier.id && a.ingredient_id === selectedIngredient
-              );
-              const isEnabled = assignment?.is_enabled ?? false;
-              
-              return (
-                <div key={supplier.id} className="flex items-center justify-between">
-                  <span>{supplier.company_name}</span>
-                  <div className="flex items-center space-x-2">
-                    <Switch 
-                      id={`switch-${supplier.id}`}
-                      checked={isEnabled}
-                      onCheckedChange={(checked) => onToggleSupplier(supplier.id, checked)}
+      {selectedIngredient && (
+        <div className="space-y-4">
+          <Label>Assign Suppliers</Label>
+          <div className="space-y-2">
+            {suppliers.length === 0 ? (
+              <div className="py-4 text-center text-sm text-muted-foreground">
+                Click "Load Suppliers" button to fetch suppliers
+              </div>
+            ) : (
+              suppliers.map((supplier) => {
+                const isAssigned = assignments.some(
+                  a => a.supplier_id === supplier.id && a.ingredient_id === selectedIngredient
+                );
+                
+                return (
+                  <div key={supplier.id} className="flex items-center justify-between p-2 border rounded-md">
+                    <span className="text-sm">{supplier.name}</span>
+                    <Switch
+                      checked={isAssigned}
+                      onCheckedChange={(checked) => handleToggleSupplier(supplier.id, checked)}
                     />
-                    <Label htmlFor={`switch-${supplier.id}`} className="cursor-pointer">
-                      {isEnabled ? 'Enabled' : 'Disabled'}
-                    </Label>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
+          <p className="text-xs text-muted-foreground">
+            {suppliers.length > 0 
+              ? `${suppliers.length} suppliers available` 
+              : "No suppliers loaded yet"}
+          </p>
         </div>
       )}
 
       <div className="flex justify-end space-x-4 pt-4">
         <Button 
-          onClick={onSave} 
-          disabled={isLoading || !selectedIngredient}
+          onClick={handleSave} 
+          disabled={isLoading || !selectedIngredient || assignments.length === 0}
         >
           <Save className="mr-2 h-4 w-4" />
-          Save Assignments
+          Save Assignment
         </Button>
       </div>
     </div>
