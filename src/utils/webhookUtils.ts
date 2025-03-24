@@ -1,4 +1,3 @@
-
 /**
  * Utility functions for working with webhooks
  */
@@ -81,6 +80,11 @@ export const processWebhookIngredients = (webhookData: any): any[] => {
       // Extract the actual data from the webhook response which may be nested inside a 'json' property
       const data = item.json || item;
       
+      // Log each item to help debug
+      console.log('Processing ingredient item:', data);
+      console.log('Ingredient name from webhook:', data.name);
+      console.log('Ingredient ID from webhook:', data.id);
+      
       return {
         id: data.id || `ingredient-${Math.random().toString(36).substr(2, 9)}`,
         name: data.name || 'Unknown Ingredient',
@@ -101,6 +105,9 @@ export const processWebhookIngredients = (webhookData: any): any[] => {
   if (webhookData && typeof webhookData === 'object') {
     console.log('Processing webhook single object data');
     const data = webhookData.json || webhookData;
+    
+    console.log('Single ingredient data:', data);
+    console.log('Single ingredient name:', data.name);
     
     const processed = [{
       id: data.id || `ingredient-${Math.random().toString(36).substr(2, 9)}`,
@@ -147,6 +154,11 @@ export const processWebhookModels = (webhookData: any): any[] => {
       // Extract the actual data from the webhook response which may be nested inside a 'json' property
       const data = item.json || item;
       
+      // Log each item to help debug
+      console.log('Processing model item:', data);
+      console.log('Model name from webhook:', data.name);
+      console.log('Model ID from webhook:', data.id);
+      
       return {
         id: data.id || `model-${Math.random().toString(36).substr(2, 9)}`,
         name: data.name || 'Unknown Model',
@@ -167,6 +179,9 @@ export const processWebhookModels = (webhookData: any): any[] => {
   if (webhookData && typeof webhookData === 'object') {
     console.log('Processing webhook single model data');
     const data = webhookData.json || webhookData;
+    
+    console.log('Single model data:', data);
+    console.log('Single model name:', data.name);
     
     const processed = [{
       id: data.id || `model-${Math.random().toString(36).substr(2, 9)}`,

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -71,16 +70,12 @@ export function useModelAssignments() {
       const formattedIngredients = processWebhookIngredients(webhookData);
       
       if (formattedIngredients.length > 0) {
-        console.log('Ingredients loaded and stored in useModelAssignments:', formattedIngredients);
-        console.log('First ingredient name:', formattedIngredients[0]?.name || 'No name');
-        console.log('Ingredient IDs:', formattedIngredients.map(i => i.id).join(', '));
+        console.log('Ingredients loaded from webhook:', formattedIngredients);
+        console.log('First ingredient name from webhook:', formattedIngredients[0]?.name || 'No name');
+        console.log('Ingredient IDs from webhook:', formattedIngredients.map(i => i.id).join(', '));
         
         setIngredients(formattedIngredients);
         toast.success(`Loaded ${formattedIngredients.length} detergents from webhook successfully`);
-        
-        // After getting data from webhook, we'll use it in our app but not attempt to save to Supabase
-        // due to RLS policy restrictions
-        console.log('Using webhook ingredient data without saving to Supabase due to RLS policy');
       } else {
         // If webhook fails to return proper data, fall back to Supabase
         console.log('No valid webhook data, falling back to Supabase...');
@@ -144,15 +139,12 @@ export function useModelAssignments() {
       const formattedModels = processWebhookModels(webhookData);
       
       if (formattedModels.length > 0) {
-        console.log('Models loaded and stored in useModelAssignments:', formattedModels);
-        console.log('First model name:', formattedModels[0]?.name || 'No name');
-        console.log('Model IDs:', formattedModels.map(m => m.id).join(', '));
+        console.log('Models loaded from webhook:', formattedModels);
+        console.log('First model name from webhook:', formattedModels[0]?.name || 'No name');
+        console.log('Model IDs from webhook:', formattedModels.map(m => m.id).join(', '));
         
         setModels(formattedModels);
         toast.success(`Loaded ${formattedModels.length} models from webhook successfully`);
-        
-        // Skip saving to Supabase due to RLS policy constraints
-        console.log('Using webhook model data without saving to Supabase due to RLS policy');
       } else {
         // If webhook fails to return proper data, fall back to Supabase
         console.log('No valid webhook model data, falling back to Supabase...');

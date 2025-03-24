@@ -5,10 +5,12 @@ import AssignmentActions from './AssignmentActions';
 import AssignmentTable from './AssignmentTable';
 import { useModelAssignments } from './useModelAssignments';
 import { useData } from '@/contexts/DataContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 const ModelAssignmentSection = () => {
-  const { models: contextModels, ingredients: contextIngredients } = useData();
+  const { models: contextModels, ingredients: contextIngredients, setModels: setContextModels, setIngredients: setContextIngredients } = useData();
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const {
     ingredients,
@@ -29,22 +31,43 @@ const ModelAssignmentSection = () => {
     setIngredients: setHookIngredients
   } = useModelAssignments();
 
-  // Use data from context if available
+  // Load data from context into the hook on initial render
   useEffect(() => {
-    if (contextModels.length > 0) {
-      console.log("Using models from context:", contextModels);
-      console.log("First context model name:", contextModels[0]?.name || 'No name');
-      console.log("Context model IDs:", contextModels.map(m => m.id).join(', '));
-      setHookModels(contextModels);
+    if (!isInitialized) {
+      if (contextModels.length > 0) {
+        console.log("Initializing models from context storage:", contextModels);
+        console.log("First context model name:", contextModels[0]?.name || 'No name');
+        setHookModels(contextModels);
+      }
+      
+      if (contextIngredients.length > 0) {
+        console.log("Initializing ingredients from context storage:", contextIngredients);
+        console.log("First context ingredient name:", contextIngredients[0]?.name || 'No name');
+        setHookIngredients(contextIngredients);
+      }
+      
+      setIsInitialized(true);
     }
-    
-    if (contextIngredients.length > 0) {
-      console.log("Using ingredients from context:", contextIngredients);
-      console.log("First context ingredient name:", contextIngredients[0]?.name || 'No name');
-      console.log("Context ingredient IDs:", contextIngredients.map(i => i.id).join(', '));
-      setHookIngredients(contextIngredients);
+  }, [contextModels, contextIngredients, setHookModels, setHookIngredients, isInitialized]);
+
+  // Sync hook data back to context when changed through fetching
+  useEffect(() => {
+    if (ingredients.length > 0 && isInitialized) {
+      console.log("Syncing ingredients back to context:", ingredients);
+      console.log("First ingredient name to sync:", ingredients[0]?.name || 'No name');
+      setContextIngredients(ingredients);
+      toast.success("Detergents loaded and saved for future use");
     }
-  }, [contextModels, contextIngredients, setHookModels, setHookIngredients]);
+  }, [ingredients, setContextIngredients, isInitialized]);
+
+  useEffect(() => {
+    if (models.length > 0 && isInitialized) {
+      console.log("Syncing models back to context:", models);
+      console.log("First model name to sync:", models[0]?.name || 'No name');
+      setContextModels(models);
+      toast.success("Models loaded and saved for future use");
+    }
+  }, [models, setContextModels, isInitialized]);
 
   // Log the values in the component for debugging
   useEffect(() => {
