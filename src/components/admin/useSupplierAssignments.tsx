@@ -58,17 +58,31 @@ export function useSupplierAssignments() {
   const fetchSuppliers = async () => {
     setIsLoadingSuppliers(true);
     try {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .select('id, company_name, email, status')
-        .order('company_name');
-        
-      if (error) throw error;
-      
-      if (data) {
-        setSuppliers(data);
-        toast.success(`Loaded ${data.length} suppliers successfully`);
+      // Fetch suppliers from webhook
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/944a3d31-08ac-4446-9c67-9e543a85aa40', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch suppliers from webhook');
       }
+
+      const data = await response.json();
+      
+      // Transform the data into the Supplier format
+      const formattedSuppliers = data.map((supplier: any) => ({
+        id: supplier.id || supplier.supplierID || crypto.randomUUID(),
+        company_name: supplier.company_name || supplier.companyName || 'Unknown Company',
+        email: supplier.email || 'no-email@example.com',
+        status: (supplier.status || 'Pending').replace(/"/g, ''), // Remove extra quotes if present
+        created_at: supplier.created_at || new Date().toISOString(),
+      }));
+      
+      setSuppliers(formattedSuppliers);
+      toast.success(`Loaded ${formattedSuppliers.length} suppliers successfully`);
     } catch (error) {
       console.error('Error fetching suppliers:', error);
       toast.error('Failed to load suppliers');
