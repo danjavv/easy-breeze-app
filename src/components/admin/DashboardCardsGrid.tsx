@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Users, Settings, RefreshCw, Database, FileText, Beaker, PieChart } from 'lucide-react';
+import { Users, Settings, RefreshCw, Database, FileText, Beaker, PieChart, Download } from 'lucide-react';
 import DashboardCard from '@/components/admin/DashboardCard';
 import { Supplier } from '@/components/admin/SupplierList';
 import { useNavigate } from 'react-router-dom';
@@ -10,17 +11,30 @@ import SupplierManagementDialog from './SupplierManagementDialog';
 import { useSupplierManagement } from '@/hooks/use-supplier-management';
 import { useIngredientManagement } from '@/hooks/use-ingredient-management';
 import { useSubmissionsManagement } from '@/hooks/use-submissions-management';
+import { Ingredient, Model } from '@/pages/AdminDashboard';
 
 interface DashboardCardsGridProps {
   suppliers: Supplier[];
   isLoading: boolean;
   onFetchSuppliers: () => void;
+  models: Model[];
+  ingredients: Ingredient[];
+  isLoadingModels: boolean;
+  isLoadingIngredients: boolean;
+  onLoadModels: () => Promise<void>;
+  onLoadIngredients: () => Promise<void>;
 }
 
 const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
   suppliers,
   isLoading,
   onFetchSuppliers,
+  models,
+  ingredients,
+  isLoadingModels,
+  isLoadingIngredients,
+  onLoadModels,
+  onLoadIngredients,
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -40,8 +54,8 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
   } = useSupplierManagement(suppliers);
   
   const {
-    ingredients,
-    isLoadingIngredients,
+    ingredients: hookIngredients,
+    isLoadingIngredients: isLoadingHookIngredients,
     handleFetchIngredients
   } = useIngredientManagement();
   
@@ -75,10 +89,13 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
           title="Detergent Configuration"
           description="Set quality standards"
           icon={Beaker}
-          value=""
-          subtitle="Define passing thresholds"
-          buttonText="Detergent Configuration"
-          onClick={() => navigate('/admin-baseline-config')}
+          value={ingredients.length || 0}
+          subtitle={ingredients.length ? `${ingredients.length} detergents loaded` : "Load detergents"}
+          buttonText="Load Detergents"
+          buttonIcon={isLoadingIngredients ? RefreshCw : Download}
+          loading={isLoadingIngredients}
+          loadingText="Loading..."
+          onClick={onLoadIngredients}
           gradient="bg-gradient-to-br from-green-50 to-teal-50"
           accentColor="border-l-teal-400"
         />
@@ -87,13 +104,13 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
           title="Ingredient Models"
           description="Manage ingredient models"
           icon={Database}
-          value={ingredients.length || 0}
-          subtitle="Available ingredients"
-          buttonText="Manage Models"
-          buttonIcon={isLoadingIngredients ? RefreshCw : Database}
-          loading={isLoadingIngredients}
+          value={models.length || 0}
+          subtitle={models.length ? `${models.length} models loaded` : "Load models"}
+          buttonText="Load Models"
+          buttonIcon={isLoadingModels ? RefreshCw : Download}
+          loading={isLoadingModels}
           loadingText="Loading..."
-          onClick={handleFetchIngredients}
+          onClick={onLoadModels}
           gradient="bg-gradient-to-br from-purple-50 to-pink-50"
           accentColor="border-l-purple-400"
         />
@@ -112,6 +129,16 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
           gradient="bg-gradient-to-br from-amber-50 to-orange-50"
           accentColor="border-l-amber-400"
         />
+      </div>
+      
+      {/* Add buttons to navigate to model-ingredient assignment page */}
+      <div className="flex justify-end space-x-4 mb-8">
+        <button 
+          onClick={() => navigate('/admin-ingredient-models')}
+          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+        >
+          Manage Model Assignments
+        </button>
       </div>
       
       {/* Supplier Management Dialog with Tabs */}

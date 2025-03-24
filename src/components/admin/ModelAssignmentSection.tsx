@@ -4,8 +4,12 @@ import ModelAssignmentForm from './ModelAssignmentForm';
 import AssignmentActions from './AssignmentActions';
 import AssignmentTable from './AssignmentTable';
 import { useModelAssignments } from './useModelAssignments';
+import { useData } from '@/contexts/DataContext';
+import { useEffect } from 'react';
 
 const ModelAssignmentSection = () => {
+  const { models: contextModels, ingredients: contextIngredients } = useData();
+  
   const {
     ingredients,
     models,
@@ -20,8 +24,21 @@ const ModelAssignmentSection = () => {
     fetchIngredients,
     fetchModels,
     handleSave,
-    handleDelete
+    handleDelete,
+    setModels: setHookModels,
+    setIngredients: setHookIngredients
   } = useModelAssignments();
+
+  // Use data from context if available
+  useEffect(() => {
+    if (contextModels.length > 0) {
+      setHookModels(contextModels);
+    }
+    
+    if (contextIngredients.length > 0) {
+      setHookIngredients(contextIngredients);
+    }
+  }, [contextModels, contextIngredients]);
 
   return (
     <Card className="mb-8">

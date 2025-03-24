@@ -291,6 +291,9 @@ export function useModelAssignments() {
     fetchIngredients,
     fetchModels,
     handleSave,
-    handleDelete
+    handleDelete,
+    // Expose methods to set models and ingredients directly
+    setModels,
+    setIngredients
   };
 }
