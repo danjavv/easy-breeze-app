@@ -34,8 +34,19 @@ export const fetchFromWebhook = async (webhookUrl: string): Promise<any> => {
       throw new Error(`Webhook request failed with status ${response.status}`);
     }
     
-    const data = await response.json();
-    console.log('Webhook response data:', data);
+    const text = await response.text();
+    console.log('Raw webhook response text:', text);
+    
+    // Try to parse the text as JSON
+    let data;
+    try {
+      data = JSON.parse(text);
+      console.log('Webhook response data (parsed):', JSON.stringify(data, null, 2));
+    } catch (parseError) {
+      console.error('Error parsing webhook response as JSON:', parseError);
+      throw new Error('Invalid JSON response from webhook');
+    }
+    
     return data;
   } catch (error) {
     console.error('Error fetching from webhook:', error);
@@ -53,6 +64,13 @@ export const processWebhookIngredients = (webhookData: any): any[] => {
   if (!webhookData) {
     console.log('No webhook data received');
     return [];
+  }
+  
+  console.log('Processing webhook ingredients data type:', typeof webhookData);
+  if (Array.isArray(webhookData)) {
+    console.log('Processing webhook array data with length:', webhookData.length);
+  } else if (typeof webhookData === 'object') {
+    console.log('Processing webhook single object data');
   }
   
   // If the response is already an array, map through it
@@ -98,6 +116,13 @@ export const processWebhookModels = (webhookData: any): any[] => {
   if (!webhookData) {
     console.log('No webhook model data received');
     return [];
+  }
+  
+  console.log('Processing webhook models data type:', typeof webhookData);
+  if (Array.isArray(webhookData)) {
+    console.log('Processing webhook models array data with length:', webhookData.length);
+  } else if (typeof webhookData === 'object') {
+    console.log('Processing webhook models single object data');
   }
   
   // If the response is already an array, map through it
