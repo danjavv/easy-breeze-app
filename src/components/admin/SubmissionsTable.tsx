@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import BatchDetails from './BatchDetails';
 import { Submission } from '@/types/submissions';
 
@@ -59,14 +59,16 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ submissions, format
                 </TableCell>
                 <TableCell>{submission.supplier_name || 'Unknown Supplier'}</TableCell>
                 <TableCell>
-                  <Tooltip>
-                    <TooltipTrigger className="text-xs text-muted-foreground">
-                      {truncateId(submission.supplierid)}
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{submission.supplierid}</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="text-xs text-muted-foreground">
+                        {truncateId(submission.supplierid)}
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{submission.supplierid}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </TableCell>
                 <TableCell>
                   {submission.total_batches === null ? (

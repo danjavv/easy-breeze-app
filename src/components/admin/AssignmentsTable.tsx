@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ModelAssignment {
   ingredient_id: string;

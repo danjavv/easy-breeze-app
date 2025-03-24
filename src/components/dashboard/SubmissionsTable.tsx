@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Eye, RefreshCw, AlertTriangle, Info } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
 interface SubmissionProps {
   id: string;
@@ -121,15 +121,17 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
                     {getStatusBadge(submission.status, submission.statusColor)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => viewDetails(submission.id)}
-                      className="hover:bg-primary/10 hover:text-primary"
-                    >
-                      <Eye className="mr-2 h-4 w-4" />
-                      View
-                    </Button>
+                    <TooltipProvider>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => viewDetails(submission.id)}
+                        className="hover:bg-primary/10 hover:text-primary"
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        View
+                      </Button>
+                    </TooltipProvider>
                   </TableCell>
                 </TableRow>
               ))}
