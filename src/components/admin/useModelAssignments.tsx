@@ -249,6 +249,23 @@ export function useModelAssignments() {
 
       if (result.error) throw result.error;
 
+      // Send webhook after successful save
+      try {
+        await fetch('https://danjaved008.app.n8n.cloud/webhook-test/1403aa87-f3ae-46c5-a77e-4c3b97192e64', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ingredient_id: selectedIngredient,
+            model_id: selectedModel
+          })
+        });
+      } catch (webhookError) {
+        console.error('Error sending webhook:', webhookError);
+        // Don't throw the error as the main operation was successful
+      }
+
       toast.success('Model assignment saved successfully');
       fetchAssignments(); // Refresh assignments data
     } catch (error) {
