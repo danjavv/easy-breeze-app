@@ -148,7 +148,7 @@ const AssignSupplierForm: React.FC<AssignSupplierFormProps> = ({ suppliers }) =>
       
       // Send webhook with the assignments
       try {
-        await fetch('https://danjaved008.app.n8n.cloud/webhook-test/1403aa87-f3ae-46c5-a77e-4c3b97192e64', {
+        await fetch('https://danjaved008.app.n8n.cloud/webhook/1403aa87-f3ae-46c5-a77e-4c3b97192e64', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

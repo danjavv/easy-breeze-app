@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Upload, FileCode, Check, Loader } from 'lucide-react';
@@ -28,7 +27,7 @@ const NewSubmission = () => {
     setIsDownloading(true);
     
     try {
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/e6369e97-7e71-4787-b1ef-54d8d456874f');
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/e6369e97-7e71-4787-b1ef-54d8d456874f');
       
       if (!response.ok) {
         throw new Error('Failed to download template');
@@ -104,7 +103,7 @@ const NewSubmission = () => {
         formData.append('supplierid', 'placeholder-id');
       }
       
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
         method: 'POST',
         body: formData,
       });

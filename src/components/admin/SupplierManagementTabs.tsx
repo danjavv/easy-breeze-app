@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -34,7 +33,7 @@ const SupplierManagementTabs: React.FC<SupplierManagementTabsProps> = ({
     setError(null);
     
     try {
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/944a3d31-08ac-4446-9c67-9e543a85aa40', {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/944a3d31-08ac-4446-9c67-9e543a85aa40', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -114,7 +113,7 @@ const SupplierManagementTabs: React.FC<SupplierManagementTabsProps> = ({
     
     try {
       // Send webhook with the supplier ID using POST method
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/bdbd4f28-77fa-4e85-ba8d-4b121384b428', {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/bdbd4f28-77fa-4e85-ba8d-4b121384b428', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

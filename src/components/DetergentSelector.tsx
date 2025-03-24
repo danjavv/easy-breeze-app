@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -56,7 +55,7 @@ const DetergentSelector: React.FC<DetergentSelectorProps> = ({ onDetergentSelect
     setIsLoadingWebhook(true);
     try {
       // Fetch data from webhook
-      const webhookData = await fetchFromWebhook('https://danjaved008.app.n8n.cloud/webhook-test/b65a9a50-5a55-462a-a29b-7f6572aa2dcc');
+      const webhookData = await fetchFromWebhook('https://danjaved008.app.n8n.cloud/webhook/b65a9a50-5a55-462a-a29b-7f6572aa2dcc');
       
       // Process the webhook response data into the format we need
       const formattedDetergents = processWebhookIngredients(webhookData);

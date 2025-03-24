@@ -59,7 +59,7 @@ export function useSupplierAssignments() {
     setIsLoadingSuppliers(true);
     try {
       // Fetch suppliers from webhook
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/944a3d31-08ac-4446-9c67-9e543a85aa40', {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/944a3d31-08ac-4446-9c67-9e543a85aa40', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ export function useSupplierAssignments() {
 
       // Send webhook with the assignments
       try {
-        await fetch('https://danjaved008.app.n8n.cloud/webhook-test/1b1dafe1-a89b-4447-a11a-ee07327b6d0c', {
+        await fetch('https://danjaved008.app.n8n.cloud/webhook/1b1dafe1-a89b-4447-a11a-ee07327b6d0c', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -148,7 +148,7 @@ const AdminDashboard = () => {
     
     setIsLoadingModels(true);
     try {
-      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook-test/416b3513-de98-441c-b482-c2e9cfb1f329';
+      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook/416b3513-de98-441c-b482-c2e9cfb1f329';
       const webhookData = await fetchFromWebhook(webhookUrl);
       const formattedModels = processWebhookModels(webhookData);
       
@@ -185,7 +185,7 @@ const AdminDashboard = () => {
     
     setIsLoadingIngredients(true);
     try {
-      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook-test/b65a9a50-5a55-462a-a29b-7f6572aa2dcc';
+      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook/b65a9a50-5a55-462a-a29b-7f6572aa2dcc';
       const webhookData = await fetchFromWebhook(webhookUrl);
       const formattedIngredients = processWebhookIngredients(webhookData);
       
