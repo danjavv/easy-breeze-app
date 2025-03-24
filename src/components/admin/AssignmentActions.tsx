@@ -1,6 +1,6 @@
 
 import { Button } from '@/components/ui/button';
-import { Database } from 'lucide-react';
+import { Database, FileDown } from 'lucide-react';
 
 interface AssignmentActionsProps {
   isLoadingIngredients: boolean;
@@ -23,7 +23,7 @@ const AssignmentActions: React.FC<AssignmentActionsProps> = ({
         disabled={isLoadingIngredients}
         className="flex items-center"
       >
-        <Database className="mr-2 h-4 w-4" />
+        <FileDown className="mr-2 h-4 w-4" />
         {isLoadingIngredients ? 'Loading Detergents...' : 'Load Detergents'}
       </Button>
       

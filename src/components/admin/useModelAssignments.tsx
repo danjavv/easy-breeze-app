@@ -50,16 +50,28 @@ export function useModelAssignments() {
   const fetchIngredients = async () => {
     setIsLoadingIngredients(true);
     try {
-      // Fetch ingredients (detergents)
+      console.log('Fetching ingredients from Supabase...');
+      // Fetch ingredients (detergents) from the ingredients table
       const { data: ingredientsData, error: ingredientsError } = await supabase
         .from('ingredients')
         .select('id, name')
         .order('name');
       
-      if (ingredientsError) throw ingredientsError;
+      if (ingredientsError) {
+        console.error('Supabase error:', ingredientsError);
+        throw ingredientsError;
+      }
       
-      setIngredients(ingredientsData || []);
-      toast.success(`Loaded ${ingredientsData?.length || 0} detergents successfully`);
+      console.log('Ingredients data received:', ingredientsData);
+      
+      if (ingredientsData && ingredientsData.length > 0) {
+        setIngredients(ingredientsData);
+        toast.success(`Loaded ${ingredientsData.length} detergents successfully`);
+      } else {
+        console.log('No ingredients data found');
+        toast.info('No detergents found in the database');
+        setIngredients([]);
+      }
     } catch (error) {
       console.error('Error fetching ingredients:', error);
       toast.error('Failed to load detergents');
@@ -71,16 +83,28 @@ export function useModelAssignments() {
   const fetchModels = async () => {
     setIsLoadingModels(true);
     try {
+      console.log('Fetching models from Supabase...');
       // Fetch models
       const { data: modelsData, error: modelsError } = await supabase
         .from('models')
         .select('id, name')
         .order('name');
       
-      if (modelsError) throw modelsError;
+      if (modelsError) {
+        console.error('Supabase error:', modelsError);
+        throw modelsError;
+      }
       
-      setModels(modelsData || []);
-      toast.success(`Loaded ${modelsData?.length || 0} models successfully`);
+      console.log('Models data received:', modelsData);
+      
+      if (modelsData && modelsData.length > 0) {
+        setModels(modelsData);
+        toast.success(`Loaded ${modelsData.length} models successfully`);
+      } else {
+        console.log('No models data found');
+        toast.info('No models found in the database');
+        setModels([]);
+      }
     } catch (error) {
       console.error('Error fetching models:', error);
       toast.error('Failed to load models');
