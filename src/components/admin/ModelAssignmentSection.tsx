@@ -4,8 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import ModelAssignmentForm from './ModelAssignmentForm';
-import AssignmentsTable from './AssignmentsTable';
-import { MoreHorizontal, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Trash2, Database } from 'lucide-react';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -34,15 +33,17 @@ const ModelAssignmentSection = () => {
   const [models, setModels] = useState<Model[]>([]);
   const [selectedIngredient, setSelectedIngredient] = useState<string>('');
   const [selectedModel, setSelectedModel] = useState<string>('');
+  const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [existingAssignments, setExistingAssignments] = useState<ModelAssignment[]>([]);
 
   useEffect(() => {
-    fetchData();
+    fetchAssignments();
   }, []);
 
-  const fetchData = async () => {
-    setIsLoading(true);
+  const fetchIngredients = async () => {
+    setIsLoadingIngredients(true);
     try {
       // Fetch ingredients (detergents)
       const { data: ingredientsData, error: ingredientsError } = await supabase
@@ -52,6 +53,19 @@ const ModelAssignmentSection = () => {
       
       if (ingredientsError) throw ingredientsError;
       
+      setIngredients(ingredientsData || []);
+      toast.success(`Loaded ${ingredientsData?.length || 0} detergents successfully`);
+    } catch (error) {
+      console.error('Error fetching ingredients:', error);
+      toast.error('Failed to load detergents');
+    } finally {
+      setIsLoadingIngredients(false);
+    }
+  };
+
+  const fetchModels = async () => {
+    setIsLoadingModels(true);
+    try {
       // Fetch models
       const { data: modelsData, error: modelsError } = await supabase
         .from('models')
@@ -60,6 +74,19 @@ const ModelAssignmentSection = () => {
       
       if (modelsError) throw modelsError;
       
+      setModels(modelsData || []);
+      toast.success(`Loaded ${modelsData?.length || 0} models successfully`);
+    } catch (error) {
+      console.error('Error fetching models:', error);
+      toast.error('Failed to load models');
+    } finally {
+      setIsLoadingModels(false);
+    }
+  };
+
+  const fetchAssignments = async () => {
+    setIsLoading(true);
+    try {
       // Fetch existing assignments
       const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('ingredient_models')
@@ -67,12 +94,10 @@ const ModelAssignmentSection = () => {
       
       if (assignmentsError) throw assignmentsError;
       
-      setIngredients(ingredientsData || []);
-      setModels(modelsData || []);
       setExistingAssignments(assignmentsData || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to load data');
+      console.error('Error fetching assignments:', error);
+      toast.error('Failed to load assignments');
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +120,7 @@ const ModelAssignmentSection = () => {
 
   const handleSave = async () => {
     if (!selectedIngredient || !selectedModel) {
-      toast.error('Please select both an ingredient and a model');
+      toast.error('Please select both a detergent and a model');
       return;
     }
 
@@ -127,7 +152,7 @@ const ModelAssignmentSection = () => {
       if (result.error) throw result.error;
 
       toast.success('Model assignment saved successfully');
-      fetchData(); // Refresh data
+      fetchAssignments(); // Refresh assignments data
     } catch (error) {
       console.error('Error saving assignment:', error);
       toast.error('Failed to save model assignment');
@@ -149,7 +174,7 @@ const ModelAssignmentSection = () => {
       if (error) throw error;
       
       toast.success('Assignment removed successfully');
-      fetchData(); // Refresh data
+      fetchAssignments(); // Refresh assignments data
     } catch (error) {
       console.error('Error deleting assignment:', error);
       toast.error('Failed to remove assignment');
@@ -164,6 +189,28 @@ const ModelAssignmentSection = () => {
         <CardTitle className="text-2xl">Assign Model to Detergent</CardTitle>
       </CardHeader>
       <CardContent>
+        <div className="flex space-x-4 mb-6">
+          <Button 
+            variant="outline"
+            onClick={fetchIngredients}
+            disabled={isLoadingIngredients}
+            className="flex items-center"
+          >
+            <Database className="mr-2 h-4 w-4" />
+            {isLoadingIngredients ? 'Loading Detergents...' : 'Load Detergents'}
+          </Button>
+          
+          <Button 
+            variant="outline"
+            onClick={fetchModels}
+            disabled={isLoadingModels}
+            className="flex items-center"
+          >
+            <Database className="mr-2 h-4 w-4" />
+            {isLoadingModels ? 'Loading Models...' : 'Load Models'}
+          </Button>
+        </div>
+        
         <ModelAssignmentForm 
           ingredients={ingredients}
           models={models}

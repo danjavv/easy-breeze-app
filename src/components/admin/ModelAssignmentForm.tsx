@@ -52,7 +52,7 @@ const ModelAssignmentForm: React.FC<ModelAssignmentFormProps> = ({
             <SelectContent>
               {ingredients.length === 0 ? (
                 <div className="py-6 text-center text-sm text-muted-foreground">
-                  {isLoading ? "Loading..." : "No detergents found"}
+                  Click "Load Detergents" button to fetch detergents
                 </div>
               ) : (
                 ingredients.map((ingredient) => (
@@ -63,6 +63,11 @@ const ModelAssignmentForm: React.FC<ModelAssignmentFormProps> = ({
               )}
             </SelectContent>
           </Select>
+          <p className="text-xs text-muted-foreground mt-1">
+            {ingredients.length > 0 
+              ? `${ingredients.length} detergents available` 
+              : "No detergents loaded yet"}
+          </p>
         </div>
         
         <div className="space-y-2">
@@ -78,7 +83,7 @@ const ModelAssignmentForm: React.FC<ModelAssignmentFormProps> = ({
             <SelectContent>
               {models.length === 0 ? (
                 <div className="py-6 text-center text-sm text-muted-foreground">
-                  {isLoading ? "Loading..." : "No models found"}
+                  Click "Load Models" button to fetch models
                 </div>
               ) : (
                 models.map((model) => (
@@ -89,6 +94,11 @@ const ModelAssignmentForm: React.FC<ModelAssignmentFormProps> = ({
               )}
             </SelectContent>
           </Select>
+          <p className="text-xs text-muted-foreground mt-1">
+            {models.length > 0 
+              ? `${models.length} models available` 
+              : "No models loaded yet"}
+          </p>
         </div>
       </div>
 
