@@ -8,6 +8,10 @@ import { logSupabaseResponse } from '@/utils/debugUtils';
 interface Model {
   id: string;
   name: string;
+  threshold_detergency?: number | null;
+  threshold_foaming?: number | null;
+  threshold_biodegrability?: number | null;
+  threshold_purity?: number | null;
 }
 
 interface Ingredient {
@@ -71,23 +75,9 @@ export function useModelAssignments() {
         setIngredients(formattedIngredients);
         toast.success(`Loaded ${formattedIngredients.length} detergents from webhook successfully`);
         
-        // After getting data from webhook, also save to Supabase
-        for (const ingredient of formattedIngredients) {
-          const { error } = await supabase
-            .from('ingredients')
-            .upsert({ 
-              id: ingredient.id, 
-              name: ingredient.name,
-              detergency: ingredient.detergency,
-              foaming: ingredient.foaming,
-              biodegradability: ingredient.biodegradability,
-              purity: ingredient.purity
-            }, { onConflict: 'id' });
-          
-          if (error) {
-            console.error('Error saving ingredient to Supabase:', error);
-          }
-        }
+        // After getting data from webhook, we'll use it in our app but not attempt to save to Supabase
+        // due to RLS policy restrictions
+        console.log('Using webhook ingredient data without saving to Supabase due to RLS policy');
       } else {
         // If webhook fails to return proper data, fall back to Supabase
         console.log('No valid webhook data, falling back to Supabase...');
@@ -152,24 +142,8 @@ export function useModelAssignments() {
         setModels(formattedModels);
         toast.success(`Loaded ${formattedModels.length} models from webhook successfully`);
         
-        // After getting data from webhook, also save to Supabase
-        for (const model of formattedModels) {
-          console.log('Saving model to Supabase:', model);
-          const { error } = await supabase
-            .from('models')
-            .upsert({ 
-              id: model.id, 
-              name: model.name,
-              threshold_detergency: model.threshold_detergency,
-              threshold_foaming: model.threshold_foaming,
-              threshold_biodegrability: model.threshold_biodegrability,
-              threshold_purity: model.threshold_purity
-            }, { onConflict: 'id' });
-          
-          if (error) {
-            console.error('Error saving model to Supabase:', error);
-          }
-        }
+        // Skip saving to Supabase due to RLS policy constraints
+        console.log('Using webhook model data without saving to Supabase due to RLS policy');
       } else {
         // If webhook fails to return proper data, fall back to Supabase
         console.log('No valid webhook model data, falling back to Supabase...');
@@ -191,7 +165,7 @@ export function useModelAssignments() {
       // Fetch models from the models table
       const { data: modelsData, error: modelsError } = await supabase
         .from('models')
-        .select('id, name')
+        .select('id, name, threshold_detergency, threshold_foaming, threshold_biodegrability, threshold_purity')
         .order('name');
       
       logSupabaseResponse('fetch models', modelsData, modelsError);

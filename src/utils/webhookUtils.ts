@@ -134,7 +134,7 @@ export const processWebhookModels = (webhookData: any): any[] => {
       name: item.name || 'Unknown Model',
       threshold_detergency: item.threshold_detergency || null,
       threshold_foaming: item.threshold_foaming || null,
-      threshold_biodegrability: item.threshold_biodegradability || null, // Note: 'biodegrability' is used in the DB schema
+      threshold_biodegrability: item.threshold_biodegrability || null, // Note: 'biodegrability' is used in the DB schema
       threshold_purity: item.threshold_purity || null,
       created_at: item.created_at || new Date().toISOString()
     }));
@@ -148,7 +148,7 @@ export const processWebhookModels = (webhookData: any): any[] => {
       name: webhookData.name || 'Unknown Model',
       threshold_detergency: webhookData.threshold_detergency || null,
       threshold_foaming: webhookData.threshold_foaming || null,
-      threshold_biodegrability: webhookData.threshold_biodegradability || null, // Note: 'biodegrability' is used in the DB schema
+      threshold_biodegrability: webhookData.threshold_biodegrability || null, // Note: 'biodegrability' is used in the DB schema
       threshold_purity: webhookData.threshold_purity || null,
       created_at: webhookData.created_at || new Date().toISOString()
     }];
