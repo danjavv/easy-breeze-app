@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -7,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
+import { fetchFromWebhook, processWebhookIngredients } from '@/utils/webhookUtils';
 
 export interface Detergent {
   id: string;
@@ -53,27 +53,34 @@ const DetergentSelector: React.FC<DetergentSelectorProps> = ({ onDetergentSelect
   const loadDetergentsFromWebhook = async () => {
     setIsLoadingWebhook(true);
     try {
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/b65a9a50-5a55-462a-a29b-7f6572aa2dcc');
+      const webhookData = await fetchFromWebhook('https://danjaved008.app.n8n.cloud/webhook-test/b65a9a50-5a55-462a-a29b-7f6572aa2dcc');
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch detergents from webhook');
-      }
+      const formattedDetergents = processWebhookIngredients(webhookData);
       
-      let data = await response.json();
-      
-      const detergentsArray = Array.isArray(data) ? data : [data];
-      
-      if (detergentsArray.length > 0) {
-        const formattedDetergents = detergentsArray.map((item: any) => ({
-          id: item.id || `detergent-${Math.random().toString(36).substr(2, 9)}`,
-          name: item.name || 'Unknown Detergent'
-        }));
-        
+      if (formattedDetergents.length > 0) {
         setDetergents(formattedDetergents);
         
         toast.success("Detergents Loaded", {
           description: `Successfully loaded ${formattedDetergents.length} detergents from external source.`
         });
+
+        // Also save to Supabase
+        for (const detergent of formattedDetergents) {
+          const { error } = await supabase
+            .from('ingredients')
+            .upsert({ 
+              id: detergent.id, 
+              name: detergent.name,
+              detergency: detergent.detergency,
+              foaming: detergent.foaming,
+              biodegradability: detergent.biodegradability,
+              purity: detergent.purity
+            }, { onConflict: 'id' });
+          
+          if (error) {
+            console.error('Error saving detergent to Supabase:', error);
+          }
+        }
       } else {
         toast.error("No Detergents Found", {
           description: "The webhook didn't return any detergent data."

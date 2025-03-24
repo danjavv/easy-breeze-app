@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { fetchFromWebhook } from '@/utils/webhookUtils';
+import { fetchFromWebhook, processWebhookIngredients } from '@/utils/webhookUtils';
 import { logSupabaseResponse } from '@/utils/debugUtils';
 
 interface Model {
@@ -13,6 +13,11 @@ interface Model {
 interface Ingredient {
   id: string;
   name: string;
+  detergency?: number | null;
+  foaming?: number | null;
+  biodegradability?: number | null;
+  purity?: number | null;
+  created_at?: string;
 }
 
 interface ModelAssignment {
@@ -58,15 +63,11 @@ export function useModelAssignments() {
       const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook-test/b65a9a50-5a55-462a-a29b-7f6572aa2dcc';
       const webhookData = await fetchFromWebhook(webhookUrl);
       
-      console.log('Webhook data received:', webhookData);
+      // Process the webhook response using our utility function
+      const formattedIngredients = processWebhookIngredients(webhookData);
       
-      // Process the webhook response (assuming it returns an array of ingredients)
-      if (webhookData && Array.isArray(webhookData) && webhookData.length > 0) {
-        const formattedIngredients = webhookData.map((item: any) => ({
-          id: item.id || `ingredient-${Math.random().toString(36).substr(2, 9)}`,
-          name: item.name || 'Unknown Ingredient'
-        }));
-        
+      if (formattedIngredients.length > 0) {
+        console.log('Formatted ingredients:', formattedIngredients);
         setIngredients(formattedIngredients);
         toast.success(`Loaded ${formattedIngredients.length} detergents from webhook successfully`);
         
@@ -74,7 +75,14 @@ export function useModelAssignments() {
         for (const ingredient of formattedIngredients) {
           const { error } = await supabase
             .from('ingredients')
-            .upsert({ id: ingredient.id, name: ingredient.name }, { onConflict: 'id' });
+            .upsert({ 
+              id: ingredient.id, 
+              name: ingredient.name,
+              detergency: ingredient.detergency,
+              foaming: ingredient.foaming,
+              biodegradability: ingredient.biodegradability,
+              purity: ingredient.purity
+            }, { onConflict: 'id' });
           
           if (error) {
             console.error('Error saving ingredient to Supabase:', error);
