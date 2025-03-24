@@ -87,3 +87,48 @@ export const processWebhookIngredients = (webhookData: any): any[] => {
   console.log('No valid webhook data found, received:', typeof webhookData);
   return [];
 };
+
+/**
+ * Process webhook response to extract model data
+ * @param webhookData The data returned from the webhook
+ * @returns Array of formatted models
+ */
+export const processWebhookModels = (webhookData: any): any[] => {
+  // Check if response is undefined or null
+  if (!webhookData) {
+    console.log('No webhook model data received');
+    return [];
+  }
+  
+  // If the response is already an array, map through it
+  if (Array.isArray(webhookData)) {
+    console.log('Processing webhook model array data with length:', webhookData.length);
+    
+    return webhookData.map((item: any) => ({
+      id: item.id || `model-${Math.random().toString(36).substr(2, 9)}`,
+      name: item.name || 'Unknown Model',
+      threshold_detergency: item.threshold_detergency || null,
+      threshold_foaming: item.threshold_foaming || null,
+      threshold_biodegrability: item.threshold_biodegradability || null, // Note: 'biodegrability' is used in the DB schema
+      threshold_purity: item.threshold_purity || null,
+      created_at: item.created_at || new Date().toISOString()
+    }));
+  }
+  
+  // If the response is a single object, wrap it in an array
+  if (webhookData && typeof webhookData === 'object') {
+    console.log('Processing webhook single model data');
+    return [{
+      id: webhookData.id || `model-${Math.random().toString(36).substr(2, 9)}`,
+      name: webhookData.name || 'Unknown Model',
+      threshold_detergency: webhookData.threshold_detergency || null,
+      threshold_foaming: webhookData.threshold_foaming || null,
+      threshold_biodegrability: webhookData.threshold_biodegradability || null, // Note: 'biodegrability' is used in the DB schema
+      threshold_purity: webhookData.threshold_purity || null,
+      created_at: webhookData.created_at || new Date().toISOString()
+    }];
+  }
+  
+  console.log('No valid model data found, received:', typeof webhookData);
+  return [];
+};

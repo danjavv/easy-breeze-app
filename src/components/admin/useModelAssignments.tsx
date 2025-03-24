@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { fetchFromWebhook, processWebhookIngredients } from '@/utils/webhookUtils';
+import { fetchFromWebhook, processWebhookIngredients, processWebhookModels } from '@/utils/webhookUtils';
 import { logSupabaseResponse } from '@/utils/debugUtils';
 
 interface Model {
@@ -138,8 +138,57 @@ export function useModelAssignments() {
   const fetchModels = async () => {
     setIsLoadingModels(true);
     try {
+      console.log('Fetching models from webhook...');
+      
+      // Call the webhook to get model data
+      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook-test/416b3513-de98-441c-b482-c2e9cfb1f329';
+      const webhookData = await fetchFromWebhook(webhookUrl);
+      
+      // Process the webhook response using our utility function
+      const formattedModels = processWebhookModels(webhookData);
+      
+      if (formattedModels.length > 0) {
+        console.log('Formatted models:', formattedModels);
+        setModels(formattedModels);
+        toast.success(`Loaded ${formattedModels.length} models from webhook successfully`);
+        
+        // After getting data from webhook, also save to Supabase
+        for (const model of formattedModels) {
+          console.log('Saving model to Supabase:', model);
+          const { error } = await supabase
+            .from('models')
+            .upsert({ 
+              id: model.id, 
+              name: model.name,
+              threshold_detergency: model.threshold_detergency,
+              threshold_foaming: model.threshold_foaming,
+              threshold_biodegrability: model.threshold_biodegrability,
+              threshold_purity: model.threshold_purity
+            }, { onConflict: 'id' });
+          
+          if (error) {
+            console.error('Error saving model to Supabase:', error);
+          }
+        }
+      } else {
+        // If webhook fails to return proper data, fall back to Supabase
+        console.log('No valid webhook model data, falling back to Supabase...');
+        await fetchModelsFromDatabase();
+      }
+    } catch (error) {
+      console.error('Error with webhook, falling back to Supabase:', error);
+      // Fall back to database if webhook fails
+      await fetchModelsFromDatabase();
+    } finally {
+      setIsLoadingModels(false);
+    }
+  };
+  
+  const fetchModelsFromDatabase = async () => {
+    try {
       console.log('Fetching models from Supabase...');
-      // Fetch models
+      
+      // Fetch models from the models table
       const { data: modelsData, error: modelsError } = await supabase
         .from('models')
         .select('id, name')
@@ -156,17 +205,15 @@ export function useModelAssignments() {
       
       if (modelsData && modelsData.length > 0) {
         setModels(modelsData);
-        toast.success(`Loaded ${modelsData.length} models successfully`);
+        toast.success(`Loaded ${modelsData.length} models from database successfully`);
       } else {
         console.log('No models data found');
         toast.info('No models found in the database');
         setModels([]);
       }
     } catch (error) {
-      console.error('Error fetching models:', error);
-      toast.error('Failed to load models');
-    } finally {
-      setIsLoadingModels(false);
+      console.error('Error fetching models from database:', error);
+      toast.error('Failed to load models from database');
     }
   };
 
