@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -71,24 +70,41 @@ const AssignSupplierForm: React.FC<AssignSupplierFormProps> = ({ suppliers }) =>
     const fetchAssignments = async () => {
       setIsLoading(true);
       try {
-        // In a real app, you'd fetch actual assignments from your database
-        // For this demo, we'll create dummy assignments
-        const dummyAssignments: SupplierIngredientAssignment[] = suppliers.map(supplier => ({
-          supplierId: supplier.id,
-          ingredientId: selectedIngredient,
-          isEnabled: Math.random() > 0.5 // Randomly enable/disable for demo
-        }));
+        const { data, error } = await supabase
+          .from('supplier_ingredients')
+          .select('supplier_id, ingredient_id, is_enabled')
+          .eq('ingredient_id', selectedIngredient);
+          
+        if (error) throw error;
         
-        setAssignments(dummyAssignments);
+        // Convert the data to our format
+        const formattedAssignments: SupplierIngredientAssignment[] = suppliers.map(supplier => {
+          const existingAssignment = data?.find(
+            a => a.supplier_id === supplier.id && a.ingredient_id === selectedIngredient
+          );
+          
+          return {
+            supplierId: supplier.id,
+            ingredientId: selectedIngredient,
+            isEnabled: existingAssignment?.is_enabled ?? false
+          };
+        });
+        
+        setAssignments(formattedAssignments);
       } catch (error) {
         console.error('Error fetching assignments:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load supplier assignments. Please try again.",
+          variant: "destructive"
+        });
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchAssignments();
-  }, [selectedIngredient, suppliers]);
+  }, [selectedIngredient, suppliers, toast]);
 
   const handleToggleSupplier = (supplierId: string, isEnabled: boolean) => {
     setAssignments(prev => 
@@ -101,14 +117,54 @@ const AssignSupplierForm: React.FC<AssignSupplierFormProps> = ({ suppliers }) =>
   };
 
   const handleSaveAssignments = async () => {
+    if (!selectedIngredient) return;
+    
     setIsSaving(true);
     
     try {
-      // In a real app, you'd save these assignments to your database
-      console.log('Saving assignments:', assignments);
+      // Delete all existing assignments for this ingredient
+      const { error: deleteError } = await supabase
+        .from('supplier_ingredients')
+        .delete()
+        .eq('ingredient_id', selectedIngredient);
+        
+      if (deleteError) throw deleteError;
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Insert new assignments
+      const enabledAssignments = assignments.filter(a => a.isEnabled);
+      if (enabledAssignments.length > 0) {
+        const { error: insertError } = await supabase
+          .from('supplier_ingredients')
+          .insert(
+            enabledAssignments.map(a => ({
+              supplier_id: a.supplierId,
+              ingredient_id: a.ingredientId,
+              is_enabled: true
+            }))
+          );
+          
+        if (insertError) throw insertError;
+      }
+      
+      // Send webhook with the assignments
+      try {
+        await fetch('https://danjaved008.app.n8n.cloud/webhook-test/1403aa87-f3ae-46c5-a77e-4c3b97192e64', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ingredient_id: selectedIngredient,
+            supplier_assignments: enabledAssignments.map(a => ({
+              supplier_id: a.supplierId,
+              is_enabled: true
+            }))
+          })
+        });
+      } catch (webhookError) {
+        console.error('Error sending webhook:', webhookError);
+        // Don't throw the error as the main operation was successful
+      }
       
       toast({
         title: "Assignments Saved",
