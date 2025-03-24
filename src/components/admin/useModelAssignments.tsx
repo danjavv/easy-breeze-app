@@ -71,7 +71,10 @@ export function useModelAssignments() {
       const formattedIngredients = processWebhookIngredients(webhookData);
       
       if (formattedIngredients.length > 0) {
-        console.log('Formatted ingredients:', formattedIngredients);
+        console.log('Ingredients loaded and stored in useModelAssignments:', formattedIngredients);
+        console.log('First ingredient name:', formattedIngredients[0]?.name || 'No name');
+        console.log('Ingredient IDs:', formattedIngredients.map(i => i.id).join(', '));
+        
         setIngredients(formattedIngredients);
         toast.success(`Loaded ${formattedIngredients.length} detergents from webhook successfully`);
         
@@ -109,7 +112,10 @@ export function useModelAssignments() {
         throw ingredientsError;
       }
       
-      console.log('Ingredients data received:', ingredientsData);
+      console.log('Ingredients from DB stored in useModelAssignments:', ingredientsData);
+      if (ingredientsData && ingredientsData.length > 0) {
+        console.log('First ingredient name from DB:', ingredientsData[0]?.name || 'No name');
+      }
       
       if (ingredientsData && ingredientsData.length > 0) {
         setIngredients(ingredientsData);
@@ -138,7 +144,10 @@ export function useModelAssignments() {
       const formattedModels = processWebhookModels(webhookData);
       
       if (formattedModels.length > 0) {
-        console.log('Formatted models:', formattedModels);
+        console.log('Models loaded and stored in useModelAssignments:', formattedModels);
+        console.log('First model name:', formattedModels[0]?.name || 'No name');
+        console.log('Model IDs:', formattedModels.map(m => m.id).join(', '));
+        
         setModels(formattedModels);
         toast.success(`Loaded ${formattedModels.length} models from webhook successfully`);
         
@@ -175,7 +184,10 @@ export function useModelAssignments() {
         throw modelsError;
       }
       
-      console.log('Models data received:', modelsData);
+      console.log('Models from DB stored in useModelAssignments:', modelsData);
+      if (modelsData && modelsData.length > 0) {
+        console.log('First model name from DB:', modelsData[0]?.name || 'No name');
+      }
       
       if (modelsData && modelsData.length > 0) {
         setModels(modelsData);

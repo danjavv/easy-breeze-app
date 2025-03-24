@@ -77,29 +77,43 @@ export const processWebhookIngredients = (webhookData: any): any[] => {
   if (Array.isArray(webhookData)) {
     console.log('Processing webhook array data with length:', webhookData.length);
     
-    return webhookData.map((item: any) => ({
-      id: item.id || `ingredient-${Math.random().toString(36).substr(2, 9)}`,
-      name: item.name || 'Unknown Ingredient',
-      detergency: item.detergency || null,
-      foaming: item.foaming || null,
-      biodegradability: item.biodegradability || null,
-      purity: item.purity || null,
-      created_at: item.created_at || new Date().toISOString()
-    }));
+    const processed = webhookData.map((item: any) => {
+      // Extract the actual data from the webhook response which may be nested inside a 'json' property
+      const data = item.json || item;
+      
+      return {
+        id: data.id || `ingredient-${Math.random().toString(36).substr(2, 9)}`,
+        name: data.name || 'Unknown Ingredient',
+        detergency: data.detergency || null,
+        foaming: data.foaming || null,
+        biodegradability: data.biodegradability || null,
+        purity: data.purity || null,
+        created_at: data.created_at || new Date().toISOString()
+      };
+    });
+    
+    console.log('Processed ingredients:', processed);
+    console.log('Processed ingredient names:', processed.map(i => i.name).join(', '));
+    return processed;
   }
   
   // If the response is a single object, wrap it in an array
   if (webhookData && typeof webhookData === 'object') {
     console.log('Processing webhook single object data');
-    return [{
-      id: webhookData.id || `ingredient-${Math.random().toString(36).substr(2, 9)}`,
-      name: webhookData.name || 'Unknown Ingredient',
-      detergency: webhookData.detergency || null,
-      foaming: webhookData.foaming || null,
-      biodegradability: webhookData.biodegradability || null,
-      purity: webhookData.purity || null,
-      created_at: webhookData.created_at || new Date().toISOString()
+    const data = webhookData.json || webhookData;
+    
+    const processed = [{
+      id: data.id || `ingredient-${Math.random().toString(36).substr(2, 9)}`,
+      name: data.name || 'Unknown Ingredient',
+      detergency: data.detergency || null,
+      foaming: data.foaming || null,
+      biodegradability: data.biodegradability || null,
+      purity: data.purity || null,
+      created_at: data.created_at || new Date().toISOString()
     }];
+    
+    console.log('Processed single ingredient:', processed);
+    return processed;
   }
   
   console.log('No valid webhook data found, received:', typeof webhookData);
@@ -129,29 +143,43 @@ export const processWebhookModels = (webhookData: any): any[] => {
   if (Array.isArray(webhookData)) {
     console.log('Processing webhook model array data with length:', webhookData.length);
     
-    return webhookData.map((item: any) => ({
-      id: item.id || `model-${Math.random().toString(36).substr(2, 9)}`,
-      name: item.name || 'Unknown Model',
-      threshold_detergency: item.threshold_detergency || null,
-      threshold_foaming: item.threshold_foaming || null,
-      threshold_biodegrability: item.threshold_biodegrability || null, // Note: 'biodegrability' is used in the DB schema
-      threshold_purity: item.threshold_purity || null,
-      created_at: item.created_at || new Date().toISOString()
-    }));
+    const processed = webhookData.map((item: any) => {
+      // Extract the actual data from the webhook response which may be nested inside a 'json' property
+      const data = item.json || item;
+      
+      return {
+        id: data.id || `model-${Math.random().toString(36).substr(2, 9)}`,
+        name: data.name || 'Unknown Model',
+        threshold_detergency: data.threshold_detergency || null,
+        threshold_foaming: data.threshold_foaming || null,
+        threshold_biodegrability: data.threshold_biodegrability || null, // Note: 'biodegrability' is used in the DB schema
+        threshold_purity: data.threshold_purity || null,
+        created_at: data.created_at || new Date().toISOString()
+      };
+    });
+    
+    console.log('Processed models:', processed);
+    console.log('Processed model names:', processed.map(m => m.name).join(', '));
+    return processed;
   }
   
   // If the response is a single object, wrap it in an array
   if (webhookData && typeof webhookData === 'object') {
     console.log('Processing webhook single model data');
-    return [{
-      id: webhookData.id || `model-${Math.random().toString(36).substr(2, 9)}`,
-      name: webhookData.name || 'Unknown Model',
-      threshold_detergency: webhookData.threshold_detergency || null,
-      threshold_foaming: webhookData.threshold_foaming || null,
-      threshold_biodegrability: webhookData.threshold_biodegrability || null, // Note: 'biodegrability' is used in the DB schema
-      threshold_purity: webhookData.threshold_purity || null,
-      created_at: webhookData.created_at || new Date().toISOString()
+    const data = webhookData.json || webhookData;
+    
+    const processed = [{
+      id: data.id || `model-${Math.random().toString(36).substr(2, 9)}`,
+      name: data.name || 'Unknown Model',
+      threshold_detergency: data.threshold_detergency || null,
+      threshold_foaming: data.threshold_foaming || null,
+      threshold_biodegrability: data.threshold_biodegrability || null, // Note: 'biodegrability' is used in the DB schema
+      threshold_purity: data.threshold_purity || null,
+      created_at: data.created_at || new Date().toISOString()
     }];
+    
+    console.log('Processed single model:', processed);
+    return processed;
   }
   
   console.log('No valid model data found, received:', typeof webhookData);

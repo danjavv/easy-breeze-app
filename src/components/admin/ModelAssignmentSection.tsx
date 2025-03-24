@@ -33,14 +33,24 @@ const ModelAssignmentSection = () => {
   useEffect(() => {
     if (contextModels.length > 0) {
       console.log("Using models from context:", contextModels);
+      console.log("First context model name:", contextModels[0]?.name || 'No name');
+      console.log("Context model IDs:", contextModels.map(m => m.id).join(', '));
       setHookModels(contextModels);
     }
     
     if (contextIngredients.length > 0) {
       console.log("Using ingredients from context:", contextIngredients);
+      console.log("First context ingredient name:", contextIngredients[0]?.name || 'No name');
+      console.log("Context ingredient IDs:", contextIngredients.map(i => i.id).join(', '));
       setHookIngredients(contextIngredients);
     }
   }, [contextModels, contextIngredients, setHookModels, setHookIngredients]);
+
+  // Log the values in the component for debugging
+  useEffect(() => {
+    console.log("Current ingredients in ModelAssignmentSection:", ingredients);
+    console.log("Current models in ModelAssignmentSection:", models);
+  }, [ingredients, models]);
 
   return (
     <Card className="mb-8">

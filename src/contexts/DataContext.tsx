@@ -14,11 +14,30 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [models, setModels] = useState<Model[]>([]);
-  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [models, setModelsState] = useState<Model[]>([]);
+  const [ingredients, setIngredientsState] = useState<Ingredient[]>([]);
 
-  const clearModels = () => setModels([]);
-  const clearIngredients = () => setIngredients([]);
+  const setModels = (newModels: Model[]) => {
+    console.log("Setting models in DataContext:", newModels);
+    console.log("First model name in context:", newModels[0]?.name || 'No name');
+    setModelsState(newModels);
+  };
+
+  const setIngredients = (newIngredients: Ingredient[]) => {
+    console.log("Setting ingredients in DataContext:", newIngredients);
+    console.log("First ingredient name in context:", newIngredients[0]?.name || 'No name');
+    setIngredientsState(newIngredients);
+  };
+
+  const clearModels = () => {
+    console.log("Clearing models in DataContext");
+    setModelsState([]);
+  };
+  
+  const clearIngredients = () => {
+    console.log("Clearing ingredients in DataContext");
+    setIngredientsState([]);
+  };
 
   return (
     <DataContext.Provider value={{ 
