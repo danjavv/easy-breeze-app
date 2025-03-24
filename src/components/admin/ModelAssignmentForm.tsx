@@ -36,6 +36,10 @@ const ModelAssignmentForm: React.FC<ModelAssignmentFormProps> = ({
   onModelChange,
   onSave,
 }) => {
+  // Find the currently selected ingredient and model to display their names
+  const selectedIngredientName = ingredients.find(i => i.id === selectedIngredient)?.name || '';
+  const selectedModelName = models.find(m => m.id === selectedModel)?.name || '';
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -48,7 +52,7 @@ const ModelAssignmentForm: React.FC<ModelAssignmentFormProps> = ({
           >
             <SelectTrigger id="ingredient-select" className="w-full">
               <SelectValue placeholder="Select a detergent">
-                {selectedIngredient && ingredients.find(i => i.id === selectedIngredient)?.name}
+                {selectedIngredientName || "Select a detergent"}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -81,7 +85,7 @@ const ModelAssignmentForm: React.FC<ModelAssignmentFormProps> = ({
           >
             <SelectTrigger id="model-select" className="w-full">
               <SelectValue placeholder="Select a model">
-                {selectedModel && models.find(m => m.id === selectedModel)?.name}
+                {selectedModelName || "Select a model"}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>

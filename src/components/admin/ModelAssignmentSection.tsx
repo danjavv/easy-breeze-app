@@ -32,13 +32,15 @@ const ModelAssignmentSection = () => {
   // Use data from context if available
   useEffect(() => {
     if (contextModels.length > 0) {
+      console.log("Using models from context:", contextModels);
       setHookModels(contextModels);
     }
     
     if (contextIngredients.length > 0) {
+      console.log("Using ingredients from context:", contextIngredients);
       setHookIngredients(contextIngredients);
     }
-  }, [contextModels, contextIngredients]);
+  }, [contextModels, contextIngredients, setHookModels, setHookIngredients]);
 
   return (
     <Card className="mb-8">

@@ -30,11 +30,13 @@ const AssignmentsTable: React.FC<AssignmentsTableProps> = ({
   isLoading,
 }) => {
   const getIngredientName = (id: string) => {
-    return ingredients.find(i => i.id === id)?.name || 'Unknown';
+    const ingredient = ingredients.find(i => i.id === id);
+    return ingredient ? ingredient.name : 'Unknown';
   };
 
   const getModelName = (id: string) => {
-    return models.find(m => m.id === id)?.name || 'Unknown';
+    const model = models.find(m => m.id === id);
+    return model ? model.name : 'Unknown';
   };
 
   if (assignments.length === 0) {
