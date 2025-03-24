@@ -5,6 +5,14 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import ModelAssignmentForm from './ModelAssignmentForm';
 import AssignmentsTable from './AssignmentsTable';
+import { MoreHorizontal, Trash2 } from 'lucide-react';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 
 interface Model {
   id: string;
@@ -36,7 +44,7 @@ const ModelAssignmentSection = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch ingredients
+      // Fetch ingredients (detergents)
       const { data: ingredientsData, error: ingredientsError } = await supabase
         .from('ingredients')
         .select('id, name')
@@ -128,6 +136,28 @@ const ModelAssignmentSection = () => {
     }
   };
 
+  const handleDelete = async (ingredientId: string) => {
+    if (!ingredientId) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('ingredient_models')
+        .delete()
+        .eq('ingredient_id', ingredientId);
+        
+      if (error) throw error;
+      
+      toast.success('Assignment removed successfully');
+      fetchData(); // Refresh data
+    } catch (error) {
+      console.error('Error deleting assignment:', error);
+      toast.error('Failed to remove assignment');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Card className="mb-8">
       <CardHeader>
@@ -145,12 +175,60 @@ const ModelAssignmentSection = () => {
           onSave={handleSave}
         />
         
-        <AssignmentsTable 
-          assignments={existingAssignments}
-          ingredients={ingredients}
-          models={models}
-          isLoading={isLoading}
-        />
+        <div className="mt-8">
+          <h3 className="text-lg font-medium mb-4">Existing Assignments</h3>
+          <div className="border rounded-md overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="text-left p-3 font-medium">Detergent</th>
+                  <th className="text-left p-3 font-medium">Assigned Model</th>
+                  <th className="text-right p-3 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {existingAssignments.length === 0 ? (
+                  <tr className="border-t">
+                    <td colSpan={3} className="p-4 text-center text-muted-foreground">
+                      No assignments found
+                    </td>
+                  </tr>
+                ) : (
+                  existingAssignments.map((assignment) => {
+                    const ingredient = ingredients.find(i => i.id === assignment.ingredient_id);
+                    const model = models.find(m => m.id === assignment.model_id);
+                    
+                    return (
+                      <tr key={assignment.ingredient_id} className="border-t">
+                        <td className="p-3">{ingredient?.name || 'Unknown Detergent'}</td>
+                        <td className="p-3">{model?.name || 'Unknown Model'}</td>
+                        <td className="p-3 text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => handleDelete(assignment.ingredient_id)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Remove Assignment
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
