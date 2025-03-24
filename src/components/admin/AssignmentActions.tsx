@@ -1,6 +1,6 @@
 
 import { Button } from '@/components/ui/button';
-import { Database, FileDown } from 'lucide-react';
+import { Database, FileDown, Loader2 } from 'lucide-react';
 
 interface AssignmentActionsProps {
   isLoadingIngredients: boolean;
@@ -23,7 +23,11 @@ const AssignmentActions: React.FC<AssignmentActionsProps> = ({
         disabled={isLoadingIngredients}
         className="flex items-center"
       >
-        <FileDown className="mr-2 h-4 w-4" />
+        {isLoadingIngredients ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <FileDown className="mr-2 h-4 w-4" />
+        )}
         {isLoadingIngredients ? 'Loading Detergents...' : 'Load Detergents'}
       </Button>
       
@@ -33,7 +37,11 @@ const AssignmentActions: React.FC<AssignmentActionsProps> = ({
         disabled={isLoadingModels}
         className="flex items-center"
       >
-        <Database className="mr-2 h-4 w-4" />
+        {isLoadingModels ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Database className="mr-2 h-4 w-4" />
+        )}
         {isLoadingModels ? 'Loading Models...' : 'Load Models'}
       </Button>
     </div>

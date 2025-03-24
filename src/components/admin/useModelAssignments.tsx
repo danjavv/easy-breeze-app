@@ -51,6 +51,7 @@ export function useModelAssignments() {
     setIsLoadingIngredients(true);
     try {
       console.log('Fetching ingredients from Supabase...');
+      
       // Fetch ingredients (detergents) from the ingredients table
       const { data: ingredientsData, error: ingredientsError } = await supabase
         .from('ingredients')
