@@ -65,7 +65,7 @@ const SupplierAssignmentSection = () => {
   return (
     <Card className="mb-8">
       <CardHeader>
-        <CardTitle className="text-2xl">Assign Suppliers to Detergent</CardTitle>
+        <CardTitle className="text-2xl">Manage Supplier Assignments</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex gap-4 mb-6">
