@@ -1,55 +1,75 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logSupabaseResponse } from '@/utils/debugUtils';
 
 interface Ingredient {
   id: string;
   name: string;
+  detergency?: number | null;
+  foaming?: number | null;
+  biodegradability?: number | null;
+  purity?: number | null;
+  created_at?: string;
 }
 
 interface Supplier {
   id: string;
-  name: string;
+  company_name: string;
+  email: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  created_at: string;
 }
 
 interface SupplierAssignment {
-  ingredient_id: string;
-  supplier_id: string;
+  ingredientId: string;
+  supplierId: string;
 }
 
 export function useSupplierAssignments() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [selectedIngredient, setSelectedIngredient] = useState<string>('');
+  const [selectedSupplier, setSelectedSupplier] = useState<string>('');
   const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
   const [isLoadingSuppliers, setIsLoadingSuppliers] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [existingAssignments, setExistingAssignments] = useState<SupplierAssignment[]>([]);
+  const [assignments, setAssignments] = useState<SupplierAssignment[]>([]);
 
   useEffect(() => {
-    fetchAssignments();
-  }, []);
+    // When ingredient selection changes, check if there's an existing supplier assignment
+    if (selectedIngredient) {
+      const assignment = assignments.find(a => a.ingredientId === selectedIngredient);
+      if (assignment) {
+        setSelectedSupplier(assignment.supplierId);
+      } else {
+        setSelectedSupplier('');
+      }
+    }
+  }, [selectedIngredient, assignments]);
 
   const fetchIngredients = async () => {
     setIsLoadingIngredients(true);
     try {
       const { data: ingredientsData, error: ingredientsError } = await supabase
         .from('ingredients')
-        .select('id, name')
+        .select('*')
         .order('name');
-
+      
+      logSupabaseResponse('fetch ingredients', ingredientsData, ingredientsError);
+      
       if (ingredientsError) throw ingredientsError;
-
+      
       if (ingredientsData && ingredientsData.length > 0) {
         setIngredients(ingredientsData);
-        toast.success(`Loaded ${ingredientsData.length} detergents successfully`);
+        toast.success(`Loaded ${ingredientsData.length} ingredients from database successfully`);
       } else {
-        toast.info('No detergents found');
+        toast.info('No ingredients found in the database');
         setIngredients([]);
       }
     } catch (error) {
       console.error('Error fetching ingredients:', error);
-      toast.error('Failed to load detergents');
+      toast.error('Failed to load ingredients from database');
     } finally {
       setIsLoadingIngredients(false);
     }
@@ -60,91 +80,57 @@ export function useSupplierAssignments() {
     try {
       const { data: suppliersData, error: suppliersError } = await supabase
         .from('suppliers')
-        .select('id, name')
-        .order('name');
-
+        .select('*')
+        .eq('status', 'Approved')
+        .order('company_name');
+      
+      logSupabaseResponse('fetch suppliers', suppliersData, suppliersError);
+      
       if (suppliersError) throw suppliersError;
-
+      
       if (suppliersData && suppliersData.length > 0) {
         setSuppliers(suppliersData);
-        toast.success(`Loaded ${suppliersData.length} suppliers successfully`);
+        toast.success(`Loaded ${suppliersData.length} suppliers from database successfully`);
       } else {
-        toast.info('No suppliers found');
+        toast.info('No approved suppliers found in the database');
         setSuppliers([]);
       }
     } catch (error) {
       console.error('Error fetching suppliers:', error);
-      toast.error('Failed to load suppliers');
+      toast.error('Failed to load suppliers from database');
     } finally {
       setIsLoadingSuppliers(false);
     }
   };
 
-  const fetchAssignments = async () => {
-    setIsLoading(true);
-    try {
-      const { data: assignmentsData, error: assignmentsError } = await supabase
-        .from('supplier_ingredients')
-        .select('ingredient_id, supplier_id');
-      
-      if (assignmentsError) throw assignmentsError;
-      
-      setExistingAssignments(assignmentsData || []);
-    } catch (error) {
-      console.error('Error fetching assignments:', error);
-      toast.error('Failed to load assignments');
-    } finally {
-      setIsLoading(false);
+  const handleSave = async () => {
+    if (!selectedIngredient || !selectedSupplier) {
+      toast.error('Please select both an ingredient and a supplier');
+      return;
     }
-  };
 
-  const handleSave = async (assignments: SupplierAssignment[]) => {
-    if (!selectedIngredient) return;
-    
     setIsLoading(true);
     try {
-      // First, delete existing assignments for this ingredient
-      const { error: deleteError } = await supabase
-        .from('supplier_ingredients')
-        .delete()
-        .eq('ingredient_id', selectedIngredient);
-        
-      if (deleteError) throw deleteError;
-      
-      // Then, insert new assignments
-      if (assignments.length > 0) {
-        const { error: insertError } = await supabase
-          .from('supplier_ingredients')
-          .insert(assignments);
-          
-        if (insertError) throw insertError;
-      }
-      
-      // Send webhook notification
-      try {
-        const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/1b1dafe1-a89b-4447-a11a-ee07327b6d0c', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            supplier_id: assignments[0]?.supplier_id,
-            ingredient_id: selectedIngredient
-          }),
-        });
-
-        if (!response.ok) {
-          console.error('Webhook notification failed:', response.statusText);
+      // Update assignments in local state
+      setAssignments(prevAssignments => {
+        const existingIndex = prevAssignments.findIndex(a => a.ingredientId === selectedIngredient);
+        if (existingIndex >= 0) {
+          // Update existing assignment
+          return prevAssignments.map((a, index) => 
+            index === existingIndex 
+              ? { ...a, supplierId: selectedSupplier }
+              : a
+          );
+        } else {
+          // Add new assignment
+          return [...prevAssignments, { ingredientId: selectedIngredient, supplierId: selectedSupplier }];
         }
-      } catch (webhookError) {
-        console.error('Error sending webhook notification:', webhookError);
-      }
-      
-      toast.success('Supplier assignments saved successfully');
-      fetchAssignments(); // Refresh assignments data
+      });
+
+      toast.success('Supplier assignment saved successfully');
     } catch (error) {
-      console.error('Error saving assignments:', error);
-      toast.error('Failed to save supplier assignments');
+      console.error('Error saving assignment:', error);
+      toast.error('Failed to save supplier assignment');
     } finally {
       setIsLoading(false);
     }
@@ -155,15 +141,12 @@ export function useSupplierAssignments() {
     
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('supplier_ingredients')
-        .delete()
-        .eq('ingredient_id', ingredientId);
-        
-      if (error) throw error;
+      // Remove assignment from local state
+      setAssignments(prevAssignments => 
+        prevAssignments.filter(a => a.ingredientId !== ingredientId)
+      );
       
       toast.success('Assignment removed successfully');
-      fetchAssignments(); // Refresh assignments data
     } catch (error) {
       console.error('Error deleting assignment:', error);
       toast.error('Failed to remove assignment');
@@ -177,10 +160,12 @@ export function useSupplierAssignments() {
     suppliers,
     selectedIngredient,
     setSelectedIngredient,
+    selectedSupplier,
+    setSelectedSupplier,
     isLoadingIngredients,
     isLoadingSuppliers,
     isLoading,
-    existingAssignments,
+    assignments,
     fetchIngredients,
     fetchSuppliers,
     handleSave,

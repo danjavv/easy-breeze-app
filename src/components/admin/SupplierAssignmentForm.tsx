@@ -3,7 +3,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Save } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
 
 interface Ingredient {
   id: string;
@@ -12,141 +11,111 @@ interface Ingredient {
 
 interface Supplier {
   id: string;
-  name: string;
-}
-
-interface SupplierAssignment {
-  ingredient_id: string;
-  supplier_id: string;
+  company_name: string;
+  email: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  created_at: string;
 }
 
 interface SupplierAssignmentFormProps {
   ingredients: Ingredient[];
   suppliers: Supplier[];
   selectedIngredient: string;
+  selectedSupplier: string;
   isLoading: boolean;
   onIngredientChange: (value: string) => void;
-  onSave: (assignments: SupplierAssignment[]) => void;
+  onSupplierChange: (value: string) => void;
+  onSave: () => void;
 }
 
 const SupplierAssignmentForm: React.FC<SupplierAssignmentFormProps> = ({
   ingredients,
   suppliers,
   selectedIngredient,
+  selectedSupplier,
   isLoading,
   onIngredientChange,
+  onSupplierChange,
   onSave,
 }) => {
-  const [assignments, setAssignments] = React.useState<SupplierAssignment[]>([]);
-
-  // Find the currently selected ingredient to display its name
+  // Find the currently selected ingredient and supplier to display their names
   const selectedIngredientName = ingredients.find(i => i.id === selectedIngredient)?.name || '';
-
-  const handleToggleSupplier = (supplierId: string, isEnabled: boolean) => {
-    if (!selectedIngredient) return;
-
-    setAssignments(prev => {
-      const existingIndex = prev.findIndex(
-        a => a.supplier_id === supplierId && a.ingredient_id === selectedIngredient
-      );
-
-      if (existingIndex >= 0) {
-        // Remove assignment if disabled
-        if (!isEnabled) {
-          return prev.filter((_, index) => index !== existingIndex);
-        }
-        return prev;
-      } else {
-        // Add new assignment if enabled
-        return [
-          ...prev,
-          {
-            supplier_id: supplierId,
-            ingredient_id: selectedIngredient,
-          }
-        ];
-      }
-    });
-  };
-
-  const handleSave = () => {
-    if (!selectedIngredient) return;
-    onSave(assignments);
-  };
+  const selectedSupplierName = suppliers.find(s => s.id === selectedSupplier)?.company_name || '';
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="ingredient-select">Select Detergent</Label>
-        <Select 
-          value={selectedIngredient} 
-          onValueChange={onIngredientChange}
-          disabled={isLoading}
-        >
-          <SelectTrigger id="ingredient-select" className="w-full">
-            <SelectValue placeholder="Select a detergent">
-              {selectedIngredientName || "Select a detergent"}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {ingredients.length === 0 ? (
-              <div className="py-6 text-center text-sm text-muted-foreground">
-                Click "Load Detergents" button to fetch detergents
-              </div>
-            ) : (
-              ingredients.map((ingredient) => (
-                <SelectItem key={ingredient.id} value={ingredient.id}>
-                  {ingredient.name}
-                </SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground mt-1">
-          {ingredients.length > 0 
-            ? `${ingredients.length} detergents available` 
-            : "No detergents loaded yet"}
-        </p>
-      </div>
-      
-      {selectedIngredient && (
-        <div className="space-y-4">
-          <Label>Assign Suppliers</Label>
-          <div className="space-y-2">
-            {suppliers.length === 0 ? (
-              <div className="py-4 text-center text-sm text-muted-foreground">
-                Click "Load Suppliers" button to fetch suppliers
-              </div>
-            ) : (
-              suppliers.map((supplier) => {
-                const isAssigned = assignments.some(
-                  a => a.supplier_id === supplier.id && a.ingredient_id === selectedIngredient
-                );
-                
-                return (
-                  <div key={supplier.id} className="flex items-center justify-between p-2 border rounded-md">
-                    <span className="text-sm">{supplier.name}</span>
-                    <Switch
-                      checked={isAssigned}
-                      onCheckedChange={(checked) => handleToggleSupplier(supplier.id, checked)}
-                    />
-                  </div>
-                );
-              })
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {suppliers.length > 0 
-              ? `${suppliers.length} suppliers available` 
-              : "No suppliers loaded yet"}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="ingredient-select">Select Ingredient</Label>
+          <Select 
+            value={selectedIngredient} 
+            onValueChange={onIngredientChange}
+            disabled={isLoading}
+          >
+            <SelectTrigger id="ingredient-select" className="w-full">
+              <SelectValue placeholder="Select an ingredient">
+                {selectedIngredientName || "Select an ingredient"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {ingredients.length === 0 ? (
+                <div className="py-6 text-center text-sm text-muted-foreground">
+                  Click "Load Ingredients" button to fetch ingredients
+                </div>
+              ) : (
+                ingredients.map((ingredient) => (
+                  <SelectItem key={ingredient.id} value={ingredient.id}>
+                    {ingredient.name}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-1">
+            {ingredients.length > 0 
+              ? `${ingredients.length} ingredients available` 
+              : "No ingredients loaded yet"}
           </p>
         </div>
-      )}
+        
+        <div className="space-y-2">
+          <Label htmlFor="supplier-select">Assign Supplier</Label>
+          <Select 
+            value={selectedSupplier} 
+            onValueChange={onSupplierChange}
+            disabled={isLoading || !selectedIngredient}
+          >
+            <SelectTrigger id="supplier-select" className="w-full">
+              <SelectValue placeholder="Select a supplier">
+                {selectedSupplierName || "Select a supplier"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {suppliers.length === 0 ? (
+                <div className="py-6 text-center text-sm text-muted-foreground">
+                  Click "Load Suppliers" button to fetch suppliers
+                </div>
+              ) : (
+                suppliers.map((supplier) => (
+                  <SelectItem key={supplier.id} value={supplier.id}>
+                    {supplier.company_name}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-1">
+            {suppliers.length > 0 
+              ? `${suppliers.length} approved suppliers available` 
+              : "No approved suppliers loaded yet"}
+          </p>
+        </div>
+      </div>
 
       <div className="flex justify-end space-x-4 pt-4">
         <Button 
-          onClick={handleSave} 
-          disabled={isLoading || !selectedIngredient || assignments.length === 0}
+          onClick={onSave} 
+          disabled={isLoading || !selectedIngredient || !selectedSupplier}
         >
           <Save className="mr-2 h-4 w-4" />
           Save Assignment

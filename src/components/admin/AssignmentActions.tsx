@@ -1,19 +1,18 @@
-
 import { Button } from '@/components/ui/button';
 import { Database, FileDown, Loader2 } from 'lucide-react';
 
 interface AssignmentActionsProps {
   isLoadingIngredients: boolean;
-  isLoadingModels: boolean;
+  isLoadingSuppliers: boolean;
   onLoadIngredients: () => Promise<void>;
-  onLoadModels: () => Promise<void>;
+  onLoadSuppliers: () => Promise<void>;
 }
 
 const AssignmentActions: React.FC<AssignmentActionsProps> = ({ 
   isLoadingIngredients, 
-  isLoadingModels, 
+  isLoadingSuppliers, 
   onLoadIngredients, 
-  onLoadModels 
+  onLoadSuppliers 
 }) => {
   return (
     <div className="flex space-x-4 mb-6">
@@ -28,21 +27,21 @@ const AssignmentActions: React.FC<AssignmentActionsProps> = ({
         ) : (
           <FileDown className="mr-2 h-4 w-4" />
         )}
-        {isLoadingIngredients ? 'Loading Detergents...' : 'Load Detergents'}
+        {isLoadingIngredients ? 'Loading Ingredients...' : 'Load Ingredients'}
       </Button>
       
       <Button 
         variant="outline"
-        onClick={onLoadModels}
-        disabled={isLoadingModels}
+        onClick={onLoadSuppliers}
+        disabled={isLoadingSuppliers}
         className="flex items-center"
       >
-        {isLoadingModels ? (
+        {isLoadingSuppliers ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : (
           <Database className="mr-2 h-4 w-4" />
         )}
-        {isLoadingModels ? 'Loading Models...' : 'Load Models'}
+        {isLoadingSuppliers ? 'Loading Suppliers...' : 'Load Suppliers'}
       </Button>
     </div>
   );

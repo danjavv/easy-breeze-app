@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Users, Settings, RefreshCw, Database, FileText, Beaker, PieChart, Download } from 'lucide-react';
+import { Users, Settings, RefreshCw, Database, FileText, Beaker, PieChart, Download, FileDown, Loader2 } from 'lucide-react';
 import DashboardCard from '@/components/admin/DashboardCard';
 import { Supplier } from '@/components/admin/SupplierList';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +12,7 @@ import { useIngredientManagement } from '@/hooks/use-ingredient-management';
 import { useSubmissionsManagement } from '@/hooks/use-submissions-management';
 import { Ingredient, Model } from '@/pages/AdminDashboard';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface DashboardCardsGridProps {
   suppliers: Supplier[];
@@ -24,6 +24,8 @@ interface DashboardCardsGridProps {
   isLoadingIngredients: boolean;
   onLoadModels: () => Promise<void>;
   onLoadIngredients: () => Promise<void>;
+  onManageSuppliers: () => void;
+  isLoadingSuppliers: boolean;
 }
 
 const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
@@ -36,6 +38,8 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
   isLoadingIngredients,
   onLoadModels,
   onLoadIngredients,
+  onManageSuppliers,
+  isLoadingSuppliers
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -45,7 +49,7 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
   // Use our custom hooks
   const {
     fetchedSuppliers,
-    isLoadingSuppliers,
+    isLoadingSuppliers: isLoadingHookSuppliers,
     showSupplierManagement,
     setShowSupplierManagement,
     handleManageSuppliers,
@@ -100,22 +104,73 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <DashboardCard
-          title="Suppliers"
-          description="Manage supplier accounts"
-          icon={Users}
-          value={suppliers.length || 0}
-          subtitle="Active suppliers"
-          extraInfo={`${pendingSupplierCount || 0} Pending approval`}
-          extraInfoColor="text-amber-500"
-          buttonText="Manage Suppliers"
-          buttonIcon={isLoadingSuppliers ? RefreshCw : Users}
-          loading={isLoadingSuppliers}
-          loadingText="Loading..."
-          onClick={handleManageSuppliers}
-          gradient="bg-gradient-to-br from-blue-50 to-indigo-50"
-          accentColor="border-l-indigo-400"
-        />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Manage Suppliers</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Suppliers</div>
+            <p className="text-xs text-muted-foreground">
+              Manage supplier accounts and permissions
+            </p>
+            <Button
+              variant="outline"
+              className="mt-4 w-full"
+              onClick={onManageSuppliers}
+              disabled={isLoadingSuppliers}
+            >
+              {isLoadingSuppliers ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Users className="mr-2 h-4 w-4" />
+              )}
+              Manage Suppliers
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Database</CardTitle>
+            <Database className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Database</div>
+            <p className="text-xs text-muted-foreground">
+              View and manage database records
+            </p>
+            <Button
+              variant="outline"
+              className="mt-4 w-full"
+              onClick={() => {}}
+            >
+              <Database className="mr-2 h-4 w-4" />
+              View Database
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Export Data</CardTitle>
+            <FileDown className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">Export</div>
+            <p className="text-xs text-muted-foreground">
+              Export data in various formats
+            </p>
+            <Button
+              variant="outline"
+              className="mt-4 w-full"
+              onClick={() => {}}
+            >
+              <FileDown className="mr-2 h-4 w-4" />
+              Export Data
+            </Button>
+          </CardContent>
+        </Card>
 
         <DashboardCard
           title="Detergent Configuration"

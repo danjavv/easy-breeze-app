@@ -12,6 +12,8 @@ import AdminHeader from '@/components/admin/AdminHeader';
 import DashboardTitle from '@/components/admin/DashboardTitle';
 import DashboardCardsGrid from '@/components/admin/DashboardCardsGrid';
 import SupplierDialogs from '@/components/admin/SupplierDialogs';
+import ModelAssignmentSection from '@/components/admin/ModelAssignmentSection';
+import SupplierAssignmentSection from '@/components/admin/SupplierAssignmentSection';
 
 // Define interfaces for models and ingredients
 export interface Ingredient {
@@ -28,236 +30,185 @@ export interface Model {
   name: string;
   threshold_detergency?: number;
   threshold_foaming?: number;
-  threshold_biodegrability?: number;
+  threshold_biodegradability?: number;
   threshold_purity?: number;
 }
 
 const AdminDashboard = () => {
-  const { setUserRole } = useAuth();
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
-  const { setModels, setIngredients } = useData();
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
-  const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
-  const [isSupplierListOpen, setIsSupplierListOpen] = useState(false);
-  const [isMockData, setIsMockData] = useState(false);
-  const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  
-  // Local state variables for UI display
-  const [localModels, setLocalModels] = useState<Model[]>([]);
-  const [localIngredients, setLocalIngredients] = useState<Ingredient[]>([]);
-  const [isLoadingModels, setIsLoadingModels] = useState(false);
-  const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
+  const { models, ingredients, suppliers, setModels, setIngredients, setSuppliers, isLoading, error, fetchData } = useData();
 
-  const fetchSuppliers = async () => {
-    if (isLoading) return;
+  const [fetchedSuppliers, setFetchedSuppliers] = useState<Supplier[]>([]);
+  const [isLoadingSuppliers, setIsLoadingSuppliers] = useState(false);
+  const [showSupplierManagement, setShowSupplierManagement] = useState(false);
+  const [isSupplierListOpen, setIsSupplierListOpen] = useState(false);
+  const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
+
+  const handleManageSuppliers = () => {
+    setIsLoadingSuppliers(true);
     
-    setIsLoading(true);
-    setError(null);
-    setIsMockData(false);
+    setFetchedSuppliers(suppliers);
+    setShowSupplierManagement(true);
     
+    toast({
+      title: "Suppliers loaded",
+      description: `Successfully loaded ${suppliers.length} suppliers.`,
+    });
+    
+    setIsLoadingSuppliers(false);
+  };
+
+  const handleAddSupplier = async (newSupplier: Omit<Supplier, 'id' | 'created_at'>) => {
     try {
-      const result = await fetchSupplierData();
+      const now = new Date().toISOString();
+      const mockId = crypto.randomUUID();
       
-      // Set all suppliers to Pending status
-      const pendingSuppliers = result.suppliers.map(supplier => ({
-        ...supplier,
-        status: 'Pending' as const
-      }));
+      const supplierWithId: Supplier = {
+        ...newSupplier,
+        id: mockId,
+        created_at: now
+      };
       
-      setSuppliers(pendingSuppliers);
-      setIsMockData(result.isMockData);
-      setError(result.error);
-      setIsSupplierListOpen(true);
+      setFetchedSuppliers(prev => [...prev, supplierWithId]);
       
-      toast({
-        title: "Suppliers loaded",
-        description: `All suppliers set to Pending status.`,
-      });
-      
-    } catch (err: any) {
-      console.error('Unexpected error:', err);
-      setError('An unexpected error occurred');
-    } finally {
-      setIsLoading(false);
+      return supplierWithId;
+    } catch (error) {
+      console.error('Error adding supplier:', error);
+      throw error;
     }
   };
 
-  const handleSignOut = () => {
-    setUserRole(null);
-    navigate('/auth');
+  const handleDeleteSupplier = async (supplierId: string) => {
+    try {
+      setFetchedSuppliers(prev => prev.filter(s => s.id !== supplierId));
+      
+      toast({
+        title: "Supplier deleted",
+        description: "The supplier has been removed successfully.",
+      });
+    } catch (error) {
+      console.error('Error deleting supplier:', error);
+      toast({
+        title: "Delete Failed",
+        description: "There was an error deleting the supplier.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleApproveSupplier = (supplierId: string) => {
-    setSuppliers(prev => 
-      prev.map(supplier => 
-        supplier.id === supplierId 
-          ? { ...supplier, status: 'Approved' as const } 
-          : supplier
-      )
-    );
-    
-    toast({
-      title: "Supplier approved",
-      description: `Supplier ${suppliers.find(s => s.id === supplierId)?.company_name} has been approved successfully.`,
-    });
-    setIsSupplierDialogOpen(false);
+  const handleApproveSupplier = async (supplierId: string) => {
+    try {
+      setFetchedSuppliers(prev =>
+        prev.map(supplier =>
+          supplier.id === supplierId
+            ? { ...supplier, status: 'Approved' }
+            : supplier
+        )
+      );
+      
+      toast({
+        title: "Supplier approved",
+        description: "The supplier has been approved successfully.",
+      });
+    } catch (error) {
+      console.error('Error approving supplier:', error);
+      toast({
+        title: "Approval Failed",
+        description: "There was an error approving the supplier.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleRejectSupplier = (supplierId: string) => {
-    setSuppliers(prev => 
-      prev.map(supplier => 
-        supplier.id === supplierId 
-          ? { ...supplier, status: 'Rejected' as const } 
-          : supplier
-      )
-    );
-    
-    toast({
-      title: "Supplier rejected",
-      description: `Supplier ${suppliers.find(s => s.id === supplierId)?.company_name} has been rejected.`,
-      variant: "destructive"
-    });
-    setIsSupplierDialogOpen(false);
+  const handleRejectSupplier = async (supplierId: string) => {
+    try {
+      setFetchedSuppliers(prev =>
+        prev.map(supplier =>
+          supplier.id === supplierId
+            ? { ...supplier, status: 'Rejected' }
+            : supplier
+        )
+      );
+      
+      toast({
+        title: "Supplier rejected",
+        description: "The supplier has been rejected successfully.",
+      });
+    } catch (error) {
+      console.error('Error rejecting supplier:', error);
+      toast({
+        title: "Rejection Failed",
+        description: "There was an error rejecting the supplier.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const openDeleteConfirmation = (supplier: Supplier, e: React.MouseEvent) => {
+  const handleViewSupplier = (supplier: Supplier) => {
+    setSelectedSupplier(supplier);
+    setIsSupplierDialogOpen(true);
+  };
+
+  const handleDeleteClick = (supplier: Supplier, e: React.MouseEvent) => {
     e.stopPropagation();
     setSupplierToDelete(supplier);
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDeleteSupplier = () => {
-    if (!supplierToDelete) return;
-    
-    setSuppliers(prev => prev.filter(supplier => supplier.id !== supplierToDelete.id));
-    setIsDeleteDialogOpen(false);
-    setSupplierToDelete(null);
-  };
-
-  const goToBaselineConfig = () => {
-    navigate('/admin-baseline-config');
-  };
-
-  const loadModels = async () => {
-    if (isLoadingModels) return;
-    
-    setIsLoadingModels(true);
-    try {
-      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook/416b3513-de98-441c-b482-c2e9cfb1f329';
-      const webhookData = await fetchFromWebhook(webhookUrl);
-      const formattedModels = processWebhookModels(webhookData);
-      
-      if (formattedModels.length > 0) {
-        // Update both local state and context
-        setLocalModels(formattedModels);
-        setModels(formattedModels);
-        
-        toast({
-          title: "Models loaded",
-          description: `Successfully loaded ${formattedModels.length} models.`,
-        });
-      } else {
-        toast({
-          title: "No models found",
-          description: "Could not retrieve any model data.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Error loading models:', error);
-      toast({
-        title: "Error loading models",
-        description: "An unexpected error occurred while loading models.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingModels(false);
+  const handleDeleteConfirm = async () => {
+    if (supplierToDelete) {
+      await handleDeleteSupplier(supplierToDelete.id);
+      setIsDeleteDialogOpen(false);
+      setSupplierToDelete(null);
     }
   };
 
-  const loadIngredients = async () => {
-    if (isLoadingIngredients) return;
-    
-    setIsLoadingIngredients(true);
-    try {
-      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook/b65a9a50-5a55-462a-a29b-7f6572aa2dcc';
-      const webhookData = await fetchFromWebhook(webhookUrl);
-      const formattedIngredients = processWebhookIngredients(webhookData);
-      
-      if (formattedIngredients.length > 0) {
-        // Update both local state and context
-        setLocalIngredients(formattedIngredients);
-        setIngredients(formattedIngredients);
-        
-        toast({
-          title: "Detergents loaded",
-          description: `Successfully loaded ${formattedIngredients.length} detergents.`,
-        });
-      } else {
-        toast({
-          title: "No detergents found",
-          description: "Could not retrieve any detergent data.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Error loading detergents:', error);
-      toast({
-        title: "Error loading detergents",
-        description: "An unexpected error occurred while loading detergents.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingIngredients(false);
-    }
+  const handleRetryFetch = () => {
+    fetchData();
   };
 
   return (
-    <div className="min-h-screen bg-muted/40">
-      <AdminHeader onSignOut={handleSignOut} />
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <DashboardTitle />
+    <div className="min-h-screen bg-background">
+      <AdminHeader user={user} onSignOut={signOut} />
+      
+      <main className="container mx-auto px-4 py-8">
+        <DashboardTitle title="Admin Dashboard" />
         
-        <DashboardCardsGrid 
-          suppliers={suppliers}
-          isLoading={isLoading}
-          onFetchSuppliers={fetchSuppliers}
-          models={localModels}
-          ingredients={localIngredients}
-          isLoadingModels={isLoadingModels}
-          isLoadingIngredients={isLoadingIngredients}
-          onLoadModels={loadModels}
-          onLoadIngredients={loadIngredients}
+        <DashboardCardsGrid
+          onManageSuppliers={handleManageSuppliers}
+          isLoadingSuppliers={isLoadingSuppliers}
         />
-      </main>
+        
+        <SupplierDialogs
+          suppliers={fetchedSuppliers}
+          isLoading={isLoadingSuppliers}
+          error={error}
+          isMockData={false}
+          isSupplierListOpen={showSupplierManagement}
+          setIsSupplierListOpen={setShowSupplierManagement}
+          isSupplierDialogOpen={isSupplierDialogOpen}
+          setIsSupplierDialogOpen={setIsSupplierDialogOpen}
+          isDeleteDialogOpen={isDeleteDialogOpen}
+          setIsDeleteDialogOpen={setIsDeleteDialogOpen}
+          selectedSupplier={selectedSupplier}
+          setSelectedSupplier={setSelectedSupplier}
+          supplierToDelete={supplierToDelete}
+          setSupplierToDelete={setSupplierToDelete}
+          onApproveSupplier={handleApproveSupplier}
+          onRejectSupplier={handleRejectSupplier}
+          onDeleteSupplier={handleDeleteClick}
+          onDeleteConfirm={handleDeleteConfirm}
+          onRetryFetch={handleRetryFetch}
+        />
 
-      <SupplierDialogs
-        suppliers={suppliers}
-        isLoading={isLoading}
-        error={error}
-        isMockData={isMockData}
-        isSupplierListOpen={isSupplierListOpen}
-        setIsSupplierListOpen={setIsSupplierListOpen}
-        isSupplierDialogOpen={isSupplierDialogOpen}
-        setIsSupplierDialogOpen={setIsSupplierDialogOpen}
-        isDeleteDialogOpen={isDeleteDialogOpen}
-        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
-        selectedSupplier={selectedSupplier}
-        setSelectedSupplier={setSelectedSupplier}
-        supplierToDelete={supplierToDelete}
-        setSupplierToDelete={setSupplierToDelete}
-        onApproveSupplier={handleApproveSupplier}
-        onRejectSupplier={handleRejectSupplier}
-        onDeleteSupplier={openDeleteConfirmation}
-        onDeleteConfirm={handleDeleteSupplier}
-        onRetryFetch={fetchSuppliers}
-      />
+        <ModelAssignmentSection />
+        <SupplierAssignmentSection />
+      </main>
     </div>
   );
 };

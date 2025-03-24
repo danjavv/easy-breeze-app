@@ -1,13 +1,16 @@
-
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 
-const DashboardTitle: React.FC = () => {
+interface DashboardTitleProps {
+  title: string;
+}
+
+const DashboardTitle: React.FC<DashboardTitleProps> = ({ title }) => {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 pb-4 border-b border-border/30 gap-4">
       <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">Admin Control Panel</h1>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">{title}</h1>
         <p className="text-muted-foreground mt-1">Manage all system operations from a single location</p>
       </div>
       <div className="relative w-full sm:w-auto">
