@@ -49,7 +49,13 @@ export const fetchFromWebhook = async (webhookUrl: string): Promise<any> => {
  * @returns Array of formatted ingredients
  */
 export const processWebhookIngredients = (webhookData: any): any[] => {
-  // If the response is already an array, use it
+  // Check if response is undefined or null
+  if (!webhookData) {
+    console.log('No webhook data received');
+    return [];
+  }
+  
+  // If the response is already an array, map through it
   if (Array.isArray(webhookData)) {
     console.log('Processing webhook array data with length:', webhookData.length);
     
@@ -78,7 +84,6 @@ export const processWebhookIngredients = (webhookData: any): any[] => {
     }];
   }
   
-  console.log('No valid webhook data found');
+  console.log('No valid webhook data found, received:', typeof webhookData);
   return [];
 };
-

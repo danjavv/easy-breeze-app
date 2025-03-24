@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 import { fetchFromWebhook, processWebhookIngredients } from '@/utils/webhookUtils';
+import { logSupabaseResponse } from '@/utils/debugUtils';
 
 export interface Detergent {
   id: string;
@@ -53,19 +55,24 @@ const DetergentSelector: React.FC<DetergentSelectorProps> = ({ onDetergentSelect
   const loadDetergentsFromWebhook = async () => {
     setIsLoadingWebhook(true);
     try {
+      // Fetch data from webhook
       const webhookData = await fetchFromWebhook('https://danjaved008.app.n8n.cloud/webhook-test/b65a9a50-5a55-462a-a29b-7f6572aa2dcc');
       
+      // Process the webhook response data into the format we need
       const formattedDetergents = processWebhookIngredients(webhookData);
+      console.log('Processed detergents:', formattedDetergents);
       
       if (formattedDetergents.length > 0) {
+        // Update state with the formatted detergents
         setDetergents(formattedDetergents);
         
         toast.success("Detergents Loaded", {
           description: `Successfully loaded ${formattedDetergents.length} detergents from external source.`
         });
 
-        // Also save to Supabase
+        // Also save each detergent to Supabase
         for (const detergent of formattedDetergents) {
+          console.log('Saving detergent to Supabase:', detergent);
           const { error } = await supabase
             .from('ingredients')
             .upsert({ 
