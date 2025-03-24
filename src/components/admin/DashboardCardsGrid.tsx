@@ -12,6 +12,7 @@ import { useSupplierManagement } from '@/hooks/use-supplier-management';
 import { useIngredientManagement } from '@/hooks/use-ingredient-management';
 import { useSubmissionsManagement } from '@/hooks/use-submissions-management';
 import { Ingredient, Model } from '@/pages/AdminDashboard';
+import { Button } from '@/components/ui/button';
 
 interface DashboardCardsGridProps {
   suppliers: Supplier[];
@@ -67,6 +68,37 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
 
   return (
     <>
+      {/* Loading buttons outside card sections */}
+      <div className="flex justify-end space-x-4 mb-6">
+        <Button 
+          variant="outline"
+          onClick={onLoadIngredients}
+          disabled={isLoadingIngredients}
+          className="flex items-center"
+        >
+          {isLoadingIngredients ? (
+            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="mr-2 h-4 w-4" />
+          )}
+          {isLoadingIngredients ? 'Loading Detergents...' : 'Load Detergents'}
+        </Button>
+        
+        <Button 
+          variant="outline"
+          onClick={onLoadModels}
+          disabled={isLoadingModels}
+          className="flex items-center"
+        >
+          {isLoadingModels ? (
+            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Database className="mr-2 h-4 w-4" />
+          )}
+          {isLoadingModels ? 'Loading Models...' : 'Load Models'}
+        </Button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <DashboardCard
           title="Suppliers"
@@ -90,12 +122,10 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
           description="Set quality standards"
           icon={Beaker}
           value={ingredients.length || 0}
-          subtitle={ingredients.length ? `${ingredients.length} detergents loaded` : "Load detergents"}
-          buttonText="Load Detergents"
-          buttonIcon={isLoadingIngredients ? RefreshCw : Download}
-          loading={isLoadingIngredients}
-          loadingText="Loading..."
-          onClick={onLoadIngredients}
+          subtitle={ingredients.length ? `${ingredients.length} detergents loaded` : "No detergents loaded"}
+          buttonText="Configure Detergents"
+          buttonIcon={Settings}
+          onClick={() => navigate('/admin-baseline-config')}
           gradient="bg-gradient-to-br from-green-50 to-teal-50"
           accentColor="border-l-teal-400"
         />
@@ -105,12 +135,10 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
           description="Manage ingredient models"
           icon={Database}
           value={models.length || 0}
-          subtitle={models.length ? `${models.length} models loaded` : "Load models"}
-          buttonText="Load Models"
-          buttonIcon={isLoadingModels ? RefreshCw : Download}
-          loading={isLoadingModels}
-          loadingText="Loading..."
-          onClick={onLoadModels}
+          subtitle={models.length ? `${models.length} models loaded` : "No models loaded"}
+          buttonText="Manage Models"
+          buttonIcon={Settings}
+          onClick={() => navigate('/admin-ingredient-models')}
           gradient="bg-gradient-to-br from-purple-50 to-pink-50"
           accentColor="border-l-purple-400"
         />
