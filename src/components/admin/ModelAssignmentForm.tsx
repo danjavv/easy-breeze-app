@@ -47,7 +47,9 @@ const ModelAssignmentForm: React.FC<ModelAssignmentFormProps> = ({
             disabled={isLoading}
           >
             <SelectTrigger id="ingredient-select" className="w-full">
-              <SelectValue placeholder="Select a detergent" />
+              <SelectValue placeholder="Select a detergent">
+                {selectedIngredient && ingredients.find(i => i.id === selectedIngredient)?.name}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {ingredients.length === 0 ? (
@@ -78,7 +80,9 @@ const ModelAssignmentForm: React.FC<ModelAssignmentFormProps> = ({
             disabled={isLoading || !selectedIngredient}
           >
             <SelectTrigger id="model-select" className="w-full">
-              <SelectValue placeholder="Select a model" />
+              <SelectValue placeholder="Select a model">
+                {selectedModel && models.find(m => m.id === selectedModel)?.name}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {models.length === 0 ? (
