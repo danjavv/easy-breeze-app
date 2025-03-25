@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface DashboardCardProps {
   title: string;
@@ -17,6 +18,8 @@ interface DashboardCardProps {
   extraInfo?: string;
   extraInfoColor?: string;
   onClick: () => void;
+  gradient?: string;
+  accentColor?: string;
 }
 
 const DashboardCard: React.FC<DashboardCardProps> = ({
@@ -32,9 +35,11 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   extraInfo,
   extraInfoColor = 'text-amber-500',
   onClick,
+  gradient = '',
+  accentColor = 'border-l-primary',
 }) => {
   return (
-    <Card>
+    <Card className={cn("transition-all duration-300 hover:shadow-md overflow-hidden border-l-4", accentColor, gradient)}>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center">
           <Icon className="mr-2 h-5 w-5 text-primary" />
@@ -55,7 +60,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
         <Button 
           size="sm" 
           variant="outline" 
-          className="w-full"
+          className="w-full transition-all duration-300 hover:bg-primary hover:text-primary-foreground"
           onClick={onClick}
           disabled={loading}
         >

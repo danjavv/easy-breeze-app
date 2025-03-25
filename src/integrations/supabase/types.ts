@@ -9,9 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ingredient_models: {
+        Row: {
+          created_at: string | null
+          id: string
+          ingredient_id: string
+          model_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          ingredient_id: string
+          model_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          ingredient_id?: string
+          model_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingredient_models_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ingredient_models_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ingredients: {
         Row: {
-          biodegrability: number | null
+          biodegradability: number | null
           created_at: string
           detergency: number | null
           foaming: number | null
@@ -20,7 +56,7 @@ export type Database = {
           purity: number | null
         }
         Insert: {
-          biodegrability?: number | null
+          biodegradability?: number | null
           created_at?: string
           detergency?: number | null
           foaming?: number | null
@@ -29,13 +65,76 @@ export type Database = {
           purity?: number | null
         }
         Update: {
-          biodegrability?: number | null
+          biodegradability?: number | null
           created_at?: string
           detergency?: number | null
           foaming?: number | null
           id?: string
           name?: string | null
           purity?: number | null
+        }
+        Relationships: []
+      }
+      models: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          threshold_biodegrability: number | null
+          threshold_detergency: number | null
+          threshold_foaming: number | null
+          threshold_purity: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          threshold_biodegrability?: number | null
+          threshold_detergency?: number | null
+          threshold_foaming?: number | null
+          threshold_purity?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          threshold_biodegrability?: number | null
+          threshold_detergency?: number | null
+          threshold_foaming?: number | null
+          threshold_purity?: number | null
+        }
+        Relationships: []
+      }
+      submissions: {
+        Row: {
+          created_at: string
+          failed_batches: number | null
+          passed_batches: number | null
+          results: Json[] | null
+          submission_label: string | null
+          submissionid: string
+          supplierid: string
+          total_batches: number | null
+        }
+        Insert: {
+          created_at?: string
+          failed_batches?: number | null
+          passed_batches?: number | null
+          results?: Json[] | null
+          submission_label?: string | null
+          submissionid: string
+          supplierid: string
+          total_batches?: number | null
+        }
+        Update: {
+          created_at?: string
+          failed_batches?: number | null
+          passed_batches?: number | null
+          results?: Json[] | null
+          submission_label?: string | null
+          submissionid?: string
+          supplierid?: string
+          total_batches?: number | null
         }
         Relationships: []
       }
@@ -48,7 +147,6 @@ export type Database = {
           notification_email: string | null
           password_hash: string | null
           status: string | null
-          submissions: Json[] | null
         }
         Insert: {
           company_name: string
@@ -58,7 +156,6 @@ export type Database = {
           notification_email?: string | null
           password_hash?: string | null
           status?: string | null
-          submissions?: Json[] | null
         }
         Update: {
           company_name?: string
@@ -68,7 +165,6 @@ export type Database = {
           notification_email?: string | null
           password_hash?: string | null
           status?: string | null
-          submissions?: Json[] | null
         }
         Relationships: []
       }

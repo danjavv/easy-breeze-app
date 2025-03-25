@@ -1,31 +1,84 @@
-
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Save, Beaker } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import ModelAssignmentSection from '@/components/admin/ModelAssignmentSection';
 
-const AdminBaselineConfig = () => {
+interface Ingredient {
+  id: string;
+  name: string;
+  detergency?: number | null;
+  foaming?: number | null;
+  biodegradability?: number | null;
+  purity?: number | null;
+  created_at?: string;
+}
+
+interface WebhookResponse {
+  id?: string;
+  name?: string;
+  threshold_detergency?: number | null;
+  threshold_foaming?: number | null;
+  threshold_biodegradability?: number | null;
+  threshold_purity?: number | null;
+  created_at?: string;
+}
+
+const AdminIngredientModels = () => {
   const navigate = useNavigate();
-  const [configName, setConfigName] = useState('Spring 2023 Detergent');
+  const location = useLocation();
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [configName, setConfigName] = useState('Model 1');
   const [isActive, setIsActive] = useState(false);
-  
-  // State for base values
-  const [baseValues, setBaseValues] = useState({
-    detergency: 320,
-    foaming: 250,
-    biodegradability: 500,
-    purity: 40,
+  const [thresholdValues, setThresholdValues] = useState({
+    detergency: 500,
+    foaming: 300,
+    biodegradability: 600,
+    purity: 60,
   });
 
-  const handleBaseValueChange = (key: keyof typeof baseValues, value: string) => {
-    setBaseValues(prev => ({
+  useEffect(() => {
+    const fetchIngredients = async () => {
+      try {
+        setIsLoading(true);
+        
+        if (location.state?.ingredients && location.state.ingredients.length > 0) {
+          setIngredients(location.state.ingredients);
+        } else {
+          const { data, error } = await supabase
+            .from('ingredients')
+            .select('*');
+          
+          if (error) {
+            throw error;
+          }
+          
+          if (data) {
+            setIngredients(data);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching ingredients:', error);
+        toast.error('Failed to fetch ingredients');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchIngredients();
+  }, [location.state]);
+
+  const handleThresholdValueChange = (key: keyof typeof thresholdValues, value: string) => {
+    setThresholdValues(prev => ({
       ...prev,
       [key]: parseFloat(value) || 0
     }));
@@ -33,20 +86,18 @@ const AdminBaselineConfig = () => {
 
   const handleSave = async () => {
     try {
-      // Prepare data for the webhook
       const webhookData = {
         name: configName,
-        baseValues: {
-          detergency: baseValues.detergency,
-          foaming: baseValues.foaming,
-          biodegradability: baseValues.biodegradability,
-          purity: baseValues.purity
+        thresholds: {
+          detergency: thresholdValues.detergency,
+          foaming: thresholdValues.foaming,
+          biodegradability: thresholdValues.biodegradability,
+          purity: thresholdValues.purity
         },
         isActive: isActive
       };
 
-      // Send POST request to the webhook
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/b912a264-8bca-4bba-8d47-535eae93b7eb', {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/9ec560b0-44db-4f4f-84e3-bb1b4f9acb82', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -55,11 +106,39 @@ const AdminBaselineConfig = () => {
       });
 
       if (response.ok) {
-        toast.success('Baseline configuration saved successfully');
-        if (isActive) {
-          toast.info('Configuration set as active');
+        try {
+          const responseData: WebhookResponse = await response.json();
+          
+          if (responseData && responseData.id) {
+            console.log('Webhook response:', responseData);
+            
+            const { error } = await supabase
+              .from('models')
+              .insert({
+                name: configName,
+                threshold_detergency: thresholdValues.detergency,
+                threshold_foaming: thresholdValues.foaming,
+                threshold_biodegrability: thresholdValues.biodegradability,
+                threshold_purity: thresholdValues.purity
+              });
+
+            if (error) {
+              console.error('Supabase error:', error);
+            }
+
+            toast.success('Ingredient model saved successfully');
+            if (isActive) {
+              toast.info('Model set as active');
+            }
+            navigate('/admin-dashboard');
+          } else {
+            toast.error('Invalid response from server');
+            console.error('Invalid webhook response:', responseData);
+          }
+        } catch (jsonError) {
+          toast.error('Failed to parse server response');
+          console.error('JSON parsing error:', jsonError);
         }
-        navigate('/admin-dashboard');
       } else {
         toast.error('Failed to save configuration');
         console.error('Failed to save configuration:', await response.text());
@@ -113,10 +192,7 @@ const AdminBaselineConfig = () => {
         
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle className="text-2xl flex items-center">
-              <Beaker className="mr-2 h-5 w-5 text-primary" />
-              Detergent Configuration
-            </CardTitle>
+            <CardTitle className="text-2xl">Create New Model</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
@@ -131,16 +207,16 @@ const AdminBaselineConfig = () => {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Base Values</h3>
+                <h3 className="text-lg font-medium">Pass/Fail Thresholds</h3>
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[200px]">Property</TableHead>
-                      <TableHead>Value</TableHead>
+                      <TableHead>Required Minimum</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {Object.entries(baseValues).map(([key, value]) => (
+                    {Object.entries(thresholdValues).map(([key, value]) => (
                       <TableRow key={key}>
                         <TableCell className="font-medium capitalize">{key}</TableCell>
                         <TableCell>
@@ -148,7 +224,7 @@ const AdminBaselineConfig = () => {
                             <Input 
                               type="number"
                               value={value}
-                              onChange={(e) => handleBaseValueChange(key as keyof typeof baseValues, e.target.value)}
+                              onChange={(e) => handleThresholdValueChange(key as keyof typeof thresholdValues, e.target.value)}
                               className="w-[120px]"
                             />
                             {key === 'purity' && <span className="ml-2">%</span>}
@@ -186,9 +262,11 @@ const AdminBaselineConfig = () => {
             </div>
           </CardContent>
         </Card>
+        
+        <ModelAssignmentSection />
       </main>
     </div>
   );
 };
 
-export default AdminBaselineConfig;
+export default AdminIngredientModels;

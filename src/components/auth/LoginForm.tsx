@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from '@/components/ui/card';
+import { loginUser } from '@/services/authService';
 
 interface LoginFormProps {
   onBack: () => void;
@@ -27,41 +29,11 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
     setLoading(true);
     
     try {
-      if (!email.trim() || !password) {
-        toast({
-          title: "Missing information",
-          description: "Please fill out all fields",
-          variant: "destructive"
-        });
-        setLoading(false);
-        return;
-      }
+      const result = await loginUser(email, password);
       
-      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook-test/3f878768-29d0-43f6-a567-c5f127ff8855';
-      
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      
-      const responseData = await response.json();
-      console.log("Login response:", responseData);
-      
-      const data = Array.isArray(responseData) ? responseData[0] : responseData;
-      
-      if (data && data.supplierid) {
-        setSupplierID(data.supplierid);
-        console.log("Stored supplierid:", data.supplierid);
+      if (result.success) {
+        setSupplierID(result.supplierID!);
+        console.log("Stored supplierid:", result.supplierID);
         
         setUserRole('supplier');
         
@@ -74,7 +46,7 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
       } else {
         toast({
           title: "Login failed",
-          description: "Invalid email or password",
+          description: result.message,
           variant: "destructive"
         });
       }

@@ -7,6 +7,28 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { format } from 'date-fns';
 
+export interface SupplierSubmission {
+  submission_id: string;
+  submission_label: string;
+  processed_at: string;
+  summary: {
+    total_batches: number;
+    failed_batches: number;
+    passed_batches: number;
+  };
+  results: {
+    status: string;
+    metrics: {
+      purity: number;
+      foaming: number;
+      detergency: number;
+      biodegradability: number;
+    };
+    batch_label: string;
+    failure_reasons?: string[];
+  }[];
+}
+
 export interface Supplier {
   id: string;
   company_name: string;
@@ -15,6 +37,7 @@ export interface Supplier {
   created_at: string;
   notification_email?: string;
   password_hash?: string;
+  submissions?: SupplierSubmission[] | null;
 }
 
 interface SupplierListProps {
@@ -25,6 +48,7 @@ interface SupplierListProps {
   onViewSupplier: (supplier: Supplier) => void;
   onDeleteSupplier: (supplier: Supplier, e: React.MouseEvent) => void;
   onRetry: () => void;
+  showDeleteOnly?: boolean;
 }
 
 const SupplierList: React.FC<SupplierListProps> = ({
@@ -35,6 +59,7 @@ const SupplierList: React.FC<SupplierListProps> = ({
   onViewSupplier,
   onDeleteSupplier,
   onRetry,
+  showDeleteOnly = false,
 }) => {
   const formatDate = (dateString: string) => {
     try {
@@ -104,9 +129,13 @@ const SupplierList: React.FC<SupplierListProps> = ({
           <TableHeader className="sticky top-0 bg-background shadow-sm z-10">
             <TableRow>
               <TableHead>Company Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created At</TableHead>
+              {!showDeleteOnly && (
+                <>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Created At</TableHead>
+                </>
+              )}
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -114,32 +143,45 @@ const SupplierList: React.FC<SupplierListProps> = ({
             {suppliers.map((supplier) => (
               <TableRow 
                 key={supplier.id || Math.random().toString()}
-                className="cursor-pointer hover:bg-muted"
-                onClick={() => onViewSupplier(supplier)}
+                className={showDeleteOnly ? "" : "cursor-pointer hover:bg-muted"}
+                onClick={showDeleteOnly ? undefined : () => onViewSupplier(supplier)}
               >
                 <TableCell className="font-medium">{supplier.company_name}</TableCell>
-                <TableCell>{supplier.email}</TableCell>
-                <TableCell>{getStatusBadge(supplier.status)}</TableCell>
-                <TableCell>{formatDate(supplier.created_at)}</TableCell>
+                {!showDeleteOnly && (
+                  <>
+                    <TableCell>{supplier.email}</TableCell>
+                    <TableCell>{getStatusBadge(supplier.status)}</TableCell>
+                    <TableCell>{formatDate(supplier.created_at)}</TableCell>
+                  </>
+                )}
                 <TableCell className="text-right">
                   <div className="flex justify-end space-x-2">
+                    {!showDeleteOnly && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewSupplier(supplier);
+                        }}
+                      >
+                        View
+                      </Button>
+                    )}
                     <Button 
-                      variant="ghost" 
+                      variant={showDeleteOnly ? "destructive" : "ghost"}
                       size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onViewSupplier(supplier);
-                      }}
-                    >
-                      View
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      className={showDeleteOnly ? "" : "text-destructive hover:text-destructive hover:bg-destructive/10"}
                       onClick={(e) => onDeleteSupplier(supplier, e)}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      {showDeleteOnly ? (
+                        <>
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </>
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
                 </TableCell>

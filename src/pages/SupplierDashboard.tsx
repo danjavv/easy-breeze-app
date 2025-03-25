@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,11 +8,12 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import SubmissionsTable from '@/components/dashboard/SubmissionsTable';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Clock, History, ArrowUpRight } from 'lucide-react';
+import { AlertCircle, Clock, History, ArrowUpRight, FileText, Info } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 
 type SubmissionResult = {
   results: {
@@ -98,7 +100,7 @@ const SupplierDashboard = () => {
         description: "Please wait while we fetch your past submissions...",
       });
       
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/7e057feb-401a-4110-9fcc-b00817876790', {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/7e057feb-401a-4110-9fcc-b00817876790', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -214,12 +216,73 @@ const SupplierDashboard = () => {
           <div className="max-w-6xl mx-auto">
             <DashboardHeader activePeriod={activePeriod} deadline={deadline} />
             
+            <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="border-l-4 border-l-blue-400 hover:shadow-md transition-all duration-300">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center">
+                    <Badge variant="outline" className="mr-2 bg-blue-50 text-blue-600 border-blue-200">Q2</Badge>
+                    Current Period
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Active Window</p>
+                      <p className="font-medium">May 1 - June 30</p>
+                    </div>
+                    <FileText className="h-8 w-8 text-blue-200" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="border-l-4 border-l-amber-400 hover:shadow-md transition-all duration-300">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center">
+                    <Badge variant="outline" className="mr-2 bg-amber-50 text-amber-600 border-amber-200">!</Badge>
+                    Submission Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Required</p>
+                      <p className="font-medium">Minimum 3 batches</p>
+                    </div>
+                    <Info className="h-8 w-8 text-amber-200" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="border-l-4 border-l-green-400 hover:shadow-md transition-all duration-300">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center">
+                    <Badge variant="outline" className="mr-2 bg-green-50 text-green-600 border-green-200">✓</Badge>
+                    Submissions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Your Submissions</p>
+                      <p className="font-medium">{pastSubmissions.length || 0} this period</p>
+                    </div>
+                    <button 
+                      onClick={fetchPastSubmissions}
+                      className="text-blue-500 hover:text-blue-700 transition-colors duration-300"
+                    >
+                      <History className="h-6 w-6" />
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
             <div className="mb-6 flex flex-wrap gap-3">
               <Button 
                 variant="outline"
                 onClick={fetchPastSubmissions}
                 disabled={loading}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 transition-all duration-300 hover:bg-secondary"
               >
                 {loading ? (
                   <Clock className="h-4 w-4 animate-spin" />
@@ -231,7 +294,7 @@ const SupplierDashboard = () => {
               
               <Button 
                 onClick={handleNewSubmission}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-primary hover:bg-primary/90 shadow-sm hover:shadow-md transition-all duration-300"
               >
                 <ArrowUpRight className="h-4 w-4" />
                 New Submission
