@@ -1,179 +1,189 @@
-
-import React, { useState, useEffect } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Search, Download } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { useAuth } from '@/contexts/AuthContext';
+import { Loader, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { toast } from "sonner";
-import { supabase } from '@/integrations/supabase/client';
-import { fetchFromWebhook, processWebhookIngredients } from '@/utils/webhookUtils';
-import { logSupabaseResponse } from '@/utils/debugUtils';
 
 export interface Detergent {
   id: string;
   name: string;
+  detergency: number;
+  foaming: number;
+  biodegradability: number;
+  purity: number;
+  created_at: string;
+  assigned_model: string;
 }
 
 interface DetergentSelectorProps {
-  onDetergentSelect: (detergent: Detergent | null) => void;
+  onDetergentSelect: (detergent: Detergent) => void;
 }
 
 const DetergentSelector: React.FC<DetergentSelectorProps> = ({ onDetergentSelect }) => {
-  const [detergents, setDetergents] = useState<Detergent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingWebhook, setIsLoadingWebhook] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDetergent, setSelectedDetergent] = useState<string | null>(null);
+  const [assignedDetergent, setAssignedDetergent] = useState<Detergent | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const { supplierID } = useAuth();
 
-  useEffect(() => {
-    fetchDetergents();
-  }, []);
+  const handleShowAssignedDetergent = async () => {
+    if (!supplierID) {
+      setError("No supplier ID found. Please log in again.");
+      return;
+    }
 
-  const fetchDetergents = async () => {
     setIsLoading(true);
+    setError(null);
+    
     try {
-      const { data, error } = await supabase
-        .from('ingredients')
-        .select('id, name')
-        .order('name');
-      
-      if (error) {
-        throw error;
+      const response = await fetch(`https://danjaved008.app.n8n.cloud/webhook/eb9db3b6-b14a-4449-b569-a9114c7a7173?supplier_id=${supplierID}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch assigned detergent');
       }
+
+      const data = await response.json();
+      console.log('Response data:', data); // For debugging
       
-      if (data) {
-        setDetergents(data);
+      if (data && Array.isArray(data) && data.length > 0) {
+        const detergent: Detergent = {
+          id: data[0].id || '',
+          name: data[0].name || '',
+          detergency: Number(data[0].detergency) || 0,
+          foaming: Number(data[0].foaming) || 0,
+          biodegradability: Number(data[0].biodegradability) || 0,
+          purity: Number(data[0].purity) || 0,
+          created_at: data[0].created_at || '',
+          assigned_model: data[0].assigned_model || ''
+        };
+        
+        console.log('Processed detergent:', detergent); // For debugging
+        setAssignedDetergent(detergent);
+        onDetergentSelect(detergent);
+        
+        toast.success("Assigned Detergent Loaded", {
+          description: `Your assigned detergent is: ${detergent.name}`
+        });
+      } else {
+        setError("No assigned ingredient found");
+        setAssignedDetergent(null);
       }
     } catch (error) {
-      console.error('Error fetching detergents:', error);
+      console.error('Error fetching assigned detergent:', error);
+      setError("Failed to load your assigned detergent. Please try again.");
+      setAssignedDetergent(null);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const loadDetergentsFromWebhook = async () => {
-    setIsLoadingWebhook(true);
+  const formatDate = (dateString: string) => {
     try {
-      // Fetch data from webhook
-      const webhookData = await fetchFromWebhook('https://danjaved008.app.n8n.cloud/webhook-test/b65a9a50-5a55-462a-a29b-7f6572aa2dcc');
-      
-      // Process the webhook response data into the format we need
-      const formattedDetergents = processWebhookIngredients(webhookData);
-      console.log('Processed detergents:', formattedDetergents);
-      
-      if (formattedDetergents.length > 0) {
-        // Update state with the formatted detergents
-        setDetergents(formattedDetergents);
-        
-        toast.success("Detergents Loaded", {
-          description: `Successfully loaded ${formattedDetergents.length} detergents from external source.`
-        });
-
-        // Also save each detergent to Supabase
-        for (const detergent of formattedDetergents) {
-          console.log('Saving detergent to Supabase:', detergent);
-          const { error } = await supabase
-            .from('ingredients')
-            .upsert({ 
-              id: detergent.id, 
-              name: detergent.name,
-              detergency: detergent.detergency,
-              foaming: detergent.foaming,
-              biodegradability: detergent.biodegradability,
-              purity: detergent.purity
-            }, { onConflict: 'id' });
-          
-          if (error) {
-            console.error('Error saving detergent to Supabase:', error);
-          }
-        }
-      } else {
-        toast.error("No Detergents Found", {
-          description: "The webhook didn't return any detergent data."
-        });
-      }
-    } catch (error) {
-      console.error('Error loading detergents from webhook:', error);
-      toast.error("Failed to Load Detergents", {
-        description: "Could not fetch detergents from the external source. Please try again."
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
       });
-    } finally {
-      setIsLoadingWebhook(false);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid Date';
     }
   };
 
-  const filteredDetergents = searchQuery 
-    ? detergents.filter(d => d.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : detergents;
-
-  const handleSelect = (value: string) => {
-    setSelectedDetergent(value);
-    const selected = detergents.find(d => d.id === value) || null;
-    onDetergentSelect(selected);
-  };
-
   return (
-    <div className="space-y-5 p-4 rounded-lg border border-border/50 bg-gradient-to-br from-background to-muted/30">
-      <div className="flex justify-between items-center">
-        <Button
-          variant="outline"
-          onClick={loadDetergentsFromWebhook}
-          className="mb-2 transition-all duration-300 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200"
-          disabled={isLoadingWebhook}
-        >
-          <Download className="mr-2 h-4 w-4" />
-          {isLoadingWebhook ? 'Loading...' : 'Load Detergents'}
-        </Button>
-      </div>
+    <div className="space-y-4">
+      <Button
+        type="button"
+        onClick={handleShowAssignedDetergent}
+        disabled={isLoading}
+        className="w-full"
+      >
+        {isLoading ? (
+          <>
+            <Loader className="animate-spin mr-2" size={18} />
+            Loading...
+          </>
+        ) : (
+          'Show Assigned Detergent'
+        )}
+      </Button>
 
-      <div className="space-y-2">
-        <Label htmlFor="detergent-search" className="text-sm font-medium">Search Detergents</Label>
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            id="detergent-search"
-            type="search"
-            placeholder="Search by name..."
-            className="pl-8 transition-all duration-300 focus:ring-2 focus:ring-primary/20"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+      {error && (
+        <div className="p-4 border border-destructive/50 rounded-lg bg-destructive/10 text-destructive flex items-center gap-2">
+          <AlertCircle size={18} />
+          <span>{error}</span>
         </div>
-      </div>
+      )}
 
-      <div className="space-y-2">
-        <Label htmlFor="detergent-select" className="text-sm font-medium">Select Detergent</Label>
-        <Select 
-          value={selectedDetergent || ""} 
-          onValueChange={handleSelect}
-          disabled={isLoading}
-        >
-          <SelectTrigger id="detergent-select" className="w-full bg-background transition-all duration-300 focus:ring-2 focus:ring-primary/20">
-            <SelectValue placeholder="Select a detergent" />
-          </SelectTrigger>
-          <SelectContent className="max-h-[300px]">
-            {filteredDetergents.length === 0 ? (
-              <div className="py-6 text-center text-sm text-muted-foreground">
-                {isLoading ? "Loading..." : "No detergents found"}
+      {assignedDetergent && (
+        <div className="p-6 border rounded-lg bg-card shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <CheckCircle2 className="text-primary" size={20} />
+            <h3 className="text-lg font-semibold">Assigned Ingredient Details</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div className="bg-muted/30 p-4 rounded-lg">
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Basic Information</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Name</span>
+                    <span className="font-medium">{assignedDetergent.name}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">ID</span>
+                    <span className="font-medium">{assignedDetergent.id}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Created At</span>
+                    <span className="font-medium">
+                      {formatDate(assignedDetergent.created_at)}
+                    </span>
+                  </div>
+                </div>
               </div>
-            ) : (
-              filteredDetergents.map((detergent) => (
-                <SelectItem 
-                  key={detergent.id} 
-                  value={detergent.id}
-                  className="cursor-pointer transition-colors hover:bg-muted"
-                >
-                  {detergent.name}
-                </SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground mt-1">
-          {detergents.length > 0 ? `${detergents.length} detergents available` : "No detergents loaded"}
-        </p>
-      </div>
+
+              <div className="bg-muted/30 p-4 rounded-lg">
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Performance Metrics</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Detergency</span>
+                    <span className="font-medium">{assignedDetergent.detergency}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Foaming</span>
+                    <span className="font-medium">{assignedDetergent.foaming}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Biodegradability</span>
+                    <span className="font-medium">{assignedDetergent.biodegradability}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Purity</span>
+                    <span className="font-medium">{assignedDetergent.purity}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-muted/30 p-4 rounded-lg">
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">Assignment Details</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Assigned Model ID</span>
+                  <span className="font-medium">{assignedDetergent.assigned_model}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

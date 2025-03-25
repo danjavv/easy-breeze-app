@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Upload, FileCode, Check, Loader } from 'lucide-react';
@@ -8,16 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuth } from '@/contexts/AuthContext';
-import DetergentSelector, { Detergent } from '@/components/DetergentSelector';
 
 const NewSubmission = () => {
   const [submissionLabel, setSubmissionLabel] = useState('ACME_Q2_Batch_2');
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [selectedDetergent, setSelectedDetergent] = useState<Detergent | null>(null);
   const navigate = useNavigate();
-  
   const { supplierID } = useAuth();
 
   useEffect(() => {
@@ -28,7 +24,7 @@ const NewSubmission = () => {
     setIsDownloading(true);
     
     try {
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/e6369e97-7e71-4787-b1ef-54d8d456874f');
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/e6369e97-7e71-4787-b1ef-54d8d456874f');
       
       if (!response.ok) {
         throw new Error('Failed to download template');
@@ -40,7 +36,7 @@ const NewSubmission = () => {
       const a = document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = 'las_submission_template.csv';
+      a.download = 'ingredient_submission_template.csv';
       document.body.appendChild(a);
       a.click();
       
@@ -76,13 +72,6 @@ const NewSubmission = () => {
       return;
     }
 
-    if (!selectedDetergent) {
-      toast.error("Missing Detergent", {
-        description: "Please select a detergent before submitting."
-      });
-      return;
-    }
-
     setIsSubmitting(true);
     
     toast.info("Processing Submission", {
@@ -93,8 +82,6 @@ const NewSubmission = () => {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('submissionLabel', submissionLabel);
-      formData.append('detergentId', selectedDetergent.id);
-      formData.append('detergentName', selectedDetergent.name);
       
       if (supplierID) {
         formData.append('supplierid', supplierID);
@@ -104,24 +91,47 @@ const NewSubmission = () => {
         formData.append('supplierid', 'placeholder-id');
       }
       
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
         method: 'POST',
         body: formData,
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to upload CSV file');
       }
-      
+
       const results = await response.json();
       
-      sessionStorage.setItem('submissionResults', JSON.stringify(results));
+      // Format the response data to match the expected structure
+      const formattedResults = Array.isArray(results) ? results.map(result => ({
+        submission_id: result.submission_id || result.submissionid || '',
+        submission_label: result.submission_label || submissionLabel,
+        processed_at: result.processed_at || new Date().toISOString(),
+        summary: {
+          total_batches: result.total_batches || result.summary?.total_batches || 0,
+          passed_batches: result.passed_batches || result.summary?.passed_batches || 0,
+          failed_batches: result.failed_batches || result.summary?.failed_batches || 0
+        },
+        results: result.results || []
+      })) : [{
+        submission_id: results.submission_id || results.submissionid || '',
+        submission_label: results.submission_label || submissionLabel,
+        processed_at: results.processed_at || new Date().toISOString(),
+        summary: {
+          total_batches: results.total_batches || results.summary?.total_batches || 0,
+          passed_batches: results.passed_batches || results.summary?.passed_batches || 0,
+          failed_batches: results.failed_batches || results.summary?.failed_batches || 0
+        },
+        results: results.results || []
+      }];
+      
+      sessionStorage.setItem('submissionResults', JSON.stringify(formattedResults));
       
       toast.success("Submission Successful", {
-        description: "Your LAS submission has been processed successfully."
+        description: "Your ingredient submission has been processed successfully."
       });
       
-      navigate(`/submission-results/${results[0]?.submission_id || 'latest'}`);
+      navigate(`/submission-results/${formattedResults[0]?.submission_id || 'latest'}`);
       
     } catch (error) {
       console.error('Upload error:', error);
@@ -136,22 +146,22 @@ const NewSubmission = () => {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-2xl mx-auto">
-        <Button 
+        <Button
           variant="outline" 
-          onClick={() => navigate('/supplier-dashboard')} 
+          onClick={() => navigate('/supplier-dashboard')}
           className="mb-6"
         >
           Back to Dashboard
         </Button>
-        
+
         <Card className="w-full shadow-md animate-fade-in">
           <CardHeader>
-            <CardTitle className="text-2xl">New LAS Submission</CardTitle>
+            <CardTitle className="text-2xl">New Ingredient Submission</CardTitle>
             <CardDescription>
-              Complete the steps below to submit your LAS data for the current period.
+              Complete the steps below to submit your ingredient data for the current period.
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent>
             <form onSubmit={handleSubmit}>
               <div className="space-y-6">
@@ -166,33 +176,14 @@ const NewSubmission = () => {
                   />
                 </div>
                 
-                <div className="space-y-2 border rounded-lg p-4 bg-muted/10">
-                  <div className="font-medium text-lg flex items-center gap-2">
-                    <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm">1</div>
-                    Select Detergent
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Select the detergent associated with this LAS submission.
-                  </p>
-                  
-                  <DetergentSelector onDetergentSelect={setSelectedDetergent} />
-                  
-                  {selectedDetergent && (
-                    <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-2 rounded mt-2">
-                      <Check size={16} />
-                      <span>Selected: {selectedDetergent.name}</span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="space-y-4 pt-4">
+                <div className="space-y-4">
                   <div className="space-y-2 border rounded-lg p-4 bg-muted/10">
                     <div className="font-medium text-lg flex items-center gap-2">
-                      <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm">2</div>
+                      <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm">1</div>
                       Download Template
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
-                      Download our standard CSV template to fill in your LAS data.
+                      Download our standard CSV template to fill in your ingredient data.
                     </p>
                     <Button
                       type="button"
@@ -204,10 +195,10 @@ const NewSubmission = () => {
                       {isDownloading ? 'Downloading...' : 'Download CSV Template'}
                     </Button>
                   </div>
-                  
+
                   <div className="space-y-2 border rounded-lg p-4 bg-muted/10">
                     <div className="font-medium text-lg flex items-center gap-2">
-                      <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm">3</div>
+                      <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm">2</div>
                       Upload Completed CSV
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
@@ -249,19 +240,19 @@ const NewSubmission = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-8">
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full py-6 text-lg"
-                  disabled={isSubmitting || !selectedDetergent}
+                  disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <>
                       <Loader className="animate-spin mr-2" />
                       Processing...
                     </>
-                  ) : 'Submit LAS Data'}
+                  ) : 'Submit Ingredient Data'}
                 </Button>
               </div>
             </form>

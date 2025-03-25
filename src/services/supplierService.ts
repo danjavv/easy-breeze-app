@@ -1,4 +1,3 @@
-
 import { Supplier } from '@/components/admin/SupplierList';
 import { toast } from '@/hooks/use-toast';
 
@@ -105,3 +104,56 @@ export const fetchSupplierData = async (): Promise<{
     error: null
   };
 };
+
+export async function getSuppliers(): Promise<{ suppliers: Supplier[] }> {
+  try {
+    const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/944a3d31-08ac-4446-9c67-9e543a85aa40');
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch suppliers');
+    }
+    
+    const data = await response.json();
+    return { suppliers: data };
+  } catch (error) {
+    console.error('Error fetching suppliers:', error);
+    throw error;
+  }
+}
+
+export async function addSupplier(supplier: Omit<Supplier, 'id' | 'created_at'>): Promise<Supplier> {
+  try {
+    // Add supplier logic here
+    const mockId = crypto.randomUUID();
+    const now = new Date().toISOString();
+    
+    return {
+      ...supplier,
+      id: mockId,
+      created_at: now
+    };
+  } catch (error) {
+    console.error('Error adding supplier:', error);
+    throw error;
+  }
+}
+
+export async function deleteSupplier(supplierId: string): Promise<void> {
+  try {
+    // Delete supplier logic here
+    console.log('Deleting supplier:', supplierId);
+  } catch (error) {
+    console.error('Error deleting supplier:', error);
+    throw error;
+  }
+}
+
+export async function updateSupplierStatus(supplierId: string, status: 'Pending' | 'Approved' | 'Rejected'): Promise<void> {
+  try {
+    // Update supplier status logic here
+    console.log('Updating supplier status:', supplierId, status);
+  } catch (error) {
+    console.error('Error updating supplier status:', error);
+    throw error;
+  }
+}

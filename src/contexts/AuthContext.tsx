@@ -1,5 +1,5 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 type UserRole = 'admin' | 'supplier' | null;
 
@@ -19,6 +19,8 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
+  
   // Initialize state from localStorage if available
   const [userRole, setUserRoleState] = useState<UserRole>(() => {
     const savedRole = localStorage.getItem('userRole');
@@ -71,11 +73,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Function to sign out the user
   const signOut = () => {
-    setUserRole(null);
-    setSupplierID(null);
+    // Clear all state
+    setUserRoleState(null);
+    setSupplierStatusState('pending');
+    setSupplierIDState(null);
+    
+    // Clear all localStorage items
     localStorage.removeItem('userRole');
-    localStorage.removeItem('supplierID');
     localStorage.removeItem('supplierStatus');
+    localStorage.removeItem('supplierID');
+    
+    // Clear any other auth-related items
+    sessionStorage.clear();
+    
+    // Force a page reload to clear any cached state
+    window.location.href = '/auth';
   };
 
   // Log the current supplierID on component mount for debugging

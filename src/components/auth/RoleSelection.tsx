@@ -1,14 +1,11 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, LogIn } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { UserPlus, LogIn } from 'lucide-react';
 
-type RoleType = 'supplier' | 'admin';
+type RoleType = 'admin';
 
 interface RoleSelectionProps {
   onRegisterClick: () => void;
@@ -16,7 +13,7 @@ interface RoleSelectionProps {
 }
 
 const RoleSelection = ({ onRegisterClick, onLoginClick }: RoleSelectionProps) => {
-  const [role, setRole] = useState<RoleType>('supplier');
+  const [role, setRole] = useState<RoleType>('admin');
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
@@ -28,18 +25,14 @@ const RoleSelection = ({ onRegisterClick, onLoginClick }: RoleSelectionProps) =>
     setLoading(true);
     
     try {
-      if (role === 'supplier') {
-        onRegisterClick();
-      } else {
-        setUserRole(role);
-        
-        toast({
-          title: "Welcome!",
-          description: `You're continuing as an admin.`,
-        });
-        
-        navigate('/admin-dashboard');
-      }
+      setUserRole(role);
+      
+      toast({
+        title: "Welcome!",
+        description: `You're continuing as an admin.`,
+      });
+      
+      navigate('/admin-dashboard');
     } catch (error: any) {
       toast({
         title: "Error",
@@ -59,55 +52,32 @@ const RoleSelection = ({ onRegisterClick, onLoginClick }: RoleSelectionProps) =>
             <span className="mr-1 text-2xl">●</span>
             <span className="font-semibold">Essence</span>
           </a>
-          <h2 className="mt-6 text-3xl font-bold tracking-tight">
-            Welcome to SilentSource
-          </h2>
+          <h2 className="text-3xl font-bold">Welcome to SilentSource</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Select a dashboard to continue
+            Select your role to continue
           </p>
         </div>
 
-        <form onSubmit={handleContinue} className="space-y-6 mt-8">
-          <div className="space-y-3">
-            <Label>Dashboard Type</Label>
-            <RadioGroup 
-              defaultValue="supplier" 
-              value={role} 
-              onValueChange={(value) => setRole(value as RoleType)} 
-              className="flex gap-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="supplier" id="supplier" />
-                <Label htmlFor="supplier" className="cursor-pointer">Supplier Dashboard</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="admin" id="admin" />
-                <Label htmlFor="admin" className="cursor-pointer">Admin Dashboard</Label>
-              </div>
-            </RadioGroup>
-          </div>
-          
+        <form onSubmit={handleContinue} className="mt-8 space-y-6">
           <div className="space-y-4">
             <Button 
               type="submit" 
               className="w-full" 
               disabled={loading}
             >
-              {loading ? 'Processing...' : `Register as ${role}`}
+              {loading ? 'Processing...' : 'Continue as Admin'}
               <UserPlus className="ml-2 h-4 w-4" />
             </Button>
             
-            {role === 'supplier' && (
-              <Button 
-                type="button" 
-                variant="outline" 
-                className="w-full" 
-                onClick={onLoginClick}
-              >
-                Sign in to existing account
-                <LogIn className="ml-2 h-4 w-4" />
-              </Button>
-            )}
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="w-full" 
+              onClick={onLoginClick}
+            >
+              Sign in as existing supplier
+              <LogIn className="ml-2 h-4 w-4" />
+            </Button>
           </div>
         </form>
       </div>

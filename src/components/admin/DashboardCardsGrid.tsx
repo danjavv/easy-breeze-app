@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Users, Settings, RefreshCw, Database, FileText, Beaker, PieChart, Download } from 'lucide-react';
+import { Users, Settings, RefreshCw, Database, FileText, Beaker, PieChart, Download, Link } from 'lucide-react';
 import DashboardCard from '@/components/admin/DashboardCard';
 import { Supplier } from '@/components/admin/SupplierList';
 import { useNavigate } from 'react-router-dom';
@@ -40,12 +39,12 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showSupplierList, setShowSupplierList] = useState(false);
+  const [isLoadingSuppliers, setIsLoadingSuppliers] = useState(false);
   const pendingSupplierCount = suppliers.filter(s => s.status === 'Pending').length;
   
   // Use our custom hooks
   const {
     fetchedSuppliers,
-    isLoadingSuppliers,
     showSupplierManagement,
     setShowSupplierManagement,
     handleManageSuppliers,
@@ -65,6 +64,45 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
     isLoadingSubmissions,
     handleViewAllSubmissions
   } = useSubmissionsManagement();
+
+  const loadSuppliers = async () => {
+    setIsLoadingSuppliers(true);
+    try {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/944a3d31-08ac-4446-9c67-9e543a85aa40', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to load suppliers: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Suppliers loaded:', data);
+      
+      // Update the suppliers state with the loaded data
+      onFetchSuppliers();
+      
+      toast({
+        title: "Success",
+        description: "Suppliers loaded successfully",
+      });
+    } catch (error) {
+      console.error('Error loading suppliers:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to load suppliers",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingSuppliers(false);
+    }
+  };
 
   return (
     <>
@@ -96,6 +134,20 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
             <Database className="mr-2 h-4 w-4" />
           )}
           {isLoadingModels ? 'Loading Models...' : 'Load Models'}
+        </Button>
+
+        <Button 
+          variant="outline"
+          onClick={loadSuppliers}
+          disabled={isLoadingSuppliers}
+          className="flex items-center"
+        >
+          {isLoadingSuppliers ? (
+            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Users className="mr-2 h-4 w-4" />
+          )}
+          {isLoadingSuppliers ? 'Loading Suppliers...' : 'Load Suppliers'}
         </Button>
       </div>
 
@@ -159,13 +211,19 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
         />
       </div>
       
-      {/* Add buttons to navigate to model-ingredient assignment page */}
-      <div className="flex justify-end space-x-4 mb-8">
+      {/* Add buttons to navigate to model-ingredient and supplier-ingredient assignment pages */}
+      <div className="flex flex-col space-y-4">
         <button 
           onClick={() => navigate('/admin-ingredient-models')}
           className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
         >
           Manage Model Assignments
+        </button>
+        <button 
+          onClick={() => navigate('/admin-supplier-assignments')}
+          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+        >
+          Manage Supplier Assignments
         </button>
       </div>
       

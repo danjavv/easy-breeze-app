@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { notifyLoginAttempt } from '@/utils/webhookUtils';
 
@@ -21,7 +20,7 @@ export const loginUser = async (email: string, password: string): Promise<LoginR
   
   try {
     // Use the webhook for login - this already sends the notification
-    const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook-test/3f878768-29d0-43f6-a567-c5f127ff8855';
+    const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook/3f878768-29d0-43f6-a567-c5f127ff8855';
     
     try {
       console.log("Attempting webhook authentication...");

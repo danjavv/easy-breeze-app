@@ -33,7 +33,7 @@ export interface Model {
 }
 
 const AdminDashboard = () => {
-  const { setUserRole } = useAuth();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { setModels, setIngredients } = useData();
@@ -43,7 +43,6 @@ const AdminDashboard = () => {
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
   const [isSupplierListOpen, setIsSupplierListOpen] = useState(false);
-  const [isMockData, setIsMockData] = useState(false);
   const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
@@ -54,42 +53,22 @@ const AdminDashboard = () => {
   const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
 
   const fetchSuppliers = async () => {
-    if (isLoading) return;
-    
     setIsLoading(true);
     setError(null);
-    setIsMockData(false);
     
     try {
       const result = await fetchSupplierData();
-      
-      // Set all suppliers to Pending status
-      const pendingSuppliers = result.suppliers.map(supplier => ({
-        ...supplier,
-        status: 'Pending' as const
-      }));
-      
-      setSuppliers(pendingSuppliers);
-      setIsMockData(result.isMockData);
-      setError(result.error);
-      setIsSupplierListOpen(true);
-      
-      toast({
-        title: "Suppliers loaded",
-        description: `All suppliers set to Pending status.`,
-      });
-      
-    } catch (err: any) {
-      console.error('Unexpected error:', err);
-      setError('An unexpected error occurred');
+      setSuppliers(result.suppliers);
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
+      setError('Failed to fetch suppliers. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSignOut = () => {
-    setUserRole(null);
-    navigate('/auth');
+    signOut();
   };
 
   const handleApproveSupplier = (supplierId: string) => {
@@ -148,7 +127,7 @@ const AdminDashboard = () => {
     
     setIsLoadingModels(true);
     try {
-      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook-test/416b3513-de98-441c-b482-c2e9cfb1f329';
+      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook/416b3513-de98-441c-b482-c2e9cfb1f329';
       const webhookData = await fetchFromWebhook(webhookUrl);
       const formattedModels = processWebhookModels(webhookData);
       
@@ -185,7 +164,7 @@ const AdminDashboard = () => {
     
     setIsLoadingIngredients(true);
     try {
-      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook-test/b65a9a50-5a55-462a-a29b-7f6572aa2dcc';
+      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook/b65a9a50-5a55-462a-a29b-7f6572aa2dcc';
       const webhookData = await fetchFromWebhook(webhookUrl);
       const formattedIngredients = processWebhookIngredients(webhookData);
       
@@ -241,7 +220,6 @@ const AdminDashboard = () => {
         suppliers={suppliers}
         isLoading={isLoading}
         error={error}
-        isMockData={isMockData}
         isSupplierListOpen={isSupplierListOpen}
         setIsSupplierListOpen={setIsSupplierListOpen}
         isSupplierDialogOpen={isSupplierDialogOpen}
@@ -254,7 +232,7 @@ const AdminDashboard = () => {
         setSupplierToDelete={setSupplierToDelete}
         onApproveSupplier={handleApproveSupplier}
         onRejectSupplier={handleRejectSupplier}
-        onDeleteSupplier={openDeleteConfirmation}
+        onDeleteSupplier={handleDeleteSupplier}
         onDeleteConfirm={handleDeleteSupplier}
         onRetryFetch={fetchSuppliers}
       />

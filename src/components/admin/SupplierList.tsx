@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -44,7 +43,6 @@ interface SupplierListProps {
   suppliers: Supplier[];
   isLoading: boolean;
   error: string | null;
-  isMockData: boolean;
   onViewSupplier: (supplier: Supplier) => void;
   onDeleteSupplier: (supplier: Supplier, e: React.MouseEvent) => void;
   onRetry: () => void;
@@ -55,7 +53,6 @@ const SupplierList: React.FC<SupplierListProps> = ({
   suppliers,
   isLoading,
   error,
-  isMockData,
   onViewSupplier,
   onDeleteSupplier,
   onRetry,

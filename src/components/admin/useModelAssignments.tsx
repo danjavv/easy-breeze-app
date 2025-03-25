@@ -63,7 +63,7 @@ export function useModelAssignments() {
       console.log('Fetching ingredients from webhook...');
       
       // Call the webhook to get detergent data
-      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook-test/b65a9a50-5a55-462a-a29b-7f6572aa2dcc';
+      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook/b65a9a50-5a55-462a-a29b-7f6572aa2dcc';
       const webhookData = await fetchFromWebhook(webhookUrl);
       
       // Process the webhook response using our utility function
@@ -132,7 +132,7 @@ export function useModelAssignments() {
       console.log('Fetching models from webhook...');
       
       // Call the webhook to get model data
-      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook-test/416b3513-de98-441c-b482-c2e9cfb1f329';
+      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook/416b3513-de98-441c-b482-c2e9cfb1f329';
       const webhookData = await fetchFromWebhook(webhookUrl);
       
       // Process the webhook response using our utility function
@@ -224,6 +224,22 @@ export function useModelAssignments() {
 
     setIsLoading(true);
     try {
+      // Send POST request to webhook
+      const webhookResponse = await fetch('https://danjaved008.app.n8n.cloud/webhook/1403aa87-f3ae-46c5-a77e-4c3b97192e64', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ingredient_id: selectedIngredient,
+          model_id: selectedModel
+        }),
+      });
+
+      if (!webhookResponse.ok) {
+        throw new Error('Failed to save assignment to webhook');
+      }
+
       // Check if assignment already exists
       const existingAssignment = existingAssignments.find(
         a => a.ingredient_id === selectedIngredient
@@ -249,25 +265,14 @@ export function useModelAssignments() {
 
       if (result.error) throw result.error;
 
-      // Send webhook after successful save
-      try {
-        await fetch('https://danjaved008.app.n8n.cloud/webhook-test/1403aa87-f3ae-46c5-a77e-4c3b97192e64', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            ingredient_id: selectedIngredient,
-            model_id: selectedModel
-          })
-        });
-      } catch (webhookError) {
-        console.error('Error sending webhook:', webhookError);
-        // Don't throw the error as the main operation was successful
-      }
-
+      // Refresh assignments
+      await fetchAssignments();
+      
+      // Clear selections
+      setSelectedIngredient('');
+      setSelectedModel('');
+      
       toast.success('Model assignment saved successfully');
-      fetchAssignments(); // Refresh assignments data
     } catch (error) {
       console.error('Error saving assignment:', error);
       toast.error('Failed to save model assignment');

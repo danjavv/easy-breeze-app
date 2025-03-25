@@ -95,29 +95,30 @@ export const processWebhookData = (webhookData: any): Submission[] => {
     }
     
     const processedSubmissions = dataArray.map(item => {
-      const typedResults = item.results ? item.results.map((result: any) => ({
-        status: result.status || 'UNKNOWN',
-        batch_label: result.batch_label || `Batch`,
-        metrics: {
-          purity: result.metrics?.purity || 0,
-          foaming: result.metrics?.foaming || 0,
-          detergency: result.metrics?.detergency || 0,
-          biodegradability: result.metrics?.biodegradability || 0
-        },
-        failure_reasons: result.failure_reasons || []
-      })) : [];
+      // Extract the submission data from the json property if it exists
+      const submissionData = item.json || item;
       
       return {
-        submissionid: item.submissionid || item.id || `webhook-${Math.random().toString(36).substr(2, 9)}`,
-        submission_label: item.submission_label || item.label || 'Webhook Submission',
-        created_at: item.created_at || item.date || new Date().toISOString(),
-        supplierid: item.supplierid || item.supplier_id || 'unknown',
-        supplier_name: item.supplier_name || item.company_name || 'External Supplier',
-        total_batches: item.total_batches || typedResults.length || 0,
-        passed_batches: item.passed_batches || 0,
-        failed_batches: item.failed_batches || 0,
-        results: typedResults
-      } as Submission;
+        submissionid: submissionData.submission_id || submissionData.submissionid || '',
+        submission_label: submissionData.submission_label || 'Untitled Submission',
+        created_at: submissionData.created_at || submissionData.processed_at || new Date().toISOString(),
+        supplierid: submissionData.supplier_id || submissionData.supplierid || '',
+        total_batches: submissionData.total_batches || submissionData.summary?.total_batches || 0,
+        passed_batches: submissionData.passed_batches || submissionData.summary?.passed_batches || 0,
+        failed_batches: submissionData.failed_batches || submissionData.summary?.failed_batches || 0,
+        supplier_name: submissionData.supplier_name || 'Unknown Supplier',
+        results: submissionData.results ? submissionData.results.map((result: any) => ({
+          status: result.status || 'UNKNOWN',
+          batch_label: result.batch_label || 'Unknown Batch',
+          metrics: {
+            detergency: result.metrics?.detergency || 0,
+            foaming: result.metrics?.foaming || 0,
+            biodegradability: result.metrics?.biodegradability || 0,
+            purity: result.metrics?.purity || 0
+          },
+          failure_reasons: result.failure_reasons || []
+        })) : []
+      };
     });
     
     console.log('Processed submissions:', processedSubmissions);

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Info, Eye } from 'lucide-react';
@@ -40,8 +39,6 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ submissions, format
           <TableRow>
             <TableHead>Date</TableHead>
             <TableHead>Submission</TableHead>
-            <TableHead>Supplier</TableHead>
-            <TableHead>Supplier ID</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Details</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -56,19 +53,6 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ submissions, format
                 </TableCell>
                 <TableCell className="font-medium">
                   {submission.submission_label || 'Untitled Submission'}
-                </TableCell>
-                <TableCell>{submission.supplier_name || 'Unknown Supplier'}</TableCell>
-                <TableCell>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger className="text-xs text-muted-foreground">
-                        {truncateId(submission.supplierid)}
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{submission.supplierid}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
                 </TableCell>
                 <TableCell>
                   {submission.total_batches === null ? (
@@ -102,7 +86,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ submissions, format
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+              <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                 No submissions found
               </TableCell>
             </TableRow>

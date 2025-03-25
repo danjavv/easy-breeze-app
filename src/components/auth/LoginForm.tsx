@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -120,16 +119,6 @@ const LoginForm = ({ onBack, onRegisterClick }: LoginFormProps) => {
           >
             Back to dashboard selection
           </Button>
-          <div className="text-center w-full">
-            <Button 
-              variant="link" 
-              className="text-sm font-medium"
-              onClick={onRegisterClick}
-            >
-              Don't have an account? Register
-              <UserPlus className="ml-2 h-3 w-3" />
-            </Button>
-          </div>
         </CardFooter>
       </Card>
     </div>

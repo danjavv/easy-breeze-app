@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from '@/components/ui/alert-dialog';
@@ -11,7 +10,6 @@ interface SupplierDialogsProps {
   suppliers: Supplier[];
   isLoading: boolean;
   error: string | null;
-  isMockData: boolean;
   isSupplierListOpen: boolean;
   setIsSupplierListOpen: (open: boolean) => void;
   isSupplierDialogOpen: boolean;
@@ -33,7 +31,6 @@ const SupplierDialogs: React.FC<SupplierDialogsProps> = ({
   suppliers,
   isLoading,
   error,
-  isMockData,
   isSupplierListOpen,
   setIsSupplierListOpen,
   isSupplierDialogOpen,
@@ -62,33 +59,20 @@ const SupplierDialogs: React.FC<SupplierDialogsProps> = ({
       <Dialog open={isSupplierListOpen} onOpenChange={setIsSupplierListOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>
-              Supplier Management
-              {isMockData && <span className="ml-2 text-xs text-amber-500">(Sample Data)</span>}
-            </DialogTitle>
-            <DialogDescription>
-              {isMockData 
-                ? "Displaying sample data as the supplier service is currently unavailable"
-                : "View and manage all registered suppliers"}
-            </DialogDescription>
+            <DialogTitle>Supplier Management</DialogTitle>
+            <DialogDescription>View and manage all registered suppliers</DialogDescription>
           </DialogHeader>
           
           <SupplierList
             suppliers={suppliers}
             isLoading={isLoading}
             error={error}
-            isMockData={isMockData}
             onViewSupplier={openSupplierDetails}
             onDeleteSupplier={onDeleteSupplier}
             onRetry={onRetryFetch}
           />
           
           <DialogFooter className="flex items-center justify-between mt-4">
-            {isMockData && (
-              <p className="text-xs text-muted-foreground">
-                Note: Actions on sample data will only be persisted for this session
-              </p>
-            )}
             <Button onClick={() => setIsSupplierListOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>

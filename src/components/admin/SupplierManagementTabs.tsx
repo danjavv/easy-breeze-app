@@ -1,9 +1,7 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import AddSupplierForm from './AddSupplierForm';
-import AssignSupplierForm from './AssignSupplierForm';
 import SupplierList from './SupplierList';
 import { Supplier } from './SupplierList';
 import { Button } from '@/components/ui/button';
@@ -34,7 +32,7 @@ const SupplierManagementTabs: React.FC<SupplierManagementTabsProps> = ({
     setError(null);
     
     try {
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/944a3d31-08ac-4446-9c67-9e543a85aa40', {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/944a3d31-08ac-4446-9c67-9e543a85aa40', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -108,121 +106,17 @@ const SupplierManagementTabs: React.FC<SupplierManagementTabsProps> = ({
       setIsLoading(false);
     }
   };
-  
-  const handleDeleteSupplier = async (supplier: Supplier, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    try {
-      // Send webhook with the supplier ID using POST method
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/bdbd4f28-77fa-4e85-ba8d-4b121384b428', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        },
-        body: JSON.stringify({ 
-          supplierID: supplier.id 
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to delete supplier: ${response.status}`);
-      }
-      
-      // Remove the supplier from the local state
-      setLoadedSuppliers(prev => prev.filter(s => s.id !== supplier.id));
-      
-      // Call the parent's onDelete handler
-      onDelete(supplier.id);
-      
-      toast({
-        title: "Delete Successful",
-        description: `Supplier ${supplier.company_name} has been deleted.`,
-      });
-    } catch (error) {
-      console.error('Error deleting supplier:', error);
-      
-      toast({
-        title: "Delete Failed",
-        description: error instanceof Error ? error.message : 'An unexpected error occurred',
-        variant: "destructive"
-      });
-    }
-  };
 
   return (
     <Tabs defaultValue="add" value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid grid-cols-3 mb-4">
+      <TabsList className="grid grid-cols-1 mb-4">
         <TabsTrigger value="add">Add Supplier</TabsTrigger>
-        <TabsTrigger value="assign">Assign Supplier</TabsTrigger>
-        <TabsTrigger value="delete">Delete Supplier</TabsTrigger>
       </TabsList>
       
       <TabsContent value="add" className="space-y-4">
         <Card>
           <CardContent className="pt-6">
-            <AddSupplierForm onAddSupplier={onAddSupplier} onSuccess={() => setActiveTab('delete')} />
-          </CardContent>
-        </Card>
-      </TabsContent>
-      
-      <TabsContent value="assign" className="space-y-4">
-        <Card>
-          <CardContent className="pt-6">
-            <AssignSupplierForm suppliers={suppliers} />
-          </CardContent>
-        </Card>
-      </TabsContent>
-      
-      <TabsContent value="delete" className="space-y-4">
-        <Card>
-          <CardContent className="pt-6 pb-2">
-            <div className="mb-4">
-              <h3 className="text-lg font-medium mb-2">Delete Supplier</h3>
-              <Button 
-                onClick={loadSuppliers} 
-                disabled={isLoading}
-                className="w-full sm:w-auto mb-4"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Loading Suppliers...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Load Suppliers
-                  </>
-                )}
-              </Button>
-              
-              {error && (
-                <div className="text-destructive text-sm my-2 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-2" />
-                  {error}
-                </div>
-              )}
-            </div>
-            
-            {loadedSuppliers.length > 0 ? (
-              <SupplierList 
-                suppliers={loadedSuppliers} 
-                isLoading={false}
-                error={null}
-                isMockData={false}
-                onViewSupplier={() => {}}
-                onDeleteSupplier={handleDeleteSupplier}
-                onRetry={loadSuppliers}
-                showDeleteOnly={true}
-              />
-            ) : !isLoading && (
-              <div className="text-center py-8 text-muted-foreground">
-                {error ? "Failed to load suppliers" : "Click 'Load Suppliers' to view suppliers for deletion"}
-              </div>
-            )}
+            <AddSupplierForm onAddSupplier={onAddSupplier} onSuccess={() => {}} />
           </CardContent>
         </Card>
       </TabsContent>

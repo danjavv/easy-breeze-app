@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -71,84 +70,22 @@ const SubmissionResults = () => {
           }
         }
         
-        // If no stored results or the submission ID doesn't match, display fallback data
-        setSubmissionData({
-          submission_id: "123",
-          submission_label: "ACME_Q2_Batch_2",
-          processed_at: "2025-03-12T10:04:39.445Z",
-          summary: {
-            total_batches: 5,
-            passed_batches: 2,
-            failed_batches: 3
-          },
-          results: [
-            {
-              batch_label: "ACME_LAS_001",
-              status: "FAIL",
-              metrics: {
-                detergency: 520,
-                foaming: 315,
-                biodegradability: 160,
-                purity: 5
-              },
-              failure_reasons: [
-                "Biodegradability (160 < required 600)",
-                "Purity (5 < required 60)"
-              ]
-            },
-            {
-              batch_label: "ACME_LAS_002",
-              status: "FAIL",
-              metrics: {
-                detergency: 1040,
-                foaming: 735,
-                biodegradability: 480,
-                purity: 25
-              },
-              failure_reasons: [
-                "Biodegradability (480 < required 600)",
-                "Purity (25 < required 60)"
-              ]
-            },
-            {
-              batch_label: "ACME_LAS_003",
-              status: "FAIL",
-              metrics: {
-                detergency: 1560,
-                foaming: 1155,
-                biodegradability: 800,
-                purity: 45
-              },
-              failure_reasons: [
-                "Purity (45 < required 60)"
-              ]
-            },
-            {
-              batch_label: "ACME_LAS_004",
-              status: "PASS",
-              metrics: {
-                detergency: 2080,
-                foaming: 1575,
-                biodegradability: 1120,
-                purity: 65
-              }
-            },
-            {
-              batch_label: "ACME_LAS_005",
-              status: "PASS",
-              metrics: {
-                detergency: 2600,
-                foaming: 1995,
-                biodegradability: 1440,
-                purity: 85
-              }
-            }
-          ]
-        });
+        // If no stored results, fetch from API
+        const response = await fetch(`https://danjaved008.app.n8n.cloud/webhook/944a3d31-08ac-4446-9c67-9e543a85aa40/submissions/${submissionId}`);
         
-        toast.info("Using sample data", {
-          description: "No submission data found. Displaying sample results."
-        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch submission results');
+        }
+        
+        const data = await response.json();
+        console.log('API response:', data);
+        
+        if (Array.isArray(data) && data.length > 0) {
+          const submissionData = data[0];
+          setSubmissionData(submissionData);
+        } else {
+          throw new Error('No submission data found');
+        }
       } catch (error) {
         console.error('Error loading submission data:', error);
         setError('Failed to load submission results. Please try again.');

@@ -1,4 +1,3 @@
-
 import { useEffect, useRef } from 'react';
 import Button from './Button';
 
@@ -38,17 +37,17 @@ const Hero = () => {
       
       <div className="max-w-5xl mx-auto text-center relative z-10">
         <span className="inline-block py-1 px-3 text-xs font-medium bg-secondary rounded-full mb-6 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-          Simple, powerful, beautiful
+          For Ingredient Manufacturers
         </span>
         
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
-          <span className="block">Embrace the power of</span>
-          <span className="block">simplicity and precision</span>
+          <span className="block">Streamline Your</span>
+          <span className="block">Ingredient Testing</span>
         </h1>
         
         <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8 md:mb-10 animate-fade-in-up" style={{ animationDelay: '0.7s' }}>
-          Create something extraordinary with a design that focuses on what truly matters.
-          Pure functionality with an elegant, minimal aesthetic.
+          A comprehensive platform for ingredient manufacturers to submit, track, and manage their ingredient test results. 
+          Get instant feedback and detailed analysis of your submissions.
         </p>
         
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '0.9s' }}>
