@@ -13,6 +13,7 @@ import SupplierDashboard from '@/pages/SupplierDashboard';
 import AuthGuard from '@/components/AuthGuard';
 import NewSubmission from '@/pages/NewSubmission';
 import AdminAllSubmissions from '@/pages/AdminAllSubmissions';
+import AdminBaselineConfig from '@/pages/AdminBaselineConfig';
 
 function App() {
   return (
@@ -57,6 +58,11 @@ function App() {
               <Route path="/admin-all-submissions" element={
                 <AuthGuard requiredRole="admin">
                   <AdminAllSubmissions />
+                </AuthGuard>
+              } />
+              <Route path="/admin-baseline-config" element={
+                <AuthGuard requiredRole="admin">
+                  <AdminBaselineConfig />
                 </AuthGuard>
               } />
             </Routes>

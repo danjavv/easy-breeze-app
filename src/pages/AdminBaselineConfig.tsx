@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,12 +9,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, Save, Beaker } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AdminBaselineConfig = () => {
   const navigate = useNavigate();
+  const { userRole } = useAuth();
   const [configName, setConfigName] = useState('Spring 2023 Detergent');
   const [isActive, setIsActive] = useState(false);
   
+  useEffect(() => {
+    console.log('AdminBaselineConfig mounted');
+    console.log('Current user role:', userRole);
+  }, [userRole]);
+
   // State for base values
   const [baseValues, setBaseValues] = useState({
     detergency: 320,

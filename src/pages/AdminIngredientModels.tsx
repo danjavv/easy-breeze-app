@@ -29,6 +29,10 @@ interface WebhookResponse {
   threshold_foaming?: number | null;
   threshold_biodegradability?: number | null;
   threshold_purity?: number | null;
+  scale_detergency?: number | null;
+  scale_foaming?: number | null;
+  scale_biodegradability?: number | null;
+  scale_purity?: number | null;
   created_at?: string;
 }
 
@@ -44,6 +48,12 @@ const AdminIngredientModels = () => {
     foaming: 300,
     biodegradability: 600,
     purity: 60,
+  });
+  const [scaleValues, setScaleValues] = useState({
+    detergency: 1.0,
+    foaming: 1.0,
+    biodegradability: 1.0,
+    purity: 1.0,
   });
 
   useEffect(() => {
@@ -84,6 +94,13 @@ const AdminIngredientModels = () => {
     }));
   };
 
+  const handleScaleValueChange = (key: keyof typeof scaleValues, value: string) => {
+    setScaleValues(prev => ({
+      ...prev,
+      [key]: parseFloat(value) || 1.0
+    }));
+  };
+
   const handleSave = async () => {
     try {
       const webhookData = {
@@ -93,6 +110,12 @@ const AdminIngredientModels = () => {
           foaming: thresholdValues.foaming,
           biodegradability: thresholdValues.biodegradability,
           purity: thresholdValues.purity
+        },
+        scales: {
+          detergency: scaleValues.detergency,
+          foaming: scaleValues.foaming,
+          biodegradability: scaleValues.biodegradability,
+          purity: scaleValues.purity
         },
         isActive: isActive
       };
@@ -119,7 +142,11 @@ const AdminIngredientModels = () => {
                 threshold_detergency: thresholdValues.detergency,
                 threshold_foaming: thresholdValues.foaming,
                 threshold_biodegrability: thresholdValues.biodegradability,
-                threshold_purity: thresholdValues.purity
+                threshold_purity: thresholdValues.purity,
+                scale_detergency: scaleValues.detergency,
+                scale_foaming: scaleValues.foaming,
+                scale_biodegradability: scaleValues.biodegradability,
+                scale_purity: scaleValues.purity
               });
 
             if (error) {
@@ -228,6 +255,40 @@ const AdminIngredientModels = () => {
                               className="w-[120px]"
                             />
                             {key === 'purity' && <span className="ml-2">%</span>}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Scaling Factors</h3>
+                <p className="text-sm text-muted-foreground">
+                  Adjust how each parameter contributes to the overall score. Higher values mean greater impact.
+                </p>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[200px]">Property</TableHead>
+                      <TableHead>Scale Factor</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {Object.entries(scaleValues).map(([key, value]) => (
+                      <TableRow key={key}>
+                        <TableCell className="font-medium capitalize">{key}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <Input 
+                              type="number"
+                              step="0.1"
+                              min="0"
+                              value={value}
+                              onChange={(e) => handleScaleValueChange(key as keyof typeof scaleValues, e.target.value)}
+                              className="w-[120px]"
+                            />
                           </div>
                         </TableCell>
                       </TableRow>
