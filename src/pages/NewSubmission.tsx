@@ -98,10 +98,7 @@ const NewSubmission = () => {
       
       const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        body: formData,
       });
 
       if (!response.ok) {

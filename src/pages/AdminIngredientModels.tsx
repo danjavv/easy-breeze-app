@@ -50,10 +50,10 @@ const AdminIngredientModels = () => {
     purity: 60,
   });
   const [scaleValues, setScaleValues] = useState({
-    detergency: 1.0,
-    foaming: 1.0,
-    biodegradability: 1.0,
-    purity: 1.0,
+    detergency: 1,
+    foaming: 1,
+    biodegradability: 1,
+    purity: 1,
   });
 
   useEffect(() => {
@@ -97,7 +97,7 @@ const AdminIngredientModels = () => {
   const handleScaleValueChange = (key: keyof typeof scaleValues, value: string) => {
     setScaleValues(prev => ({
       ...prev,
-      [key]: parseFloat(value) || 1.0
+      [key]: parseInt(value) || 1
     }));
   };
 
@@ -283,8 +283,8 @@ const AdminIngredientModels = () => {
                           <div className="flex items-center">
                             <Input 
                               type="number"
-                              step="0.1"
-                              min="0"
+                              step="1"
+                              min="1"
                               value={value}
                               onChange={(e) => handleScaleValueChange(key as keyof typeof scaleValues, e.target.value)}
                               className="w-[120px]"
