@@ -24,8 +24,11 @@ const NewSubmission = () => {
     setIsDownloading(true);
     
     try {
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
-        method: 'GET'
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       
       if (!response.ok) {
@@ -93,9 +96,12 @@ const NewSubmission = () => {
         formData.append('supplierid', 'placeholder-id');
       }
       
-      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook-test/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
+      const response = await fetch('https://danjaved008.app.n8n.cloud/webhook/ec92ebad-901c-43d5-bc72-7063593ddc2c', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
