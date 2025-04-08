@@ -199,7 +199,7 @@ const AdminDashboard = () => {
     
     setIsLoadingIngredients(true);
     try {
-      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook/b65a9a50-5a55-462a-a29b-7f6572aa2dcc';
+      const webhookUrl = 'https://danjaved008.app.n8n.cloud/webhook-test/b65a9a50-5a55-462a-a29b-7f6572aa2dcc';
       const webhookData = await fetchFromWebhook(webhookUrl);
       const formattedIngredients = processWebhookIngredients(webhookData);
       
