@@ -12,6 +12,8 @@ import { useIngredientManagement } from '@/hooks/use-ingredient-management';
 import { useSubmissionsManagement } from '@/hooks/use-submissions-management';
 import { Ingredient, Model } from '@/pages/AdminDashboard';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useData } from '@/contexts/DataContext';
 
 interface DashboardCardsGridProps {
   suppliers: Supplier[];
@@ -65,6 +67,8 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
     handleViewAllSubmissions
   } = useSubmissionsManagement();
 
+  const { ingredients: dataIngredients, models: dataModels, suppliers: dataSuppliers, setSuppliers } = useData();
+
   const loadSuppliers = async () => {
     setIsLoadingSuppliers(true);
     try {
@@ -85,9 +89,21 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
       const data = await response.json();
       console.log('Suppliers loaded:', data);
       
-      // Update the suppliers state with the loaded data
-      onFetchSuppliers();
-      
+      // Process the webhook data to match our Supplier interface
+      const formattedSuppliers = data.map((item: any) => ({
+        id: item.json.id,
+        company_name: item.json.company_name,
+        contact_person: item.json.contact_person,
+        email: item.json.email,
+        phone: item.json.phone,
+        address: item.json.address,
+        status: item.json.status
+      }));
+
+      // Update the context with the formatted suppliers
+      setSuppliers(formattedSuppliers);
+      console.log('Formatted suppliers saved to context:', formattedSuppliers);
+
       toast({
         title: "Success",
         description: "Suppliers loaded successfully",
@@ -96,7 +112,7 @@ const DashboardCardsGrid: React.FC<DashboardCardsGridProps> = ({
       console.error('Error loading suppliers:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to load suppliers",
+        description: "Failed to load suppliers",
         variant: "destructive",
       });
     } finally {

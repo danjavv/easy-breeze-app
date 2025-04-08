@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { fetchFromWebhook, processWebhookIngredients } from '@/utils/webhookUtils';
 import { logSupabaseResponse } from '@/utils/debugUtils';
+import { useData } from '@/contexts/DataContext';
 
 interface Supplier {
   id: string;
@@ -30,8 +31,9 @@ interface SupplierAssignment {
 }
 
 export function useSupplierAssignments() {
+  const { suppliers: contextSuppliers, setSuppliers: setContextSuppliers } = useData();
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>(contextSuppliers);
   const [selectedIngredient, setSelectedIngredient] = useState<string>('');
   const [selectedSupplier, setSelectedSupplier] = useState<string>('');
   const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
@@ -138,6 +140,7 @@ export function useSupplierAssignments() {
         
         console.log('Suppliers loaded from webhook:', formattedSuppliers);
         setSuppliers(formattedSuppliers);
+        setContextSuppliers(formattedSuppliers);
         toast.success(`Loaded ${formattedSuppliers.length} suppliers from webhook successfully`);
       } else {
         await fetchSuppliersFromDatabase();
@@ -168,11 +171,13 @@ export function useSupplierAssignments() {
       
       if (suppliersData && suppliersData.length > 0) {
         setSuppliers(suppliersData);
+        setContextSuppliers(suppliersData);
         toast.success(`Loaded ${suppliersData.length} suppliers from database successfully`);
       } else {
         console.log('No suppliers data found');
         toast.info('No suppliers found in the database');
         setSuppliers([]);
+        setContextSuppliers([]);
       }
     } catch (error) {
       console.error('Error fetching suppliers from database:', error);

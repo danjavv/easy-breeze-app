@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -36,8 +36,19 @@ const AdminDashboard = () => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { setModels, setIngredients } = useData();
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const { 
+    models: contextModels, 
+    ingredients: contextIngredients, 
+    suppliers: contextSuppliers,
+    setModels, 
+    setIngredients,
+    setSuppliers 
+  } = useData();
+  
+  // Initialize local state from context
+  const [localModels, setLocalModels] = useState<Model[]>(contextModels);
+  const [localIngredients, setLocalIngredients] = useState<Ingredient[]>(contextIngredients);
+  const [localSuppliers, setLocalSuppliers] = useState<Supplier[]>(contextSuppliers);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
@@ -45,12 +56,21 @@ const AdminDashboard = () => {
   const [isSupplierListOpen, setIsSupplierListOpen] = useState(false);
   const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  
-  // Local state variables for UI display
-  const [localModels, setLocalModels] = useState<Model[]>([]);
-  const [localIngredients, setLocalIngredients] = useState<Ingredient[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [isLoadingIngredients, setIsLoadingIngredients] = useState(false);
+
+  // Update local state when context changes
+  useEffect(() => {
+    setLocalModels(contextModels);
+  }, [contextModels]);
+
+  useEffect(() => {
+    setLocalIngredients(contextIngredients);
+  }, [contextIngredients]);
+
+  useEffect(() => {
+    setLocalSuppliers(contextSuppliers);
+  }, [contextSuppliers]);
 
   const fetchSuppliers = async () => {
     setIsLoading(true);
@@ -59,6 +79,7 @@ const AdminDashboard = () => {
     try {
       const result = await fetchSupplierData();
       setSuppliers(result.suppliers);
+      setLocalSuppliers(result.suppliers);
     } catch (error) {
       console.error('Error fetching suppliers:', error);
       setError('Failed to fetch suppliers. Please try again.');
@@ -72,36 +93,52 @@ const AdminDashboard = () => {
   };
 
   const handleApproveSupplier = (supplierId: string) => {
-    setSuppliers(prev => 
-      prev.map(supplier => 
-        supplier.id === supplierId 
-          ? { ...supplier, status: 'Approved' as const } 
-          : supplier
-      )
+    const updatedSuppliers = localSuppliers.map(supplier => 
+      supplier.id === supplierId 
+        ? { ...supplier, status: 'Approved' as const } 
+        : supplier
     );
+    setSuppliers(updatedSuppliers);
+    setLocalSuppliers(updatedSuppliers);
     
+    const supplierName = localSuppliers.find(s => s.id === supplierId)?.company_name;
     toast({
       title: "Supplier approved",
-      description: `Supplier ${suppliers.find(s => s.id === supplierId)?.company_name} has been approved successfully.`,
+      description: `Supplier ${supplierName} has been approved successfully.`,
     });
     setIsSupplierDialogOpen(false);
   };
 
   const handleRejectSupplier = (supplierId: string) => {
-    setSuppliers(prev => 
-      prev.map(supplier => 
-        supplier.id === supplierId 
-          ? { ...supplier, status: 'Rejected' as const } 
-          : supplier
-      )
+    const updatedSuppliers = localSuppliers.map(supplier => 
+      supplier.id === supplierId 
+        ? { ...supplier, status: 'Rejected' as const } 
+        : supplier
     );
+    setSuppliers(updatedSuppliers);
+    setLocalSuppliers(updatedSuppliers);
     
+    const supplierName = localSuppliers.find(s => s.id === supplierId)?.company_name;
     toast({
       title: "Supplier rejected",
-      description: `Supplier ${suppliers.find(s => s.id === supplierId)?.company_name} has been rejected.`,
-      variant: "destructive"
+      description: `Supplier ${supplierName} has been rejected.`,
+      variant: "destructive",
     });
     setIsSupplierDialogOpen(false);
+  };
+
+  const handleDeleteSupplier = (supplierId: string) => {
+    const updatedSuppliers = localSuppliers.filter(supplier => supplier.id !== supplierId);
+    setSuppliers(updatedSuppliers);
+    setLocalSuppliers(updatedSuppliers);
+    
+    const supplierName = localSuppliers.find(s => s.id === supplierId)?.company_name;
+    toast({
+      title: "Supplier deleted",
+      description: `Supplier ${supplierName} has been deleted.`,
+      variant: "destructive",
+    });
+    setIsDeleteDialogOpen(false);
   };
 
   const openDeleteConfirmation = (supplier: Supplier, e: React.MouseEvent) => {
@@ -110,12 +147,10 @@ const AdminDashboard = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDeleteSupplier = () => {
+  const handleDeleteSupplierConfirm = () => {
     if (!supplierToDelete) return;
     
-    setSuppliers(prev => prev.filter(supplier => supplier.id !== supplierToDelete.id));
-    setIsDeleteDialogOpen(false);
-    setSupplierToDelete(null);
+    handleDeleteSupplier(supplierToDelete.id);
   };
 
   const goToBaselineConfig = () => {
@@ -204,7 +239,7 @@ const AdminDashboard = () => {
         <DashboardTitle />
         
         <DashboardCardsGrid 
-          suppliers={suppliers}
+          suppliers={localSuppliers}
           isLoading={isLoading}
           onFetchSuppliers={fetchSuppliers}
           models={localModels}
@@ -217,23 +252,27 @@ const AdminDashboard = () => {
       </main>
 
       <SupplierDialogs
-        suppliers={suppliers}
+        suppliers={localSuppliers}
         isLoading={isLoading}
         error={error}
-        isSupplierListOpen={isSupplierListOpen}
-        setIsSupplierListOpen={setIsSupplierListOpen}
-        isSupplierDialogOpen={isSupplierDialogOpen}
-        setIsSupplierDialogOpen={setIsSupplierDialogOpen}
-        isDeleteDialogOpen={isDeleteDialogOpen}
-        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
         selectedSupplier={selectedSupplier}
         setSelectedSupplier={setSelectedSupplier}
+        isSupplierDialogOpen={isSupplierDialogOpen}
+        setIsSupplierDialogOpen={setIsSupplierDialogOpen}
+        isSupplierListOpen={isSupplierListOpen}
+        setIsSupplierListOpen={setIsSupplierListOpen}
+        isDeleteDialogOpen={isDeleteDialogOpen}
+        setIsDeleteDialogOpen={setIsDeleteDialogOpen}
         supplierToDelete={supplierToDelete}
         setSupplierToDelete={setSupplierToDelete}
         onApproveSupplier={handleApproveSupplier}
         onRejectSupplier={handleRejectSupplier}
-        onDeleteSupplier={handleDeleteSupplier}
-        onDeleteConfirm={handleDeleteSupplier}
+        onDeleteSupplier={(supplier, e) => {
+          e.preventDefault();
+          setSupplierToDelete(supplier);
+          setIsDeleteDialogOpen(true);
+        }}
+        onDeleteConfirm={handleDeleteSupplierConfirm}
         onRetryFetch={fetchSuppliers}
       />
     </div>
